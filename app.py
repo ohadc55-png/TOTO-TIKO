@@ -29,21 +29,20 @@ def get_data_from_sheets():
         st.error(f"Google Sheets Connection Error: {e}")
         return [], None
 
-# --- Logic: Intelligent Parallel Calculation ---
+# --- Logic: Intelligent Parallel Calculation with Cycle Profit ---
 def calculate_parallel_status(raw_data, initial_stake):
     processed_games = []
-    # comp_states keeps track of the next stake for each track separately
+    # Tracks the next required stake
     comp_states = {"Brighton": initial_stake, "Africa Cup of Nations": initial_stake}
+    # Tracks cumulative investment in the current unfinished cycle
+    cycle_investments = {"Brighton": 0, "Africa Cup of Nations": 0}
 
     if not raw_data:
         return [], comp_states
 
     for row in raw_data:
         try:
-            # Data extraction with safety defaults
             comp = str(row.get('Competition', 'Brighton')).strip()
-            
-            # Handle Odds: conversion from string/comma to float
             try:
                 odds = float(str(row.get('Odds', 1)).replace(',', '.'))
             except:
@@ -53,22 +52,25 @@ def calculate_parallel_status(raw_data, initial_stake):
             
             if comp not in comp_states:
                 comp_states[comp] = initial_stake
+                cycle_investments[comp] = 0
             
             current_stake = comp_states[comp]
+            cycle_investments[comp] += current_stake # Add current bet to cycle total
             
-            # Exact match check to avoid confusion between "Draw (X)" and "No Draw"
             is_win = (res_str == "Draw (X)")
             
             if is_win:
                 revenue = current_stake * odds
-                profit = revenue - current_stake
-                comp_states[comp] = initial_stake # Reset Martingale on win
+                # Profit = Total Revenue minus ALL money spent in this specific cycle
+                net_cycle_profit = revenue - cycle_investments[comp]
+                comp_states[comp] = initial_stake # Reset stake
+                cycle_investments[comp] = 0 # Reset cycle investment
                 status = "✅ Won"
+                display_profit = net_cycle_profit
             else:
-                revenue = 0
-                profit = -current_stake
-                comp_states[comp] = current_stake * 2 # Double stake on loss
                 status = "❌ Lost"
+                display_profit = 0 # Record 0 profit for loss rows to avoid double-counting cycle net
+                comp_states[comp] = current_stake * 2 # Double stake
             
             processed_games.append({
                 "Date": row.get('Date', ''),
@@ -77,10 +79,9 @@ def calculate_parallel_status(raw_data, initial_stake):
                 "Odds": odds,
                 "Stake": current_stake,
                 "Status": status,
-                "Profit": profit
+                "Cycle Net Profit": display_profit
             })
         except Exception:
-            # Skip corrupted rows to keep the app running
             continue
 
     return processed_games, comp_states
@@ -99,35 +100,32 @@ raw_data, worksheet = get_data_from_sheets()
 all_processed_data, next_stakes = calculate_parallel_status(raw_data, base_stake)
 
 # --- FILTERING LOGIC ---
-# We filter the data based on the selection BEFORE displaying metrics or charts
 if all_processed_data:
     full_df = pd.DataFrame(all_processed_data)
-    # Filter for the selected competition only
     filtered_df = full_df[full_df['Comp'] == selected_comp].copy()
 else:
     filtered_df = pd.DataFrame()
 
-# Calculate track-specific metrics
+# Calculate specific metrics based on history
 if not filtered_df.empty:
     track_inv = filtered_df['Stake'].sum()
-    track_profit = filtered_df['Profit'].sum()
-    track_rev = track_inv + track_profit
+    track_net = filtered_df['Cycle Net Profit'].sum()
+    track_rev = track_inv + track_profit if 'track_profit' in locals() else track_inv + track_net
 else:
-    track_inv, track_rev, track_profit = 0, 0, 0
+    track_inv, track_rev, track_net = 0, 0, 0
 
 # --- Main UI Display ---
 st.markdown(f"<h1>⚽ {selected_comp} Tracker</h1>", unsafe_allow_html=True)
 
-# Performance Metrics (Filtered for Selected Track)
+# Performance Metrics
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Invested", f"₪{track_inv:,.0f}")
-col2.metric("Total Returned", f"₪{track_rev:,.0f}")
-col3.metric("Net Profit/Loss", f"₪{track_profit:,.0f}", delta=track_profit)
+col2.metric("Total Revenue", f"₪{track_rev:,.0f}")
+col3.metric("Net Cycle Profit", f"₪{track_net:,.0f}", delta=track_net)
 
 # Match Input Form
 st.markdown("### 📝 Add New Match")
 with st.container(border=True):
-    # Get the recommended stake for the specific selected track
     rec_stake = next_stakes.get(selected_comp, base_stake)
     st.success(f"💡 Recommended Stake for {selected_comp}: **₪{rec_stake}**")
     
@@ -144,9 +142,7 @@ with st.container(border=True):
         if st.form_submit_button("🚀 Sync to Cloud", use_container_width=True):
             if home_t and away_t:
                 # Calculate quick profit for the sheet record
-                p_val = (rec_stake * odds_in) - rec_stake if res_in == "Draw (X)" else -rec_stake
-                # Column order: Date, Competition, Home Team, Away Team, Odds, Result, Stake, Profit
-                new_row = [str(date_in), selected_comp, home_t, away_t, odds_in, res_in, rec_stake, p_val]
+                new_row = [str(date_in), selected_comp, home_t, away_t, odds_in, res_in, rec_stake, 0] # 0 as placeholder
                 worksheet.append_row(new_row)
                 st.balloons()
                 st.rerun()
@@ -156,7 +152,6 @@ with st.container(border=True):
 # Filtered History & Visuals
 if not filtered_df.empty:
     st.markdown("### 📜 Match History")
-    # Color coding logic
     def style_status(val):
         if 'Won' in str(val): return 'background-color: #d4edda; color: #155724'
         if 'Lost' in str(val): return 'background-color: #f8d7da; color: #721c24'
@@ -167,11 +162,10 @@ if not filtered_df.empty:
         use_container_width=True, hide_index=True
     )
     
-    st.markdown("### 📈 Profit Trajectory")
-    filtered_df['Cumulative'] = filtered_df['Profit'].cumsum()
-    fig = px.area(filtered_df, x=filtered_df.index, y='Cumulative', title=f"{selected_comp} - Cumulative Balance")
+    st.markdown("### 📈 Cumulative Performance")
+    filtered_df['Cumulative Profit'] = filtered_df['Cycle Net Profit'].cumsum()
+    fig = px.area(filtered_df, x=filtered_df.index, y='Cumulative Profit', title=f"{selected_comp} Account Growth")
     fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.2)')
-    fig.update_layout(xaxis_title="Match Number", yaxis_title="Balance (₪)")
     st.plotly_chart(fig, use_container_width=True)
 else:
-    st.info(f"No data available for {selected_comp}. Add your first match to start tracking!")
+    st.info(f"No data available for {selected_comp}.")
