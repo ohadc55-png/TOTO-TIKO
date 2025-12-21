@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import gspread
+import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -21,10 +22,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Google Sheets Connection Function ---
+# --- Google Sheets Connection ---
 def get_data_from_sheets():
     try:
-        # Access secrets securely
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
         worksheet = sh.get_worksheet(0)
@@ -34,83 +34,83 @@ def get_data_from_sheets():
         st.error(f"Connection Error: {e}")
         return [], None
 
-# --- Logic: Calculation Function ---
-def calculate_status(games_data, start_stake):
+# --- Logic: Parallel Martingale Calculation ---
+def calculate_parallel_status(raw_data, initial_stake):
+    if not raw_data:
+        return [], {}, 0, 0, 0
+
+    df_raw = pd.DataFrame(raw_data)
     processed_games = []
-    current_stake = start_stake
+    
+    # מילון לשמירת הסטייק הבא לכל תחרות בנפרד
+    next_stakes = {"Brighton": initial_stake, "Africa Cup of Nations": initial_stake}
+    
     total_invested = 0
     total_revenue = 0
-    balance_history = []
     
-    running_balance = 0 
-    
-    for game in games_data:
-        try:
-            # Safe conversion of data
-            odds = float(game['Odds'])
-            res_str = str(game['Result'])
-        except:
-            continue 
+    # עוברים על הנתונים ומחשבים לוגיקה לכל תחרות בנפרד
+    # אנחנו מניחים שהנתונים בשיטס מסודרים לפי תאריך
+    comp_states = {} # שומר את ה-current_stake הנוכחי לכל תחרות
 
+    for index, row in df_raw.iterrows():
+        comp = row['Competition']
+        if comp not in comp_states:
+            comp_states[comp] = initial_stake
+        
+        current_stake = comp_states[comp]
+        odds = float(row['Odds'])
+        res_str = str(row['Result'])
+        
         invested = current_stake
         total_invested += invested
         
         is_draw = "Draw" in res_str or "תיקו" in res_str or "X" in res_str
         
-        revenue = 0
-        profit = -invested 
-        
         if is_draw:
             revenue = invested * odds
             profit = revenue - invested
-            next_stake = start_stake 
+            comp_states[comp] = initial_stake # איפוס
             status = "✅ Won"
         else:
-            next_stake = current_stake * 2 
+            revenue = 0
+            profit = -invested
+            comp_states[comp] = current_stake * 2 # הכפלה
             status = "❌ Lost"
             
         total_revenue += revenue
-        running_balance = total_revenue - total_invested
         
-        processed_game = {
-            "Date": game['Date'],
-            "Opponent": game['Opponent'],
+        processed_games.append({
+            "Date": row['Date'],
+            "Comp": comp,
+            "Match": f"{row['Home Team']} vs {row['Away Team']}",
             "Odds": odds,
             "Stake": invested,
-            "Result": res_str,
             "Status": status,
-            "Game P/L": profit,
-            "Total Balance": running_balance
-        }
-        processed_games.append(processed_game)
-        balance_history.append(running_balance)
-        
-        current_stake = next_stake
+            "P/L": profit
+        })
 
-    return processed_games, current_stake, total_invested, total_revenue, running_balance if balance_history else 0
+    running_bal = total_revenue - total_invested
+    return processed_games, comp_states, total_invested, total_revenue, running_bal
 
 # --- Sidebar ---
 with st.sidebar:
     st.title("⚙️ Tactics Board")
-    team_name = st.text_input("Selected Team", "Hapoel Be'er Sheva")
+    # בחירת התחרות לניהול בטופס
+    selected_comp = st.selectbox("Current Competition", ["Brighton", "Africa Cup of Nations"])
     initial_stake = st.number_input("Initial Stake", min_value=10, value=50, step=10)
     st.divider()
-    st.info("Connected to Google Sheets Database 🟢")
+    st.info("Parallel Tracking Enabled 🟢")
 
 # --- MAIN APP FLOW ---
-
-# 1. Load Data
 raw_data, worksheet = get_data_from_sheets()
-
-# 2. Run Calculations
-processed_data, next_stake, total_inv, total_rev, total_bal = calculate_status(raw_data, initial_stake)
+processed_data, next_stakes_map, total_inv, total_rev, total_bal = calculate_parallel_status(raw_data, initial_stake)
 
 # Header
-st.markdown(f"<h1>⚽ {team_name} Tracker</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: grey;'>Live Cloud Database</p>", unsafe_allow_html=True)
+display_name = "Brighton" if selected_comp == "Brighton" else "Africa Cup"
+st.markdown(f"<h1>⚽ {display_name} Tracker</h1>", unsafe_allow_html=True)
 
-# 3. Key Stats
-st.markdown("### 📊 Performance Overview")
+# 1. Key Stats
+st.markdown("### 📊 Overall Performance (All Tracks)")
 col1, col2, col3 = st.columns(3)
 with col1:
     st.container(border=True).metric("Total Invested", f"{total_inv:,.0f}")
@@ -120,16 +120,16 @@ with col3:
     color = "normal" if total_bal >= 0 else "inverse"
     st.container(border=True).metric("Net Profit", f"{total_bal:,.0f}", delta=total_bal, delta_color=color)
 
-# 4. Input Form
-st.write("")
-st.markdown("### 📝 Match Day Input")
-
+# 2. Input Form
+st.markdown(f"### 📝 Match Day Input: {selected_comp}")
 with st.container(border=True):
-    # Recommended Stake
+    # שליפת הסטייק הבא עבור התחרות הספציפית שנבחרה
+    recommended_stake = next_stakes_map.get(selected_comp, initial_stake)
+    
     st.markdown(f"""
         <div style='background-color: #d8f3dc; padding: 15px; border-radius: 10px; border-left: 5px solid #2d6a4f; margin-bottom: 20px;'>
-            <strong style='color: #1b4332;'>💡 Next Match Strategy:</strong> 
-            Place a bet of <span style='font-size: 1.2em; font-weight: bold;'>{next_stake}</span> on X (Draw).
+            <strong style='color: #1b4332;'>💡 Strategy for {selected_comp}:</strong> 
+            Next bet: <span style='font-size: 1.2em; font-weight: bold;'>{recommended_stake}</span> on X.
         </div>
     """, unsafe_allow_html=True)
 
@@ -137,54 +137,38 @@ with st.container(border=True):
         c1, c2 = st.columns(2)
         with c1:
             date_input = st.date_input("Match Date")
+            home_team = st.text_input("Home Team", value="Brighton" if selected_comp == "Brighton" else "")
             odds_input = st.number_input("Odds (X)", min_value=1.0, value=3.0, step=0.1)
         with c2:
-            opponent_input = st.text_input("Opponent Name")
+            away_team = st.text_input("Away Team")
             result_input = st.radio("Result", ["Draw (X)", "Win/Loss"], horizontal=True)
         
-        # FIX: Changed use_container_width=True to width='stretch'
-        submitted = st.form_submit_button("⚽ Add Match to Cloud", width='stretch')
+        submitted = st.form_submit_button("⚽ Save Match to Cloud", use_container_width=True)
         
         if submitted and worksheet:
-            if opponent_input:
-                new_row = [str(date_input), opponent_input, odds_input, result_input]
+            if home_team and away_team:
+                # מבנה השורה החדש: Date, Competition, Home, Away, Odds, Result
+                new_row = [str(date_input), selected_comp, home_team, away_team, odds_input, result_input]
                 worksheet.append_row(new_row)
-                st.success("Saved to Google Sheets!")
+                st.success(f"Saved {selected_comp} match!")
                 st.rerun()
             else:
-                st.error("Please enter opponent name.")
+                st.error("Please enter both team names.")
 
-# 5. Visuals
+# 3. Visuals & History
 if processed_data:
     df = pd.DataFrame(processed_data)
     
-    st.write("")
-    st.markdown("### 📈 Profit Trajectory")
-    
-    fig = px.area(df, x="Date", y="Total Balance", markers=True)
-    fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.2)')
-    fig.update_layout(
-        plot_bgcolor='white', paper_bgcolor='white',
-        font=dict(family="Helvetica", size=12, color="#333"),
-        xaxis_title="", yaxis_title="Balance",
-        margin=dict(l=20, r=20, t=30, b=20), hovermode="x unified"
-    )
-    fig.add_hline(y=0, line_dash="dot", line_color="red", opacity=0.5)
-    
-    # FIX: Changed use_container_width=True to width='stretch'
-    st.plotly_chart(fig, width='stretch')
-
-    st.markdown("### 📜 Match History")
+    st.markdown("### 📜 Match History (Combined)")
     
     def color_status(val):
         color = '#d4edda' if 'Won' in val else '#f8d7da'
         return f'background-color: {color}; color: black; border-radius: 5px;'
 
-    # FIX: Changed applymap() to map() and use_container_width=True to width='stretch'
     st.dataframe(
         df.style.map(color_status, subset=['Status'])
-          .format({"Stake": "{:.0f}", "Game P/L": "{:.0f}", "Total Balance": "{:.0f}", "Odds": "{:.2f}"}),
-        width='stretch', hide_index=True
+          .format({"Stake": "{:.0f}", "P/L": "{:.0f}", "Odds": "{:.2f}"}),
+        use_container_width=True, hide_index=True
     )
     
     with st.expander("⚠️ Danger Zone"):
