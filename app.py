@@ -4,19 +4,20 @@ import plotly.express as px
 import gspread
 import datetime
 
-# --- הגדרות דף ---
+# --- Page Configuration ---
 st.set_page_config(page_title="Pro Football Tracker", layout="centered", page_icon="⚽")
 
-# --- עיצוב CSS ---
+# --- Custom CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #f8f9fa; }
-    h1 { color: #1b4332; text-align: center; }
+    h1 { color: #1b4332; text-align: center; font-family: 'Arial', sans-serif; }
     .stMetric { background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    div[data-testid="stForm"] { background-color: white; border-radius: 10px; padding: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- פונקציית חיבור לגיליון ---
+# --- Google Sheets Connection ---
 def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -25,23 +26,24 @@ def get_data_from_sheets():
         data = worksheet.get_all_records()
         return data, worksheet
     except Exception as e:
-        st.error(f"שגיאת חיבור ל-Google Sheets: {e}")
+        st.error(f"Google Sheets Connection Error: {e}")
         return [], None
 
-# --- לוגיקה: חישוב מקבילי חכם ---
+# --- Logic: Intelligent Parallel Calculation ---
 def calculate_parallel_status(raw_data, initial_stake):
     processed_games = []
+    # comp_states keeps track of the next stake for each track separately
     comp_states = {"Brighton": initial_stake, "Africa Cup of Nations": initial_stake}
-    total_inv, total_rev = 0, 0
 
     if not raw_data:
-        return [], comp_states, 0, 0, 0
+        return [], comp_states
 
-    for i, row in enumerate(raw_data):
+    for row in raw_data:
         try:
-            # חילוץ נתונים עם ערכי ברירת מחדל כדי למנוע קריסה
+            # Data extraction with safety defaults
             comp = str(row.get('Competition', 'Brighton')).strip()
-            # טיפול ב-Odds: אם ריק או לא מספר, נשתמש ב-1.0
+            
+            # Handle Odds: conversion from string/comma to float
             try:
                 odds = float(str(row.get('Odds', 1)).replace(',', '.'))
             except:
@@ -53,24 +55,21 @@ def calculate_parallel_status(raw_data, initial_stake):
                 comp_states[comp] = initial_stake
             
             current_stake = comp_states[comp]
-            total_inv += current_stake
             
-            # בדיקת תוצאה מדויקת למניעת בלבול עם "No Draw"
-            # זה הפתרון לבאג שכל משחק נצבע בירוק
+            # Exact match check to avoid confusion between "Draw (X)" and "No Draw"
             is_win = (res_str == "Draw (X)")
             
             if is_win:
                 revenue = current_stake * odds
                 profit = revenue - current_stake
-                comp_states[comp] = initial_stake
+                comp_states[comp] = initial_stake # Reset Martingale on win
                 status = "✅ Won"
             else:
                 revenue = 0
                 profit = -current_stake
-                comp_states[comp] = current_stake * 2
+                comp_states[comp] = current_stake * 2 # Double stake on loss
                 status = "❌ Lost"
             
-            total_rev += revenue
             processed_games.append({
                 "Date": row.get('Date', ''),
                 "Comp": comp,
@@ -80,76 +79,99 @@ def calculate_parallel_status(raw_data, initial_stake):
                 "Status": status,
                 "Profit": profit
             })
-        except Exception as e:
-            # אם שורה ספציפית בעייתית, נדלג עליה ולא נקריס את כל האפליקציה
+        except Exception:
+            # Skip corrupted rows to keep the app running
             continue
 
-    total_bal = total_rev - total_inv
-    return processed_games, comp_states, total_inv, total_rev, total_bal
+    return processed_games, comp_states
 
 # --- Sidebar ---
 with st.sidebar:
     st.title("⚙️ Tactics Board")
     selected_comp = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
-    initial_stake = st.number_input("Base Stake (₪)", min_value=10, value=50, step=10)
+    base_stake = st.number_input("Base Stake (₪)", min_value=10, value=50, step=10)
     st.divider()
-    if st.button("רענן נתונים"):
+    if st.button("Refresh Data"):
         st.rerun()
 
-# --- טעינה וחישוב ---
+# --- Data Loading & Processing ---
 raw_data, worksheet = get_data_from_sheets()
-processed_data, next_stakes, total_inv, total_rev, total_bal = calculate_parallel_status(raw_data, initial_stake)
+all_processed_data, next_stakes = calculate_parallel_status(raw_data, base_stake)
 
-# --- תצוגה ראשית ---
+# --- FILTERING LOGIC ---
+# We filter the data based on the selection BEFORE displaying metrics or charts
+if all_processed_data:
+    full_df = pd.DataFrame(all_processed_data)
+    # Filter for the selected competition only
+    filtered_df = full_df[full_df['Comp'] == selected_comp].copy()
+else:
+    filtered_df = pd.DataFrame()
+
+# Calculate track-specific metrics
+if not filtered_df.empty:
+    track_inv = filtered_df['Stake'].sum()
+    track_profit = filtered_df['Profit'].sum()
+    track_rev = track_inv + track_profit
+else:
+    track_inv, track_rev, track_profit = 0, 0, 0
+
+# --- Main UI Display ---
 st.markdown(f"<h1>⚽ {selected_comp} Tracker</h1>", unsafe_allow_html=True)
 
-# מדדים כספיים
+# Performance Metrics (Filtered for Selected Track)
 col1, col2, col3 = st.columns(3)
-col1.metric("השקעה כוללת", f"₪{total_inv:,.0f}")
-col2.metric("החזר כולל", f"₪{total_rev:,.0f}")
-col3.metric("רווח/הפסד נקי", f"₪{total_bal:,.0f}", delta=total_bal)
+col1.metric("Total Invested", f"₪{track_inv:,.0f}")
+col2.metric("Total Returned", f"₪{track_rev:,.0f}")
+col3.metric("Net Profit/Loss", f"₪{track_profit:,.0f}", delta=track_profit)
 
-# טופס הזנה
-st.markdown("### 📝 הזנת משחק חדש")
+# Match Input Form
+st.markdown("### 📝 Add New Match")
 with st.container(border=True):
-    rec_stake = next_stakes.get(selected_comp, initial_stake)
-    st.success(f"💡 הימור מומלץ לסיבוב הבא ב-{selected_comp}: **₪{rec_stake}**")
+    # Get the recommended stake for the specific selected track
+    rec_stake = next_stakes.get(selected_comp, base_stake)
+    st.success(f"💡 Recommended Stake for {selected_comp}: **₪{rec_stake}**")
     
     with st.form("input_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1:
-            d_in = st.date_input("תאריך", datetime.date.today())
-            h_t = st.text_input("Home Team", value="Brighton" if selected_comp == "Brighton" else "")
-            o_in = st.number_input("Odds (X)", min_value=1.0, value=3.2, step=0.1)
+            date_in = st.date_input("Match Date", datetime.date.today())
+            home_t = st.text_input("Home Team", value="Brighton" if selected_comp == "Brighton" else "")
+            odds_in = st.number_input("Draw Odds (X)", min_value=1.0, value=3.2, step=0.1)
         with c2:
-            a_t = st.text_input("Away Team")
-            r_in = st.radio("תוצאה", ["Draw (X)", "No Draw"], horizontal=True)
+            away_t = st.text_input("Away Team")
+            res_in = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
         
-        if st.form_submit_button("🚀 שמור לגיליון", use_container_width=True):
-            if h_t and a_t:
-                # חישוב רווח מהיר לשמירה בגיליון
-                p_val = (rec_stake * o_in) - rec_stake if r_in == "Draw (X)" else -rec_stake
-                new_row = [str(d_in), selected_comp, h_t, a_t, o_in, r_in, rec_stake, p_val]
+        if st.form_submit_button("🚀 Sync to Cloud", use_container_width=True):
+            if home_t and away_t:
+                # Calculate quick profit for the sheet record
+                p_val = (rec_stake * odds_in) - rec_stake if res_in == "Draw (X)" else -rec_stake
+                # Column order: Date, Competition, Home Team, Away Team, Odds, Result, Stake, Profit
+                new_row = [str(date_in), selected_comp, home_t, away_t, odds_in, res_in, rec_stake, p_val]
                 worksheet.append_row(new_row)
                 st.balloons()
                 st.rerun()
             else:
-                st.error("נא למלא את שמות שתי הקבוצות")
+                st.error("Please provide both team names.")
 
-# היסטוריה וגרפים
-if processed_data:
-    df = pd.DataFrame(processed_data)
-    
-    st.markdown("### 📜 היסטוריית משחקים")
+# Filtered History & Visuals
+if not filtered_df.empty:
+    st.markdown("### 📜 Match History")
+    # Color coding logic
+    def style_status(val):
+        if 'Won' in str(val): return 'background-color: #d4edda; color: #155724'
+        if 'Lost' in str(val): return 'background-color: #f8d7da; color: #721c24'
+        return ''
+
     st.dataframe(
-        df.style.map(lambda x: 'background-color: #d4edda' if 'Won' in str(x) else ('background-color: #f8d7da' if 'Lost' in str(x) else ''), subset=['Status']),
+        filtered_df.style.applymap(style_status, subset=['Status']),
         use_container_width=True, hide_index=True
     )
     
-    st.markdown("### 📈 גרף רווחיות")
-    df['Cumulative'] = df['Profit'].cumsum()
-    fig = px.area(df, x=df.index, y='Cumulative', title="מאזן מצטבר")
+    st.markdown("### 📈 Profit Trajectory")
+    filtered_df['Cumulative'] = filtered_df['Profit'].cumsum()
+    fig = px.area(filtered_df, x=filtered_df.index, y='Cumulative', title=f"{selected_comp} - Cumulative Balance")
     fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.2)')
+    fig.update_layout(xaxis_title="Match Number", yaxis_title="Balance (₪)")
     st.plotly_chart(fig, use_container_width=True)
 else:
-    st.info("אין עדיין נתונים בגיליון. הכנס את המשחק הראשון למעלה!")
+    st.info(f"No data available for {selected_comp}. Add your first match to start tracking!")
