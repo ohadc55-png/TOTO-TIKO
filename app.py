@@ -5,15 +5,22 @@ import gspread
 import datetime
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Pro Football Tracker", layout="centered", page_icon="⚽")
+st.set_page_config(
+    page_title="Elite Football Tracker",
+    layout="wide",
+    page_icon="🏟️",
+    initial_sidebar_state="expanded"
+)
 
-# --- Custom CSS ---
+# --- Modern Custom CSS ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
-    h1 { color: #1b4332; text-align: center; font-family: 'Arial', sans-serif; }
-    .stMetric { background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    div[data-testid="stForm"] { background-color: white; border-radius: 10px; padding: 20px; }
+    .stApp { background-color: #f0f2f6; }
+    .main-header { color: #1b4332; text-align: center; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+    .metric-card { background-color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #2d6a4f; }
+    .stMetric { background-color: transparent !important; }
+    div[data-testid="stForm"] { background-color: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .strategy-box { background-color: #e8f5e9; padding: 20px; border-radius: 12px; border: 1px solid #c8e6c9; color: #1b5e20; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -29,7 +36,7 @@ def get_data_from_sheets():
         st.error(f"Google Sheets Connection Error: {e}")
         return [], None
 
-# --- Logic: Intelligent Parallel Calculation ---
+# --- Logic: Parallel Calculation & Bankroll Analysis ---
 def calculate_parallel_status(raw_data, br_base, af_base):
     processed_games = []
     comp_states = {"Brighton": br_base, "Africa Cup of Nations": af_base}
@@ -41,7 +48,6 @@ def calculate_parallel_status(raw_data, br_base, af_base):
     for i, row in enumerate(raw_data):
         try:
             comp = str(row.get('Competition', 'Brighton')).strip()
-            
             if comp not in comp_states:
                 comp_states[comp] = br_base if "Brighton" in comp else af_base
                 cycle_investments[comp] = 0
@@ -63,18 +69,13 @@ def calculate_parallel_status(raw_data, br_base, af_base):
             
             if is_win:
                 revenue = recorded_stake * odds
-                # Net profit for this specific winning row
-                net_cycle_profit = revenue - cycle_investments[comp]
                 status = "✅ Won"
-                display_revenue = revenue # Money back from bookie
-                
-                # Reset for next match
+                display_revenue = revenue
                 comp_states[comp] = br_base if "Brighton" in comp else af_base
                 cycle_investments[comp] = 0
             else:
                 status = "❌ Lost"
-                display_revenue = 0 # No money back
-                # Stake for next match
+                display_revenue = 0
                 comp_states[comp] = recorded_stake * 2
             
             processed_games.append({
@@ -92,97 +93,152 @@ def calculate_parallel_status(raw_data, br_base, af_base):
 
     return processed_games, comp_states
 
-# --- Sidebar ---
+# --- Sidebar: Financial Settings ---
 with st.sidebar:
-    st.title("⚙️ Tactics Board")
-    selected_comp = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
+    st.image("https://cdn-icons-png.flaticon.com/512/805/805401.png", width=100)
+    st.title("Financial Center")
     
-    # Set requested defaults
-    default_val = 30 if selected_comp == "Brighton" else 20
-    stake_key = f"base_stake_{selected_comp}"
-    base_stake = st.number_input("Base Stake (₪)", min_value=5, value=default_val, step=5, key=stake_key)
+    # Shared Bankroll Setting
+    total_bankroll = st.number_input("Starting Bankroll (₪)", min_value=100, value=5000, step=100)
     
     st.divider()
-    if st.button("Refresh & Sync"):
+    selected_comp = st.selectbox("Track Selection", ["Brighton", "Africa Cup of Nations"])
+    
+    # Dynamic defaults for current session
+    default_val = 30 if selected_comp == "Brighton" else 20
+    base_stake = st.number_input("Track Base Stake (₪)", min_value=5, value=default_val, step=5)
+    
+    st.divider()
+    if st.button("🔄 Sync & Refresh"):
         st.rerun()
 
-# --- Load and Process ---
+# --- Data processing ---
 raw_data, worksheet = get_data_from_sheets()
-# Pass the requested defaults to the engine
 all_processed_data, next_stakes = calculate_parallel_status(raw_data, 30, 20)
 
-# --- Filter & Metrics ---
+# Global Metrics (All Tracks)
 if all_processed_data:
     full_df = pd.DataFrame(all_processed_data)
+    global_inv = full_df['Stake'].sum()
+    global_rev = full_df['Revenue'].sum()
+    global_net = global_rev - global_inv
+    current_cash = total_bankroll + global_net
+    
+    # Filter for UI view
     filtered_df = full_df[full_df['Comp'] == selected_comp].copy()
 else:
+    global_net = 0
+    current_cash = total_bankroll
     filtered_df = pd.DataFrame()
 
-if not filtered_df.empty:
-    total_invested = filtered_df['Stake'].sum()
-    total_returned = filtered_df['Revenue'].sum()
-    net_profit = total_returned - total_invested
-else:
-    total_invested, total_returned, net_profit = 0, 0, 0
-
 # --- Main UI ---
-st.markdown(f"<h1>⚽ {selected_comp} Tracker</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 class='main-header'>⚽ {selected_comp} Strategy</h1>", unsafe_allow_html=True)
 
+# 1. Global Bankroll Status (Top Bar)
+with st.container():
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        profit_color = "green" if global_net >= 0 else "red"
+        st.markdown(f"<h3 style='text-align: center;'>Bankroll Health: ₪{current_cash:,.0f}</h3>", unsafe_allow_html=True)
+        health_pct = min(max(current_cash / total_bankroll, 0.0), 2.0) / 2.0
+        st.progress(health_pct)
+        st.markdown(f"<p style='text-align: center; color: {profit_color};'>Overall P/L: ₪{global_net:,.0f}</p>", unsafe_allow_html=True)
+
+st.write("")
+
+# 2. Track Specific Metrics
 col1, col2, col3 = st.columns(3)
-col1.metric("Total Invested", f"₪{total_invested:,.0f}")
-col2.metric("Total Returned", f"₪{total_returned:,.0f}")
-col3.metric("Net Profit", f"₪{net_profit:,.0f}", delta=net_profit)
+if not filtered_df.empty:
+    t_inv = filtered_df['Stake'].sum()
+    t_rev = filtered_df['Revenue'].sum()
+    t_net = t_rev - t_inv
+else:
+    t_inv, t_rev, t_net = 0, 0, 0
 
-# Input Form
-st.markdown("### 📝 Add Match Result")
-with st.container(border=True):
-    rec_stake = next_stakes.get(selected_comp, base_stake)
-    st.success(f"💡 Next Required Stake: **₪{rec_stake}**")
-    
-    with st.form("input_form", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1:
-            date_in = st.date_input("Match Date", datetime.date.today())
-            home_t = st.text_input("Home Team", value="Brighton" if selected_comp == "Brighton" else "")
-            odds_in = st.number_input("Draw Odds (X)", min_value=1.0, value=3.2, step=0.1)
-        with c2:
-            away_t = st.text_input("Away Team")
-            res_in = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+with col1:
+    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+    st.metric("Track Investment", f"₪{t_inv:,.0f}")
+    st.markdown("</div>", unsafe_allow_html=True)
+with col2:
+    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+    st.metric("Track Returns", f"₪{t_rev:,.0f}")
+    st.markdown("</div>", unsafe_allow_html=True)
+with col3:
+    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+    st.metric("Track Net P/L", f"₪{t_net:,.0f}", delta=t_net)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.write("")
+
+# 3. Dynamic Form & Strategy
+m_col1, m_col2 = st.columns([1, 1])
+
+with m_col1:
+    st.markdown("### 🏟️ Match Deployment")
+    with st.form("modern_input_form", clear_on_submit=True):
+        d_in = st.date_input("Match Day", datetime.date.today())
+        h_t = st.text_input("Home", value="Brighton" if selected_comp == "Brighton" else "")
+        a_t = st.text_input("Away")
+        o_in = st.number_input("Draw Odds", min_value=1.0, value=3.2, step=0.1)
+        r_in = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
         
-        if st.form_submit_button("🚀 Submit to Cloud", use_container_width=True):
-            if home_t and away_t:
-                new_row = [str(date_in), selected_comp, home_t, away_t, odds_in, res_in, rec_stake, 0]
+        if st.form_submit_button("Submit Match to Cloud", use_container_width=True):
+            if h_t and a_t:
+                # Recommended stake from engine
+                rec_stake = next_stakes.get(selected_comp, base_stake)
+                new_row = [str(d_in), selected_comp, h_t, a_t, o_in, r_in, rec_stake, 0]
                 worksheet.append_row(new_row)
-                st.balloons()
+                st.toast("Match Synced to Cloud!", icon="🚀")
                 st.rerun()
 
-# History Table
+with m_col2:
+    st.markdown("### 🧠 Live Intelligence")
+    rec_stake = next_stakes.get(selected_comp, base_stake)
+    st.markdown(f"""
+        <div class='strategy-box'>
+            <h4>Next Strategic Move</h4>
+            <p>Based on Martingale sequence for <b>{selected_comp}</b>:</p>
+            <h2 style='margin: 0;'>Bet ₪{rec_stake} on Draw</h2>
+            <p style='font-size: 0.8rem; margin-top: 10px;'>Target Odds: 3.00 or higher</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if not filtered_df.empty:
+        filtered_df['Growth'] = filtered_df['Revenue'].cumsum() - filtered_df['Stake'].cumsum()
+        fig = px.line(filtered_df, x=filtered_df.index, y='Growth', title="Track Performance Curve")
+        fig.update_traces(line_color='#2d6a4f', line_width=3)
+        fig.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
+
+# 4. Activity Log
+st.markdown("### 📜 Recent Activity Log")
 if not filtered_df.empty:
-    st.markdown("### 📜 Activity Log")
     def style_status(val):
         if 'Won' in str(val): return 'background-color: #d4edda; color: #155724'
         if 'Lost' in str(val): return 'background-color: #f8d7da; color: #721c24'
         return ''
+    
+    st.dataframe(
+        filtered_df.drop(columns=['SheetRow']).style.applymap(style_status, subset=['Status']),
+        use_container_width=True, hide_index=True
+    )
 
-    st.dataframe(filtered_df.drop(columns=['SheetRow']).style.applymap(style_status, subset=['Status']), use_container_width=True, hide_index=True)
-
-# --- Danger Zone & Record Management ---
+# 5. Management
 st.write("---")
-with st.expander("⚠️ Manage Records & Danger Zone"):
+with st.expander("🛠️ Advanced Record Management"):
     if raw_data:
-        st.subheader("Undo & Specific Deletion")
-        if st.button("Delete Last Entry"):
-            worksheet.delete_rows(len(raw_data) + 1)
-            st.rerun()
-            
-        st.divider()
-        match_options = {f"{g['Date']} - {g['Match']}": g['SheetRow'] for g in all_processed_data}
-        selected_to_delete = st.selectbox("Select specific match to remove:", options=list(match_options.keys()))
-        if st.button("Delete Selected"):
-            worksheet.delete_rows(match_options[selected_to_delete])
-            st.rerun()
-
-    st.divider()
-    if st.button("Nuke Everything (Factory Reset)"):
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("Undo Last Entry"):
+                worksheet.delete_rows(len(raw_data) + 1)
+                st.rerun()
+        with c2:
+            match_map = {f"{g['Date']} - {g['Match']}": g['SheetRow'] for g in all_processed_data}
+            to_del = st.selectbox("Select match to delete", options=list(match_map.keys()))
+            if st.button("Delete Selected"):
+                worksheet.delete_rows(match_map[to_del])
+                st.rerun()
+    
+    if st.button("FACTORY RESET (Delete All)"):
         worksheet.resize(rows=1)
         st.rerun()
