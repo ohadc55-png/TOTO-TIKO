@@ -32,7 +32,6 @@ def get_data_from_sheets():
 # --- Logic: Intelligent Parallel Calculation ---
 def calculate_parallel_status(raw_data, br_base, af_base):
     processed_games = []
-    # Set default bases per track
     comp_states = {"Brighton": br_base, "Africa Cup of Nations": af_base}
     cycle_investments = {"Brighton": 0, "Africa Cup of Nations": 0}
 
@@ -43,7 +42,6 @@ def calculate_parallel_status(raw_data, br_base, af_base):
         try:
             comp = str(row.get('Competition', 'Brighton')).strip()
             
-            # Use current track base if not already in state
             if comp not in comp_states:
                 comp_states[comp] = br_base if "Brighton" in comp else af_base
                 cycle_investments[comp] = 0
@@ -55,7 +53,6 @@ def calculate_parallel_status(raw_data, br_base, af_base):
             
             res_str = str(row.get('Result', '')).strip()
             
-            # Use the stake recorded in the sheet for accurate history
             try:
                 recorded_stake = float(row.get('Stake', comp_states[comp]))
             except:
@@ -66,25 +63,29 @@ def calculate_parallel_status(raw_data, br_base, af_base):
             
             if is_win:
                 revenue = recorded_stake * odds
+                # Net profit for this specific winning row
                 net_cycle_profit = revenue - cycle_investments[comp]
+                status = "✅ Won"
+                display_revenue = revenue # Money back from bookie
+                
+                # Reset for next match
                 comp_states[comp] = br_base if "Brighton" in comp else af_base
                 cycle_investments[comp] = 0
-                status = "✅ Won"
-                display_profit = net_cycle_profit
             else:
                 status = "❌ Lost"
-                display_profit = 0
+                display_revenue = 0 # No money back
+                # Stake for next match
                 comp_states[comp] = recorded_stake * 2
             
             processed_games.append({
-                "SheetRow": i + 2, # Helpers to track row in GSheets
+                "SheetRow": i + 2,
                 "Date": row.get('Date', ''),
                 "Comp": comp,
                 "Match": f"{row.get('Home Team', '')} vs {row.get('Away Team', '')}",
                 "Odds": odds,
                 "Stake": recorded_stake,
                 "Status": status,
-                "Cycle Net Profit": display_profit
+                "Revenue": display_revenue
             })
         except Exception:
             continue
@@ -96,10 +97,8 @@ with st.sidebar:
     st.title("⚙️ Tactics Board")
     selected_comp = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
     
-    # Dynamic defaults based on selection
+    # Set requested defaults
     default_val = 30 if selected_comp == "Brighton" else 20
-    
-    # We use a unique key for each track to maintain their separate base stakes if changed manually
     stake_key = f"base_stake_{selected_comp}"
     base_stake = st.number_input("Base Stake (₪)", min_value=5, value=default_val, step=5, key=stake_key)
     
@@ -109,42 +108,36 @@ with st.sidebar:
 
 # --- Load and Process ---
 raw_data, worksheet = get_data_from_sheets()
-# Pass both defaults to the engine
+# Pass the requested defaults to the engine
 all_processed_data, next_stakes = calculate_parallel_status(raw_data, 30, 20)
 
-# Update next_stakes logic to use the sidebar's current value for the selected track
-next_stakes[selected_comp] = next_stakes.get(selected_comp, base_stake)
-
-# --- Filter View ---
+# --- Filter & Metrics ---
 if all_processed_data:
     full_df = pd.DataFrame(all_processed_data)
     filtered_df = full_df[full_df['Comp'] == selected_comp].copy()
 else:
     filtered_df = pd.DataFrame()
 
-# Stats calculation
 if not filtered_df.empty:
-    track_inv = filtered_df['Stake'].sum()
-    track_net = filtered_df['Cycle Net Profit'].sum()
-    track_rev = track_inv + track_net
+    total_invested = filtered_df['Stake'].sum()
+    total_returned = filtered_df['Revenue'].sum()
+    net_profit = total_returned - total_invested
 else:
-    track_inv, track_rev, track_net = 0, 0, 0
+    total_invested, total_returned, net_profit = 0, 0, 0
 
 # --- Main UI ---
 st.markdown(f"<h1>⚽ {selected_comp} Tracker</h1>", unsafe_allow_html=True)
 
-# Metrics
 col1, col2, col3 = st.columns(3)
-col1.metric("Total Invested", f"₪{track_inv:,.0f}")
-col2.metric("Total Returned", f"₪{track_rev:,.0f}")
-col3.metric("Net Cycle Profit", f"₪{track_net:,.0f}", delta=track_net)
+col1.metric("Total Invested", f"₪{total_invested:,.0f}")
+col2.metric("Total Returned", f"₪{total_returned:,.0f}")
+col3.metric("Net Profit", f"₪{net_profit:,.0f}", delta=net_profit)
 
-# Match Input Form
+# Input Form
 st.markdown("### 📝 Add Match Result")
 with st.container(border=True):
-    # Determine next stake. If no history, use the current sidebar base_stake
     rec_stake = next_stakes.get(selected_comp, base_stake)
-    st.success(f"💡 Next Required Stake for {selected_comp}: **₪{rec_stake}**")
+    st.success(f"💡 Next Required Stake: **₪{rec_stake}**")
     
     with st.form("input_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
@@ -162,10 +155,8 @@ with st.container(border=True):
                 worksheet.append_row(new_row)
                 st.balloons()
                 st.rerun()
-            else:
-                st.error("Please fill in both team names.")
 
-# History Display
+# History Table
 if not filtered_df.empty:
     st.markdown("### 📜 Activity Log")
     def style_status(val):
@@ -174,49 +165,24 @@ if not filtered_df.empty:
         return ''
 
     st.dataframe(filtered_df.drop(columns=['SheetRow']).style.applymap(style_status, subset=['Status']), use_container_width=True, hide_index=True)
-    
-    # Growth Chart
-    st.markdown("### 📈 Profit Growth")
-    filtered_df['Cumulative'] = filtered_df['Cycle Net Profit'].cumsum()
-    fig = px.area(filtered_df, x=filtered_df.index, y='Cumulative', title=f"{selected_comp} Growth")
-    fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.2)')
-    st.plotly_chart(fig, use_container_width=True)
 
-# --- DANGER ZONE & EDITING ---
+# --- Danger Zone & Record Management ---
 st.write("---")
 with st.expander("⚠️ Manage Records & Danger Zone"):
-    st.subheader("Edit History")
-    
-    # 1. Delete Last Match
-    if st.button("Undo Last Match (Delete Last Entry)"):
-        if raw_data:
-            last_row_index = len(raw_data) + 1 # +1 because of header row 1
-            worksheet.delete_rows(last_row_index)
-            st.success("Last entry removed.")
+    if raw_data:
+        st.subheader("Undo & Specific Deletion")
+        if st.button("Delete Last Entry"):
+            worksheet.delete_rows(len(raw_data) + 1)
             st.rerun()
-        else:
-            st.info("No data to delete.")
-
-    st.divider()
-    
-    # 2. Delete Specific Match
-    if all_processed_data:
-        st.write("Delete a specific match:")
-        match_options = {f"{g['Date']} - {g['Match']} ({g['Comp']})": g['SheetRow'] for g in all_processed_data}
-        selected_match_label = st.selectbox("Select match to remove:", options=list(match_options.keys()))
-        
-        if st.button("Delete Selected Match"):
-            row_to_delete = match_options[selected_match_label]
-            worksheet.delete_rows(row_to_delete)
-            st.success(f"Removed: {selected_match_label}")
+            
+        st.divider()
+        match_options = {f"{g['Date']} - {g['Match']}": g['SheetRow'] for g in all_processed_data}
+        selected_to_delete = st.selectbox("Select specific match to remove:", options=list(match_options.keys()))
+        if st.button("Delete Selected"):
+            worksheet.delete_rows(match_options[selected_to_delete])
             st.rerun()
 
     st.divider()
-    
-    # 3. Full Reset
-    st.warning("Clear All Data (Factory Reset)")
-    if st.button("Nuke Everything"):
-        if worksheet:
-            worksheet.resize(rows=1)
-            st.success("Database Reset!")
-            st.rerun()
+    if st.button("Nuke Everything (Factory Reset)"):
+        worksheet.resize(rows=1)
+        st.rerun()
