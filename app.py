@@ -12,42 +12,62 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN PROFESSIONAL CSS ---
+# --- MODERN PROFESSIONAL CSS WITH BRANDED HEADERS ---
 st.markdown("""
     <style>
-    /* Import Professional Font from Google */
+    /* Import Professional Font */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
 
     .stApp { background-color: #f0f2f6; }
     
-    /* --- Professional Header Banner --- */
+    /* --- Base Header Container Style --- */
     .pro-header-container {
-        background-color: #ffffff;
-        padding: 25px 20px;
+        padding: 30px 20px;
         border-radius: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         text-align: center;
         margin-bottom: 35px;
-        border-left: 8px solid #2d6a4f;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        position: relative;
     }
 
+    /* --- Base Header Text Style --- */
     .pro-header-text {
         margin: 0;
-        color: #1a1a1a;
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
-        font-size: 2.8rem;
+        font-size: 3rem;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        background: linear-gradient(45deg, #1b4332, #2d6a4f);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        letter-spacing: 2px;
+        z-index: 1;
     }
 
-    /* Metric Cards Styling */
+    /* === BRIGHTON BRANDING === */
+    /* Blue, White, Light Blue Theme */
+    .brighton-header {
+        background: linear-gradient(135deg, #0057B8 0%, #0077C8 50%, #4CABFF 100%);
+        border-left: 10px solid #FFFFFF;
+    }
+    .brighton-text {
+        color: #FFFFFF;
+        text-shadow: 0px 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* === AFCON BRANDING (Based on Logo) === */
+    /* Red, Gold/Yellow, Green Theme */
+    .afcon-header {
+        background: linear-gradient(120deg, #CE1126 25%, #FCD116 50%, #007A33 85%);
+        border-left: 10px solid #CE1126;
+    }
+    .afcon-text {
+        color: #FFFFFF;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.6); /* Strong shadow for contrast */
+    }
+
+    /* --- Rest of the UI Styling --- */
     .metric-card { 
         background-color: white; 
         padding: 20px; 
@@ -57,7 +77,6 @@ st.markdown("""
         text-align: center;
     }
     
-    /* Modern Button Styling */
     div.stButton > button {
         width: 100%;
         border-radius: 12px;
@@ -77,7 +96,6 @@ st.markdown("""
         box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
 
-    /* Strategy Intelligence Box */
     .strategy-box { 
         background-color: #e8f5e9; 
         padding: 20px; 
@@ -138,9 +156,7 @@ def calculate_parallel_status(raw_data, br_base, af_base):
                 revenue = recorded_stake * odds
                 status = "✅ Won"
                 display_rev = revenue
-                # Correct cycle profit calculation
                 cycle_net = revenue - cycle_investments[comp]
-                # Reset for next match
                 comp_states[comp] = br_base if "Brighton" in comp else af_base
                 cycle_investments[comp] = 0
             else:
@@ -171,7 +187,6 @@ with st.sidebar:
     st.divider()
     selected_comp = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
     
-    # Defaults as requested: Brighton (30), Africa (20)
     default_val = 30 if selected_comp == "Brighton" else 20
     stake_key = f"base_stake_{selected_comp}"
     base_stake = st.number_input("Track Base Stake (₪)", min_value=5, value=default_val, step=5, key=stake_key)
@@ -182,29 +197,36 @@ with st.sidebar:
 
 # --- Load and Process Data ---
 raw_data, worksheet = get_data_from_sheets()
-# Maintain track defaults for recalculation
 all_processed_data, next_stakes = calculate_parallel_status(raw_data, 30, 20)
 
 if all_processed_data:
     full_df = pd.DataFrame(all_processed_data)
-    # Global metrics for shared bankroll
     global_inv = full_df['Stake'].sum()
     global_rev = full_df['Revenue'].sum()
     global_net = global_rev - global_inv
     current_cash = total_bankroll + global_net
-    # Track-specific filter
     filtered_df = full_df[full_df['Comp'] == selected_comp].copy()
 else:
     global_net, current_cash = 0, total_bankroll
     filtered_df = pd.DataFrame()
 
 # --- MAIN UI ---
-# Updated Professional Header Banner
+
+# === לוגיקה לבחירת העיצוב הממותג ===
+if selected_comp == "Brighton":
+    header_class = "brighton-header"
+    text_class = "brighton-text"
+else:
+    header_class = "afcon-header"
+    text_class = "afcon-text"
+
+# === הצגת הבאנר המעוצב ===
 st.markdown(f"""
-    <div class='pro-header-container'>
-        <h1 class='pro-header-text'>{selected_comp.upper()} HUB</h1>
+    <div class='pro-header-container {header_class}'>
+        <h1 class='pro-header-text {text_class}'>{selected_comp.upper()} HUB</h1>
     </div>
 """, unsafe_allow_html=True)
+
 
 # 1. Global Bankroll Indicator
 c1, c2, c3 = st.columns([1, 2, 1])
@@ -241,7 +263,6 @@ with m_col1:
         
         if st.form_submit_button("🚀 SYNC MATCH TO CLOUD"):
             if h_t and a_t:
-                # Recalculate rec_stake to ensure sync
                 rec_stake = next_stakes.get(selected_comp, base_stake)
                 worksheet.append_row([str(d_in), selected_comp, h_t, a_t, o_in, r_in, rec_stake, 0])
                 st.toast("Synchronized Successfully!", icon="✅")
@@ -260,7 +281,6 @@ with m_col2:
     """, unsafe_allow_html=True)
     
     if not filtered_df.empty:
-        # Mini performance curve
         filtered_df['Cumulative'] = filtered_df['Revenue'].cumsum() - filtered_df['Stake'].cumsum()
         fig = px.line(filtered_df, y='Cumulative', title="Equity Curve")
         fig.update_traces(line_color='#2d6a4f', line_width=3)
