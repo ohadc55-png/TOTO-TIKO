@@ -17,7 +17,7 @@ bg_img_url = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk
 
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&family=Inter:wght@400;700&display=swap');
     
     /* 1. Main Background with Dark Overlay */
     [data-testid="stAppViewContainer"] {{
@@ -324,13 +324,27 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- LIVE BALANCE HERO ---
+# --- LIVE BALANCE HERO (FIXED & REFINED) ---
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 40px;">
-        <div style="font-size: 3rem; font-weight: 500; color: white; text-shadow: 2px 2px 6px rgba(0,0,0,0.4), 1px 1px 3px rgba(0,0,0,0.3); line-height: 1.2; margin-bottom: 12px; letter-spacing: 1px;">
+        <div style="
+            font-size: 2.5rem !important; 
+            font-weight: 300 !important; 
+            color: #ffffff !important; 
+            text-shadow: 0px 0px 15px rgba(255,255,255,0.2) !important; 
+            line-height: 1.2; 
+            margin-bottom: 5px; 
+            letter-spacing: 2px;
+            font-family: 'Montserrat', sans-serif;">
             ₪{current_bal:,.2f}
         </div>
-        <div style="font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.9); letter-spacing: 4px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);">
+        <div style="
+            font-size: 0.8rem !important; 
+            font-weight: 400 !important; 
+            color: rgba(255,255,255,0.7) !important; 
+            letter-spacing: 3px; 
+            text-shadow: none !important;
+            text-transform: uppercase;">
             LIVE BANKROLL
         </div>
     </div>
