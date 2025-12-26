@@ -12,75 +12,90 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- THE CORRECTED CSS SELECTOR FOR BACKGROUND ---
-bg_img_url = "https://i.postimg.cc/Xr0jkv6G/Gemini-Generated-Image-lscdsmlscdsmlscd.png"
+# --- NEW BACKGROUND & HIGH CONTRAST CSS ---
+bg_img_url = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
     
-    /* Targeting the specific Streamlit container for the background */
+    /* Background Image - Fixed position */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url("{bg_img_url}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{bg_img_url}");
         background-attachment: fixed;
         background-size: cover;
-        background-position: center;
+        background-position: center center;
     }}
 
-    /* Ensuring the header is transparent to show the background */
-    [data-testid="stHeader"] {{
-        background: rgba(0,0,0,0);
-    }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
 
-    /* Main container styling - Glassmorphism */
+    /* Main glass containers - Darker for contrast against new image */
     .main .block-container {{
-        background-color: rgba(0, 0, 0, 0.2); 
-        backdrop-filter: blur(10px);
+        background-color: rgba(0, 0, 0, 0.5); /* Darker tint */
+        backdrop-filter: blur(20px); /* Stronger blur */
         border-radius: 25px;
         padding: 40px;
         color: white;
         margin-top: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }}
 
-    /* Dashboard Header */
+    /* Header Styling - Strong Shadows for Readability */
     .pro-header-container {{
         padding: 20px;
         border-radius: 20px;
         text-align: center;
         margin-bottom: 30px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }}
     .pro-header-text {{
         font-family: 'Montserrat', sans-serif;
         font-weight: 900;
-        font-size: 3.5rem;
-        color: white;
+        font-size: 3.8rem;
+        color: #ffffff;
         text-transform: uppercase;
-        text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        /* Strong shadow to make text pop out */
+        text-shadow: 4px 4px 15px rgba(0,0,0,1); 
     }}
 
-    /* Metric Cards - High Contrast for Readability */
+    /* Metric Cards */
     .metric-card {{ 
         background-color: rgba(255, 255, 255, 0.95); 
         padding: 25px; 
         border-radius: 18px; 
         text-align: center;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }}
-    .metric-label {{ font-size: 1rem; color: #444; font-weight: bold; text-transform: uppercase; }}
+    .metric-label {{ 
+        font-size: 1.1rem; 
+        color: #000000; /* Pure black for contrast on white card */
+        font-weight: 900; 
+        text-transform: uppercase; 
+    }}
     .metric-value {{ font-size: 2.2rem; font-weight: 900; color: #1b4332; }}
 
-    /* Sidebar Transparency */
+    /* Sidebar */
     [data-testid="stSidebar"] {{
-        background-color: rgba(0, 0, 0, 0.5) !important;
+        background-color: rgba(0, 0, 0, 0.6) !important;
         backdrop-filter: blur(15px);
+        border-right: 1px solid rgba(255,255,255,0.1);
     }}
     
-    /* Forms and Tables */
-    div[data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; color: black; }}
-    .stDataFrame {{ background-color: rgba(255, 255, 255, 0.9) !important; border-radius: 15px; }}
+    /* Forms & Tables */
+    div[data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; color: black; }}
+    .stDataFrame {{ background-color: rgba(255, 255, 255, 0.95) !important; border-radius: 15px; }}
+    
+    /* General Text Contrast ensure white text has shadow */
+    h1, h2, h3, .stMarkdown p {{
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+    }}
+    /* Reset shadow for text inside white cards/forms */
+    .metric-card p, div[data-testid="stForm"] p, div[data-testid="stForm"] h1, div[data-testid="stForm"] h2, div[data-testid="stForm"] h3 {{
+        text-shadow: none;
+        color: black !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -167,8 +182,10 @@ with st.sidebar:
 
 # --- Dashboard UI ---
 st.markdown(f"<div class='pro-header-container'><h1 class='pro-header-text'>{track}</h1></div>", unsafe_allow_html=True)
-st.markdown(f"<h1 style='text-align: center; font-size: 4rem; text-shadow: 2px 2px 15px #000;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; letter-spacing: 3px;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
+
+# High contrast live balance style
+st.markdown(f"<h1 style='text-align: center; font-size: 4.5rem; font-weight: 900; color: white; text-shadow: 4px 4px 20px #000000;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; letter-spacing: 3px; font-weight: bold; color: white; text-shadow: 2px 2px 10px #000;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
 
 # Metrics Cards
 f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
@@ -200,12 +217,14 @@ with col_viz:
     if not f_df.empty:
         f_df['Growth'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
         fig = px.area(f_df, y='Growth', title="Bankroll Curve")
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", margin=dict(l=0,r=0,t=30,b=0))
-        fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.3)')
+        # Ensure chart text is readable
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", title_font_size=20, margin=dict(l=0,r=0,t=40,b=0))
+        fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.4)')
         st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("📜 Activity Log")
 if not f_df.empty:
+    # Table needs to be opaque to be readable
     st.dataframe(f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Status', 'ROI']].sort_index(ascending=False), use_container_width=True, hide_index=True)
 
 with st.expander("Admin"):
