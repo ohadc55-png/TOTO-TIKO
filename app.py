@@ -79,7 +79,7 @@ def update_bankroll_value(worksheet, new_val):
     except:
         return False
 
-# --- Logic: Martingale Calculation ---
+# --- Logic: Martingale Calculation with ROI Tracking ---
 def calculate_parallel_status(raw_data, br_base, af_base):
     processed_games = []
     comp_states = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
@@ -101,12 +101,21 @@ def calculate_parallel_status(raw_data, br_base, af_base):
             
             if is_win:
                 revenue = recorded_stake * odds
-                profit = revenue - cycle_investments[comp]
+                chain_profit = revenue - cycle_investments[comp]
+                chain_roi = (chain_profit / cycle_investments[comp]) * 100
                 status = "✅ Won"
+                
+                # Report this info
+                p_profit = chain_profit
+                p_roi = f"{chain_roi:.1f}%"
+                
+                # Reset for next match
                 comp_states[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_investments[comp] = 0.0
             else:
-                revenue, profit = 0.0, -recorded_stake
+                revenue = 0.0
+                p_profit = -recorded_stake
+                p_roi = "Pending"
                 status = "❌ Lost"
                 comp_states[comp] = recorded_stake * 2.0
             
@@ -114,7 +123,7 @@ def calculate_parallel_status(raw_data, br_base, af_base):
                 "SheetRow": i + 2, "Date": row.get('Date', ''), "Comp": comp,
                 "Match": f"{row.get('Home Team', '')} vs {row.get('Away Team', '')}",
                 "Odds": odds, "Stake": recorded_stake, "Status": status, 
-                "Revenue": revenue, "Net": profit
+                "Cycle Net": p_profit, "Chain ROI": p_roi
             })
         except: continue
     return processed_games, comp_states
@@ -122,7 +131,7 @@ def calculate_parallel_status(raw_data, br_base, af_base):
 # --- Load Data ---
 raw_data, worksheet, saved_bankroll = get_data_from_sheets()
 
-# --- Sidebar: Financial Management ---
+# --- Sidebar ---
 with st.sidebar:
     st.title("💰 Financial Center")
     st.subheader("Current Base Bankroll")
@@ -153,19 +162,21 @@ with st.sidebar:
     
     if st.button("🔄 Sync & Refresh"): st.rerun()
 
-# --- Process ---
+# --- Process Data ---
 all_processed_data, next_stakes = calculate_parallel_status(raw_data, 30.0, 20.0)
 
 if all_processed_data:
     df = pd.DataFrame(all_processed_data)
-    global_p_l = df['Revenue'].sum() - df['Stake'].sum()
+    # Calculate global P/L based on single row net (Revenue - Stake)
+    # Note: Global balance uses simple summation
+    global_p_l = sum([row['Cycle Net'] if row['Status'] == "✅ Won" else -row['Stake'] for row in all_processed_data])
     current_balance = saved_bankroll + global_p_l
     filtered_df = df[df['Comp'] == selected_comp].copy()
 else:
     current_balance, global_p_l = saved_bankroll, 0.0
     filtered_df = pd.DataFrame()
 
-# --- Branded Header ---
+# --- UI Branding ---
 h_class = "brighton-header" if selected_comp == "Brighton" else "afcon-header"
 t_class = "brighton-text" if selected_comp == "Brighton" else "afcon-text"
 st.markdown(f"<div class='pro-header-container {h_class}'><h1 class='pro-header-text {t_class}'>{selected_comp.upper()} HUB</h1></div>", unsafe_allow_html=True)
@@ -182,13 +193,14 @@ with c2:
 # --- Track Metrics ---
 col1, col2, col3 = st.columns(3)
 t_inv = filtered_df['Stake'].sum() if not filtered_df.empty else 0.0
-t_rev = filtered_df['Revenue'].sum() if not filtered_df.empty else 0.0
-t_net = t_rev - t_inv
+t_net = filtered_df[filtered_df['Status'] == "✅ Won"]['Cycle Net'].sum() + filtered_df[filtered_df['Status'] == "❌ Lost"]['Cycle Net'].sum()
 col1.markdown(f"<div class='metric-card'><b>Investment</b><br>₪{t_inv:,.0f}</div>", unsafe_allow_html=True)
-col2.markdown(f"<div class='metric-card'><b>Returned</b><br>₪{t_rev:,.0f}</div>", unsafe_allow_html=True)
-col3.markdown(f"<div class='metric-card'><b>Track Net</b><br>₪{t_net:,.0f}</div>", unsafe_allow_html=True)
+col2.markdown(f"<div class='metric-card'><b>Track Net Profit</b><br>₪{t_net:,.0f}</div>", unsafe_allow_html=True)
+col3.markdown(f"<div class='metric-card'><b>Total Entries</b><br>{len(filtered_df)}</div>", unsafe_allow_html=True)
 
-# --- Input & Strategy ---
+st.write("")
+
+# --- Input Section ---
 m1, m2 = st.columns(2)
 with m1:
     st.markdown("### 🏟️ Match Entry")
@@ -210,16 +222,28 @@ with m2:
     st.markdown("### 🧠 Live Intelligence")
     st.markdown(f"<div class='strategy-box'><h4>Suggested Stake: ₪{rec_stake_auto}</h4><p>Sequence for {selected_comp}</p></div>", unsafe_allow_html=True)
     if not filtered_df.empty:
-        filtered_df['Curve'] = saved_bankroll + (filtered_df['Revenue'].cumsum() - filtered_df['Stake'].cumsum())
-        fig = px.area(filtered_df, y='Curve', title="Bankroll Evolution (₪)")
+        # Simple cumulative growth for the chart
+        filtered_df['Cumulative'] = saved_bankroll + (filtered_df['Cycle Net'].cumsum())
+        fig = px.area(filtered_df, y='Cumulative', title="Bankroll Growth (₪)")
         fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.2)')
         fig.update_layout(height=250, margin=dict(l=0,r=0,t=30,b=0), paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
 
-# --- History ---
+# --- Activity Log עם העמודות החדשות ---
 if not filtered_df.empty:
     st.markdown("### 📜 Activity Log")
-    st.dataframe(filtered_df[['Date', 'Match', 'Odds', 'Stake', 'Status']].style.applymap(lambda v: 'background-color: #d4edda' if 'Won' in str(v) else 'background-color: #f8d7da', subset=['Status']), use_container_width=True, hide_index=True)
+    
+    # עיצוב טבלה - צבעים לפי סטטוס
+    def highlight_results(row):
+        color = '#d4edda' if 'Won' in row['Status'] else '#f8d7da'
+        return [f'background-color: {color}'] * len(row)
+
+    # הצגת הטבלה עם העמודות החדשות
+    st.dataframe(
+        filtered_df[['Date', 'Match', 'Odds', 'Stake', 'Status', 'Cycle Net', 'Chain ROI']].style.apply(highlight_results, axis=1),
+        use_container_width=True, 
+        hide_index=True
+    )
 
 with st.expander("🛠️ Admin Tools"):
     if st.button("Undo Last Entry"):
