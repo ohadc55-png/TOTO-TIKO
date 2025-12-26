@@ -6,121 +6,83 @@ import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Elite Football Tracker | Pro Branding",
+    page_title="Elite Football Tracker",
     layout="wide",
     page_icon="🏟️",
     initial_sidebar_state="expanded"
 )
 
-# --- ADVANCED UX/UI CSS ---
+# --- GLOBAL STYLES & BACKGROUND ---
 bg_img_url = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;700&display=swap');
     
-    /* Background Setup */
+    /* 1. Main Background Fix */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url("{bg_img_url}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url("{bg_img_url}");
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
-        font-family: 'Inter', sans-serif;
     }}
-
+    
+    /* 2. Header Transparency */
     [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
 
-    /* Main Content Area */
-    .main .block-container {{
-        background-color: rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(25px);
-        border-radius: 30px;
-        padding: 50px;
-        margin-top: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+    /* 3. Text Visibility Optimization (Pop Effect) */
+    h1, h2, h3, p, label, .stMarkdown, div[data-testid="stMetricLabel"] {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px #000000;
+        font-family: 'Montserrat', sans-serif;
+    }}
+    
+    /* Exception: Text inside white cards needs to be dark */
+    div[data-testid="stForm"] label, div[data-testid="stForm"] p, 
+    .metric-card-text, .metric-card-value, .metric-card-label {{
+        color: #000000 !important;
+        text-shadow: none !important;
     }}
 
-    /* Branded Banner Styling with Logo Support */
-    .pro-header-container {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 30px;
+    /* 4. Sidebar Styling */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }}
+
+    /* 5. Custom Metric Cards (White Box) */
+    .custom-metric-box {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
         padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    }}
+    .metric-card-label {{
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #555 !important;
+    }}
+    .metric-card-value {{
+        font-size: 32px;
+        font-weight: 900;
+        color: #1b4332 !important;
+    }}
+
+    /* 6. Form Styling */
+    div[data-testid="stForm"] {{
+        background-color: rgba(255, 255, 255, 0.95);
         border-radius: 20px;
-        margin-bottom: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        border: 1px solid rgba(255,255,255,0.2);
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }}
-    
-    .banner-logo {{
-        height: 100px;
-        filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.5));
-    }}
-
-    .brighton-banner {{
-        background: linear-gradient(90deg, #0057B8, #FFFFFF, #4CABFF);
-        background-size: 200% auto;
-    }}
-    .afcon-banner {{
-        background: linear-gradient(90deg, #CE1126, #FCD116, #007A33);
-        background-size: 200% auto;
-    }}
-
-    .pro-header-text {{
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 900;
-        font-size: 3.2rem;
-        text-transform: uppercase;
-        letter-spacing: 5px;
-        margin: 0;
-        color: white;
-        text-shadow: 3px 3px 15px rgba(0,0,0,0.6);
-    }}
-    
-    .brighton-text-fix {{
-        color: #0057B8 !important;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.5) !important;
-    }}
-
-    /* Dashboard Metrics */
-    .live-balance-value {{
-        font-family: 'Montserrat', sans-serif;
-        font-size: 6rem;
-        font-weight: 900;
-        color: #ffffff;
-        text-align: center;
-        text-shadow: 0 0 30px rgba(0,0,0,1);
-    }}
-    .live-balance-label {{
-        text-align: center;
-        font-size: 1.2rem;
-        letter-spacing: 10px;
-        color: rgba(255,255,255,0.7);
-        text-transform: uppercase;
-        margin-bottom: 40px;
-    }}
-
-    .pro-metric-card {{ 
-        background: rgba(255, 255, 255, 0.98); 
-        padding: 30px; 
-        border-radius: 22px; 
-        flex: 1; 
-        text-align: center;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    }}
-    .pro-metric-label {{ font-size: 0.9rem; color: #555; font-weight: 800; text-transform: uppercase; }}
-    .pro-metric-value {{ font-size: 2.5rem; font-weight: 900; color: #111; font-family: 'Montserrat', sans-serif; }}
-
-    /* Sidebar & Components */
-    [data-testid="stSidebar"] {{ background-color: rgba(0, 0, 0, 0.7) !important; backdrop-filter: blur(20px); }}
-    div[data-testid="stForm"] {{ background: rgba(255, 255, 255, 0.95); border-radius: 25px; padding: 35px; color: #111; }}
-    .stDataFrame {{ background: rgba(255, 255, 255, 0.95) !important; border-radius: 20px; }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- Data & Logic (Functions) ---
+# --- LOGIC (UNCHANGED) ---
 def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -175,7 +137,7 @@ def calculate_logic(raw_data, br_base, af_base):
         except: continue
     return processed, next_bets
 
-# --- Main App Execution ---
+# --- DATA LOADING ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
@@ -185,9 +147,9 @@ if processed:
 else:
     current_bal, df = saved_br, pd.DataFrame()
 
-# --- Sidebar ---
+# --- SIDEBAR ---
 with st.sidebar:
-    st.markdown("<h2 style='color:white; letter-spacing:2px;'>WALLET CONTROL</h2>", unsafe_allow_html=True)
+    st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
     amt = st.number_input("Transaction Amount", min_value=0.0, value=100.0)
     c1, c2 = st.columns(2)
@@ -199,66 +161,73 @@ with st.sidebar:
     track = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
     if st.button("🔄 Sync Cloud"): st.rerun()
 
-# --- Banner Logic with Logos ---
-if track == "Brighton":
-    banner_class = "brighton-banner"
-    text_class = "brighton-text-fix"
-    logo_url = "https://i.postimg.cc/tnjbtrLC/Brighton-Hove-Albion-logo.png"
-else:
-    banner_class = "afcon-banner"
-    text_class = ""
-    logo_url = "https://i.postimg.cc/8fSGByqk/2025-Africa-Cup-of-Nations-logo.png"
+# --- THE CUSTOM HEADER COMPONENT (HTML/CSS INJECTION) ---
+# This ensures the banner is exactly as requested, regardless of Streamlit themes
+brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
+afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
+if track == "Brighton":
+    banner_bg = "linear-gradient(90deg, #0057B8 0%, #FFFFFF 50%, #4CABFF 100%)"
+    text_color = "#0057B8" # Blue text for contrast against white center
+    logo_src = brighton_logo
+    shadow_style = "none" # Clean look for blue text
+else:
+    banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
+    text_color = "#FFFFFF" # White text
+    logo_src = afcon_logo
+    shadow_style = "2px 2px 4px #000000" # Shadow for white text
+
+# Injecting the Banner HTML
 st.markdown(f"""
-    <div class='pro-header-container {banner_class}'>
-        <img src='{logo_url}' class='banner-logo'>
-        <h1 class='pro-header-text {text_class}'>{track}</h1>
+    <div style="
+        background: {banner_bg};
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 2px solid rgba(255,255,255,0.3);
+    ">
+        <img src="{logo_src}" style="height: 100px; margin-right: 25px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));">
+        <h1 style="
+            margin: 0;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: {text_color} !important;
+            text-shadow: {shadow_style};
+            font-family: 'Montserrat', sans-serif;
+        ">{track.upper()}</h1>
     </div>
 """, unsafe_allow_html=True)
 
-# --- Hero Stats ---
-st.markdown(f"<div class='live-balance-value'>₪{current_bal:,.2f}</div>", unsafe_allow_html=True)
-st.markdown("<div class='live-balance-label'>LIVE TOTAL BANKROLL</div>", unsafe_allow_html=True)
+# --- LIVE BALANCE HERO ---
+st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 6rem; font-weight: 900; color: white; text-shadow: 4px 4px 10px #000; line-height: 1;">
+            ₪{current_bal:,.2f}
+        </div>
+        <div style="font-size: 1.2rem; font-weight: bold; color: #ddd; letter-spacing: 5px; text-shadow: 2px 2px 5px #000;">
+            LIVE BANKROLL
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
+# --- METRIC CARDS ---
 f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
-t_exp, t_inc = f_df['Expense'].sum() if not f_df.empty else 0.0, f_df['Income'].sum() if not f_df.empty else 0.0
+t_exp = f_df['Expense'].sum() if not f_df.empty else 0.0
+t_inc = f_df['Income'].sum() if not f_df.empty else 0.0
 t_net = t_inc - t_exp
 
-col1, col2, col3 = st.columns(3)
-with col1: st.markdown(f"<div class='pro-metric-card'><div class='pro-metric-label'>Total Outbound</div><div class='pro-metric-value'>₪{t_exp:,.0f}</div></div>", unsafe_allow_html=True)
-with col2: st.markdown(f"<div class='pro-metric-card'><div class='pro-metric-label'>Total Inbound</div><div class='pro-metric-value'>₪{t_inc:,.0f}</div></div>", unsafe_allow_html=True)
-with col3: st.markdown(f"<div class='pro-metric-card' style='border-bottom: 8px solid {'#2d6a4f' if t_net >= 0 else '#ce1126'}'><div class='pro-metric-label'>Track Net Profit</div><div class='pro-metric-value' style='color: {'#1b4332' if t_net >= 0 else '#ce1126'}'>₪{t_net:,.0f}</div></div>", unsafe_allow_html=True)
-
-# --- Forms & Viz ---
-st.write("")
-c_form, c_viz = st.columns([1, 1.3])
-with c_form:
-    with st.form("match_entry"):
-        st.markdown("<h3 style='color:#111; margin-top:0;'>Match Entry</h3>", unsafe_allow_html=True)
-        h = st.text_input("Home", value="Brighton" if track == "Brighton" else "")
-        a = st.text_input("Away")
-        o = st.number_input("Odds (X)", value=3.2)
-        s = st.number_input("Stake (Expense)", value=float(next_stakes[track]))
-        r = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
-        if st.form_submit_button("SYNC MATCH 🚀"):
-            worksheet.append_row([str(datetime.date.today()), track, h, a, o, r, s, 0.0])
-            st.rerun()
-
-with c_viz:
-    if not f_df.empty:
-        f_df['Growth'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-        fig = px.area(f_df, y='Growth', title="Bankroll Evolution")
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", margin=dict(l=0,r=0,t=40,b=0))
-        fig.update_traces(line_color='#2d6a4f', fillcolor='rgba(45, 106, 79, 0.4)')
-        st.plotly_chart(fig, use_container_width=True)
-
-# --- Log ---
-st.write("")
-st.markdown("<h3 style='color:white; text-shadow:2px 2px 10px #000;'>📜 Activity Log</h3>", unsafe_allow_html=True)
-if not f_df.empty:
-    st.dataframe(f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Status', 'ROI']].sort_index(ascending=False), use_container_width=True, hide_index=True)
-
-with st.expander("🛠️ Admin"):
-    if st.button("Delete Last Record"):
-        worksheet.delete_rows(len(raw_data) + 1)
-        st.rerun()
+# Using HTML columns for perfect styling control
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown(f"""
+        <div class="custom-metric-box">
+            <div class="metric-card-label">TOTAL OUT</div>
+            <div class="metric-card-value">₪{t_exp:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+with c
