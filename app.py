@@ -163,7 +163,7 @@ st.markdown(f"""
         border: 2px solid #ddd;
     }}
     
-    /* 10. Table Styling (Activity Log Fix) */
+    /* 10. Table Styling (Activity Log Visibility Fix) */
     .stDataFrame,
     div[data-testid="stDataFrame"],
     div[data-testid="stDataFrame"] *,
@@ -173,8 +173,8 @@ st.markdown(f"""
         background-color: rgba(255, 255, 255, 0.95) !important;
         border-radius: 10px;
         padding: 10px;
-        color: #000000 !important; /* Force Black Text */
-        text-shadow: none !important; /* Remove Shadow */
+        color: #000000 !important; /* Forces black text in tables */
+        text-shadow: none !important;
     }}
     
     /* 11. Text Color Fixes */
@@ -349,9 +349,16 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- METRIC CARDS ---
+# FIX: Handle empty dataframe gracefully to avoid syntax errors
 f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
-t_exp = f_df['Expense'].sum() if not f_df.empty else 0.0
-t_inc = f_df['Income'].sum() if not f_df.empty else 0.0
+
+if not f_df.empty:
+    t_exp = f_df['Expense'].sum()
+    t_inc = f_df['Income'].sum()
+else:
+    t_exp = 0.0
+    t_inc = 0.0
+
 t_net = t_inc - t_exp
 
 c1, c2, c3 = st.columns(3)
@@ -438,10 +445,11 @@ st.subheader("📜 Activity Log")
 if not df.empty:
     f_df = df[df['Comp'] == track].copy()
     if not f_df.empty:
-        # FIXED: Added 'color: black' to enforce visibility on the light background
+        # FIXED: Added 'color: black' specifically here to fix the "invisible text" issue
         def highlight_results(row):
             bg_color = '#d4edda' if 'Won' in str(row['Status']) else '#f8d7da'
-            return [f'background-color: {bg_color}; color: #000000; font-weight: 500;'] * len(row)
+            # The Critical Fix: Ensure text is BLACK inside the colored rows
+            return [f'background-color: {bg_color}; color: #000000 !important; font-weight: 500; text-shadow: none !important;'] * len(row)
         
         display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
         display_df = display_df.sort_index(ascending=False)
