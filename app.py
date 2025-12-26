@@ -172,6 +172,7 @@ if processed_data:
     global_p_l = total_revenue - total_stakes
 else:
     current_balance, global_p_l = saved_bankroll, 0.0
+    total_revenue, total_stakes = 0.0, 0.0
     df = pd.DataFrame()
 
 # --- Sidebar ---
@@ -200,11 +201,18 @@ h_style = "brighton-header" if selected_comp == "Brighton" else "afcon-header"
 st.markdown(f"<div class='pro-header-container {h_style}'><h1 class='pro-header-text'>{selected_comp.upper()}</h1></div>", unsafe_allow_html=True)
 
 # --- Dashboard ---
+# Live Balance at the top
+st.markdown(f"<h2 style='text-align: center; margin-bottom: 30px;'>Live Balance: ₪{current_balance:,.0f}</h2>", unsafe_allow_html=True)
+
+# Financial metrics in 3 columns
 c1, c2, c3 = st.columns(3)
-c1.metric("Live Balance", f"₪{current_balance:,.0f}")
-delta_color = "normal" if global_p_l >= 0 else "inverse"
-c2.metric("Total P/L", f"₪{global_p_l:,.0f}", delta=f"₪{global_p_l:,.0f}")
-c3.metric("Next Bet", f"₪{next_stakes.get(selected_comp, 30.0):,.0f}")
+c1.metric("Total Expenses", f"₪{total_stakes:,.0f}")
+c2.metric("Total Revenue", f"₪{total_revenue:,.0f}")
+delta_value = f"₪{global_p_l:,.0f}" if global_p_l >= 0 else f"-₪{abs(global_p_l):,.0f}"
+c3.metric("Net Profit", f"₪{global_p_l:,.0f}", delta=delta_value)
+
+# Next Bet below
+st.markdown(f"<p style='text-align: center; margin-top: 20px;'><b>Next Bet:</b> ₪{next_stakes.get(selected_comp, 30.0):,.0f}</p>", unsafe_allow_html=True)
 
 # --- Entry Form ---
 st.write("---")
