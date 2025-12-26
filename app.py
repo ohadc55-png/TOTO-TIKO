@@ -46,18 +46,36 @@ st.markdown(f"""
         font-weight: 700 !important;
     }}
     
-    /* Exception: Text inside white forms and metric cards - BLACK */
+    /* Exception: Text inside white forms and metric cards - BLACK (CRITICAL FIX) */
+    div[data-testid="stForm"],
+    div[data-testid="stForm"] *,
     div[data-testid="stForm"] label,
     div[data-testid="stForm"] p,
     div[data-testid="stForm"] input,
+    div[data-testid="stForm"] .stTextInput,
+    div[data-testid="stForm"] .stTextInput *,
     div[data-testid="stForm"] .stTextInput label,
+    div[data-testid="stForm"] .stNumberInput,
+    div[data-testid="stForm"] .stNumberInput *,
     div[data-testid="stForm"] .stNumberInput label,
+    div[data-testid="stForm"] .stRadio,
+    div[data-testid="stForm"] .stRadio *,
     div[data-testid="stForm"] .stRadio label,
+    div[data-testid="stForm"] h3,
+    div[data-testid="stForm"] h4,
+    div[data-testid="stForm"] h5,
+    div[data-testid="stForm"] h6,
     .custom-metric-box,
     .custom-metric-box *,
+    .custom-metric-box div,
     .metric-card-label,
-    .metric-card-value {{
-        color: #000000 !important;
+    .metric-card-value,
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataFrame"] *,
+    div[data-testid="stDataFrame"] table,
+    div[data-testid="stDataFrame"] th,
+    div[data-testid="stDataFrame"] td {{
+        color: #111111 !important;
         text-shadow: none !important;
     }}
 
@@ -97,7 +115,7 @@ st.markdown(f"""
         margin-bottom: 10px;
     }}
     .metric-card-value {{
-        font-size: 36px;
+        font-size: 28px;
         font-weight: 900;
         color: #1b4332 !important;
         line-height: 1.2;
@@ -145,11 +163,37 @@ st.markdown(f"""
         border: 2px solid #ddd;
     }}
     
-    /* 10. Table Styling */
-    .stDataFrame {{
-        background-color: rgba(255, 255, 255, 0.95);
+    /* 10. Table Styling - White Background with Black Text */
+    .stDataFrame,
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataFrame"] *,
+    div[data-testid="stDataFrame"] table,
+    div[data-testid="stDataFrame"] thead,
+    div[data-testid="stDataFrame"] tbody,
+    div[data-testid="stDataFrame"] tr,
+    div[data-testid="stDataFrame"] th,
+    div[data-testid="stDataFrame"] td {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
         border-radius: 10px;
         padding: 10px;
+        color: #111111 !important;
+        text-shadow: none !important;
+    }}
+    
+    /* 11. Additional White Container Text Fix */
+    div[style*="background-color: rgba(255, 255, 255"],
+    div[style*="background-color: white"],
+    div[style*="background: rgba(255, 255, 255"],
+    div[style*="background: white"] {{
+        color: #111111 !important;
+    }}
+    
+    div[style*="background-color: rgba(255, 255, 255"] *,
+    div[style*="background-color: white"] *,
+    div[style*="background: rgba(255, 255, 255"] *,
+    div[style*="background: white"] * {{
+        color: #111111 !important;
+        text-shadow: none !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -264,10 +308,10 @@ st.markdown(f"""
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         border: 2px solid rgba(255,255,255,0.3);
     ">
-        <img src="{logo_src}" style="height: 120px; margin-right: 30px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));">
+        <img src="{logo_src}" style="height: 80px; margin-right: 30px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));">
         <h1 style="
             margin: 0;
-            font-size: 4rem;
+            font-size: 2.5rem;
             font-weight: 900;
             text-transform: uppercase;
             color: {text_color} !important;
@@ -283,10 +327,10 @@ st.markdown(f"""
 # --- LIVE BALANCE HERO ---
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 40px;">
-        <div style="font-size: 6rem; font-weight: 900; color: white; text-shadow: 4px 4px 10px #000, 2px 2px 5px #000; line-height: 1; margin-bottom: 10px;">
+        <div style="font-size: 4.5rem; font-weight: 900; color: white; text-shadow: 4px 4px 10px #000, 2px 2px 5px #000; line-height: 1; margin-bottom: 10px;">
             ₪{current_bal:,.2f}
         </div>
-        <div style="font-size: 1.4rem; font-weight: bold; color: #ffffff; letter-spacing: 5px; text-shadow: 3px 3px 6px #000, 1px 1px 2px #000;">
+        <div style="font-size: 1.2rem; font-weight: bold; color: #ffffff; letter-spacing: 5px; text-shadow: 3px 3px 6px #000, 1px 1px 2px #000;">
             LIVE BANKROLL
         </div>
     </div>
