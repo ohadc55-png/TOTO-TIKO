@@ -327,10 +327,10 @@ st.markdown(f"""
 # --- LIVE BALANCE HERO ---
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 40px;">
-        <div style="font-size: 4.5rem; font-weight: 900; color: white; text-shadow: 4px 4px 10px #000, 2px 2px 5px #000; line-height: 1; margin-bottom: 10px;">
+        <div style="font-size: 3rem; font-weight: 500; color: white; text-shadow: 2px 2px 6px rgba(0,0,0,0.4), 1px 1px 3px rgba(0,0,0,0.3); line-height: 1.2; margin-bottom: 12px; letter-spacing: 1px;">
             ₪{current_bal:,.2f}
         </div>
-        <div style="font-size: 1.2rem; font-weight: bold; color: #ffffff; letter-spacing: 5px; text-shadow: 3px 3px 6px #000, 1px 1px 2px #000;">
+        <div style="font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.9); letter-spacing: 4px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);">
             LIVE BANKROLL
         </div>
     </div>
