@@ -19,7 +19,7 @@ st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&family=Inter:wght@400;700&display=swap');
     
-    /* 1. Main Background with Dark Overlay */
+    /* 1. Main Background */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{bg_img_url}");
         background-attachment: fixed;
@@ -33,7 +33,7 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important; 
     }}
 
-    /* 3. Global Text Visibility - White with Black Shadow */
+    /* 3. Global Text - White with Shadow */
     h1, h2, h3, h4, h5, h6, p, label, 
     .stMarkdown, 
     div[data-testid="stMetricLabel"],
@@ -46,30 +46,13 @@ st.markdown(f"""
         font-weight: 700 !important;
     }}
     
-    /* Exception: Text inside white forms and metric cards - BLACK */
+    /* EXCEPTION: Black Text for Forms, Metrics, Tables */
     div[data-testid="stForm"],
     div[data-testid="stForm"] *,
-    div[data-testid="stForm"] label,
-    div[data-testid="stForm"] p,
-    div[data-testid="stForm"] input,
-    div[data-testid="stForm"] .stTextInput,
-    div[data-testid="stForm"] .stTextInput *,
-    div[data-testid="stForm"] .stTextInput label,
-    div[data-testid="stForm"] .stNumberInput,
-    div[data-testid="stForm"] .stNumberInput *,
-    div[data-testid="stForm"] .stNumberInput label,
-    div[data-testid="stForm"] .stRadio,
-    div[data-testid="stForm"] .stRadio *,
-    div[data-testid="stForm"] .stRadio label,
-    div[data-testid="stForm"] h3,
-    div[data-testid="stForm"] h4,
-    div[data-testid="stForm"] h5,
-    div[data-testid="stForm"] h6,
     .custom-metric-box,
     .custom-metric-box *,
-    .custom-metric-box div,
-    .metric-card-label,
-    .metric-card-value {{
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataFrame"] * {{
         color: #111111 !important;
         text-shadow: none !important;
     }}
@@ -85,13 +68,8 @@ st.markdown(f"""
         color: #ffffff !important;
         text-shadow: 2px 2px 4px #000000 !important;
     }}
-    
-    [data-testid="stSidebar"] label {{
-        color: #ffffff !important;
-        text-shadow: 2px 2px 4px #000000 !important;
-    }}
 
-    /* 5. Custom Metric Cards (White Box) */
+    /* 5. Custom Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
@@ -106,7 +84,6 @@ st.markdown(f"""
         font-weight: bold;
         text-transform: uppercase;
         color: #555 !important;
-        letter-spacing: 1px;
         margin-bottom: 10px;
     }}
     .metric-card-value {{
@@ -116,7 +93,7 @@ st.markdown(f"""
         line-height: 1.2;
     }}
 
-    /* 6. Form Styling - White Background */
+    /* 6. Form Styling */
     div[data-testid="stForm"] {{
         background-color: rgba(255, 255, 255, 0.95) !important;
         border-radius: 20px;
@@ -125,15 +102,7 @@ st.markdown(f"""
         border: 2px solid rgba(255,255,255,0.3);
     }}
     
-    /* 7. Streamlit Metric Component Override */
-    div[data-testid="stMetric"] {{
-        background-color: rgba(255, 255, 255, 0.1);
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid rgba(255,255,255,0.2);
-    }}
-    
-    /* 8. Button Styling - SIDEBAR FIX */
+    /* 7. Button Styling (Sidebar Fix included) */
     [data-testid="stSidebar"] div[data-testid="stButton"] button {{
         background-color: rgba(45, 106, 79, 0.9) !important;
         color: white !important;
@@ -155,43 +124,14 @@ st.markdown(f"""
         transform: scale(1.02);
     }}
     
-    /* 9. Input Fields in Forms */
-    div[data-testid="stForm"] input,
-    div[data-testid="stForm"] .stTextInput > div > div > input {{
-        background-color: #ffffff;
-        color: #000000;
-        border: 2px solid #ddd;
-    }}
-    
-    /* 10. Table Styling (Activity Log Visibility Fix) */
-    .stDataFrame,
-    div[data-testid="stDataFrame"],
-    div[data-testid="stDataFrame"] *,
-    div[data-testid="stDataFrame"] table,
-    div[data-testid="stDataFrame"] th,
-    div[data-testid="stDataFrame"] td {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border-radius: 10px;
-        padding: 10px;
-        color: #000000 !important; /* Forces black text in tables */
-        text-shadow: none !important;
-    }}
-    
-    /* 11. Text Color Fixes */
-    div[style*="background-color: rgba(255, 255, 255"],
-    div[style*="background-color: white"] {{
-        color: #111111 !important;
-    }}
-    
-    div[style*="background-color: rgba(255, 255, 255"] *,
-    div[style*="background-color: white"] * {{
-        color: #111111 !important;
-        text-shadow: none !important;
+    /* 8. Table Styling Override */
+    div[data-testid="stDataFrame"] table {{
+        color: #000000 !important;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- LOGIC (UNCHANGED) ---
+# --- LOGIC & DATA PARSING (IMPROVED) ---
 def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -215,35 +155,73 @@ def update_bankroll(worksheet, val):
 
 def calculate_logic(raw_data, br_base, af_base):
     processed = []
+    # Initialize trackers
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
     for i, row in enumerate(raw_data):
         try:
+            # 1. Parse Competition
             comp = str(row.get('Competition', 'Brighton')).strip()
-            odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+            
+            # 2. Parse Odds (handle commas/strings)
+            raw_odds = str(row.get('Odds', 1)).replace(',', '.')
+            try:
+                odds = float(raw_odds)
+            except ValueError:
+                odds = 1.0
+
+            # 3. Parse Result
             res = str(row.get('Result', '')).strip()
-            exp = float(row.get('Stake', next_bets[comp]))
+
+            # 4. Parse Stake (Critical Fix: Handle empty strings gracefully)
+            raw_stake = row.get('Stake')
+            if raw_stake == '' or raw_stake is None:
+                # If empty in sheet, use the calculated next bet
+                exp = next_bets[comp]
+            else:
+                try:
+                    exp = float(str(raw_stake).replace(',', ''))
+                except ValueError:
+                    exp = next_bets[comp] # Fallback if garbage data
+
+            # Logic Calculation
             cycle_invest[comp] += exp
             is_win = "Draw (X)" in res
             
             if is_win:
                 inc = exp * odds
                 net = inc - cycle_invest[comp]
-                roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                try:
+                    roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                except ZeroDivisionError:
+                    roi = "0.0%"
+                
+                # Win Logic: Reset Cycle
                 next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_invest[comp] = 0.0
                 status = "✅ Won"
             else:
+                # Loss Logic: Double Stake
                 inc, net, roi = 0.0, -exp, "N/A"
                 next_bets[comp] = exp * 2.0
                 status = "❌ Lost"
             
             processed.append({
-                "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team', '')} vs {row.get('Away Team', '')}",
-                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net, "Status": status, "ROI": roi
+                "Date": row.get('Date', ''), 
+                "Comp": comp, 
+                "Match": f"{row.get('Home Team', '')} vs {row.get('Away Team', '')}",
+                "Odds": odds, 
+                "Expense": exp, 
+                "Income": inc, 
+                "Net Profit": net, 
+                "Status": status, 
+                "ROI": roi
             })
-        except: continue
+        except Exception as e:
+            # Skip only truly broken rows, but don't crash the whole app
+            continue
+            
     return processed, next_bets
 
 # --- DATA LOADING ---
@@ -252,6 +230,7 @@ processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
 if processed:
     df = pd.DataFrame(processed)
+    # Calculate Live Bankroll based on history
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
     total_expenses = df['Expense'].sum()
     total_revenue = df['Income'].sum()
@@ -322,7 +301,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- LIVE BALANCE HERO (UPDATED SIZE: 2.3rem) ---
+# --- LIVE BALANCE HERO (SIZE: 2.3rem) ---
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 40px;">
         <div style="
@@ -349,16 +328,13 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- METRIC CARDS ---
-# FIX: Handle empty dataframe gracefully to avoid syntax errors
-f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
-
+# Logic fix to prevent crashes on empty data
 if not f_df.empty:
-    t_exp = f_df['Expense'].sum()
     t_inc = f_df['Income'].sum()
 else:
-    t_exp = 0.0
     t_inc = 0.0
 
+# Calculate specific metrics for current track
 t_net = t_inc - t_exp
 
 c1, c2, c3 = st.columns(3)
@@ -366,21 +342,21 @@ with c1:
     st.markdown(f"""
         <div class="custom-metric-box">
             <div class="metric-card-label">TOTAL EXPENSES</div>
-            <div class="metric-card-value">₪{total_expenses:,.0f}</div>
+            <div class="metric-card-value">₪{t_exp:,.0f}</div>
         </div>
     """, unsafe_allow_html=True)
 with c2:
     st.markdown(f"""
         <div class="custom-metric-box">
             <div class="metric-card-label">TOTAL REVENUE</div>
-            <div class="metric-card-value">₪{total_revenue:,.0f}</div>
+            <div class="metric-card-value">₪{t_inc:,.0f}</div>
         </div>
     """, unsafe_allow_html=True)
 with c3:
     st.markdown(f"""
         <div class="custom-metric-box">
             <div class="metric-card-label">NET PROFIT</div>
-            <div class="metric-card-value" style="color: {'#2d6a4f' if net_profit >= 0 else '#d32f2f'} !important;">₪{net_profit:,.0f}</div>
+            <div class="metric-card-value" style="color: {'#2d6a4f' if t_net >= 0 else '#d32f2f'} !important;">₪{t_net:,.0f}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -445,11 +421,12 @@ st.subheader("📜 Activity Log")
 if not df.empty:
     f_df = df[df['Comp'] == track].copy()
     if not f_df.empty:
-        # FIXED: Added 'color: black' specifically here to fix the "invisible text" issue
+        # STRICT STYLER: Forces black text and background colors
         def highlight_results(row):
-            bg_color = '#d4edda' if 'Won' in str(row['Status']) else '#f8d7da'
-            # The Critical Fix: Ensure text is BLACK inside the colored rows
-            return [f'background-color: {bg_color}; color: #000000 !important; font-weight: 500; text-shadow: none !important;'] * len(row)
+            bg = '#d4edda' if 'Won' in str(row['Status']) else '#f8d7da'
+            # The Critical CSS: color: black !important
+            css = f'background-color: {bg}; color: #000000 !important;'
+            return [css] * len(row)
         
         display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
         display_df = display_df.sort_index(ascending=False)
