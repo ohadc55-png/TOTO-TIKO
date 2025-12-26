@@ -138,17 +138,17 @@ st.markdown(f"""
         border: 1px solid rgba(255,255,255,0.2);
     }}
     
-    /* 8. Button Styling - FIXED FOR SIDEBAR */
+    /* 8. Button Styling - AGGRESSIVE FIX FOR SIDEBAR */
     div[data-testid="stButton"] > button {{
         background-color: rgba(45, 106, 79, 0.9);
         color: white;
-        font-weight: 600 !important; /* Slightly lighter bold */
-        font-size: 13px !important; /* Smaller text */
+        font-weight: 600 !important;
+        font-size: 13px !important; /* Slightly smaller text to fit */
         border: none;
         border-radius: 8px;
-        padding: 8px 5px !important; /* Minimal side padding */
-        width: 100%; /* Force full width */
-        white-space: nowrap; /* Prevent text wrapping */
+        padding: 8px 2px !important; /* Minimal side padding is crucial */
+        width: 100%;
+        white-space: nowrap !important; /* Forces text to stay on one line */
         transition: all 0.3s;
     }}
     
@@ -261,3 +261,82 @@ raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
 if processed:
+    df = pd.DataFrame(processed)
+    current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
+    total_expenses = df['Expense'].sum()
+    total_revenue = df['Income'].sum()
+    net_profit = total_revenue - total_expenses
+else:
+    current_bal, df = saved_br, pd.DataFrame()
+    total_expenses, total_revenue, net_profit = 0.0, 0.0, 0.0
+
+# --- SIDEBAR ---
+with st.sidebar:
+    st.markdown("## WALLET CONTROL")
+    st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
+    amt = st.number_input("Transaction Amount", min_value=0.0, value=100.0)
+    
+    # Buttons - Using columns for side-by-side
+    c1, c2 = st.columns(2)
+    if c1.button("Deposit"):
+        if update_bankroll(worksheet, saved_br + amt): st.rerun()
+    if c2.button("Withdraw"):
+        if update_bankroll(worksheet, saved_br - amt): st.rerun()
+        
+    st.divider()
+    track = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
+    if st.button("🔄 Sync Cloud"): st.rerun()
+
+# --- CUSTOM BRANDED BANNER (HTML/CSS Injection) ---
+brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
+afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
+
+if track == "Brighton":
+    banner_bg = "linear-gradient(90deg, #4CABFF 0%, #FFFFFF 50%, #4CABFF 100%)"
+    text_color = "#0057B8"
+    logo_src = brighton_logo
+    shadow_style = "none"
+else:
+    banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
+    text_color = "#FFFFFF"
+    logo_src = afcon_logo
+    shadow_style = "3px 3px 6px #000000, 1px 1px 2px #000000"
+
+st.markdown(f"""
+    <div style="
+        background: {banner_bg};
+        border-radius: 20px;
+        padding: 25px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        border: 2px solid rgba(255,255,255,0.3);
+    ">
+        <img src="{logo_src}" style="height: 80px; margin-right: 30px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));">
+        <h1 style="
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: {text_color} !important;
+            text-shadow: {shadow_style};
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 3px;
+            flex: 1;
+            text-align: left;
+        ">{track.upper()}</h1>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- LIVE BALANCE HERO (UPDATED SIZE: 2.1rem) ---
+st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="
+            font-size: 2.1rem !important; 
+            font-weight: 300 !important; 
+            color: #ffffff !important; 
+            text-shadow: 0px 0px 15px rgba(255,255,255,0.2) !important; 
+            line-height: 1.2; 
+            margin-bottom
