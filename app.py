@@ -7,35 +7,35 @@ import datetime
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
+# הלינק החדש והנכון לרקע המטושטש בסרגל הצד
+SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
     page_title="Elite Football Tracker",
     layout="wide",
     page_icon=APP_LOGO_URL,
-    initial_sidebar_state="expanded" # This tries to open sidebar on desktop by default
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Fixed Mobile Menu) ---
+# --- 2. CSS STYLING (Blurred Sidebar with Correct Image) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* --- GENERAL SETUP --- */
+    /* Hide default elements except header (needed for mobile menu) */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    /* Removed 'header {{visibility: hidden}}' because it hides the sidebar button! */
     
-    /* Make the top header transparent so we only see the button */
+    /* Transparent Header */
     [data-testid="stHeader"] {{
         background-color: rgba(0,0,0,0) !important;
     }}
-    
-    /* Color the sidebar toggle button (Hamburger) White */
+    /* White Hamburger Menu Icon */
     [data-testid="collapsedControl"] {{
         color: #ffffff !important;
     }}
 
-    /* --- BACKGROUND --- */
+    /* --- MAIN BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -43,42 +43,50 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- SIDEBAR (Light BG / Black Text) --- */
+    /* --- SIDEBAR WITH BLURRED BACKGROUND IMAGE --- */
+    
+    /* 1. Container: Relative position and semi-transparent overlay */
     [data-testid="stSidebar"] {{
-        background-color: #f8f9fa !important;
-        border-right: 1px solid #ddd;
+        position: relative;
+        background-color: rgba(255, 255, 255, 0.6) !important; /* Light overlay for readability */
+        border-right: 1px solid rgba(255,255,255,0.2);
+        overflow: hidden;
+    }}
+
+    /* 2. Pseudo-Element: The blurred image layer behind content */
+    [data-testid="stSidebar"]::before {{
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("{SIDEBAR_BG_IMAGE_URL}");
+        background-size: cover;
+        background-position: center;
+        filter: blur(10px); /* Strong blur */
+        z-index: -1;
+        transform: scale(1.1); /* Hide blurred edges */
     }}
     
-    /* Force BLACK text in sidebar */
+    /* Force BLACK text on EVERYTHING in the sidebar */
     [data-testid="stSidebar"] *, 
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] div, 
-    [data-testid="stSidebar"] span, 
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] .stMarkdown {{
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
         color: #000000 !important;
         text-shadow: none !important;
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* Sidebar Input Fields */
+    /* Sidebar Inputs */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
-        background-color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.85) !important;
         border: 1px solid #ccc;
     }}
     
     /* Sidebar Buttons (Keep White Text) */
     [data-testid="stSidebar"] button {{
         color: #ffffff !important;
-    }}
-    
-    /* Sidebar Metric Value */
-    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-        color: #000000 !important;
     }}
 
     /* --- MAIN AREA (Dark BG / White Text) --- */
@@ -88,16 +96,13 @@ st.markdown(f"""
     }}
 
     /* --- COMPONENTS --- */
-    
-    /* Dataframe (White BG, Black Text) */
+    /* Tables, Forms, Cards remain white with black text */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
-    /* Forms */
     [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; }}
     [data-testid="stForm"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
-    /* Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -108,29 +113,12 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- MOBILE RESPONSIVE LOGIC --- */
+    /* --- MOBILE RESPONSIVE --- */
     @media only screen and (max-width: 768px) {{
-        
-        /* Hide Banner Text on Mobile */
         .banner-text {{ display: none !important; }}
-        
-        /* Center Logo on Mobile */
-        .banner-container {{
-            justify-content: center !important;
-            padding: 10px !important;
-        }}
-        
-        /* Resize Logo on Mobile */
-        .banner-img {{
-            height: 120px !important;
-            margin: 0 !important;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important;
-        }}
-        
-        /* Adjust Table Font Size */
-        [data-testid="stDataFrame"] * {{
-            font-size: 12px !important;
-        }}
+        .banner-container {{ justify-content: center !important; padding: 10px !important; }}
+        .banner-img {{ height: 120px !important; margin: 0 !important; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important; }}
+        [data-testid="stDataFrame"] * {{ font-size: 12px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -201,7 +189,6 @@ def calculate_logic(raw_data, br_base, af_base):
 # --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
-
 if processed:
     df = pd.DataFrame(processed)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
