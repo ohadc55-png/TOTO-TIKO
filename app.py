@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING ---
+# --- 2. CSS STYLING (THE FINAL & COMPLETE VERSION) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
@@ -37,7 +37,7 @@ st.markdown(f"""
     /* >>> ARROWS CONTRAST STRATEGY <<< */
     /* ================================================================= */
 
-    /* 1. OPEN SIDEBAR BUTTON (When sidebar is CLOSED) */
+    /* 1. OPEN SIDEBAR BUTTON (Visible on Dark Stadium) */
     [data-testid="stSidebarCollapsedControl"] {{
         background-color: rgba(0, 0, 0, 0.4) !important;
         border-radius: 8px !important;
@@ -54,7 +54,7 @@ st.markdown(f"""
         color: #ffffff !important;
     }}
 
-    /* 2. CLOSE SIDEBAR BUTTON (When sidebar is OPEN) */
+    /* 2. CLOSE SIDEBAR BUTTON (Visible on Light Sidebar) */
     section[data-testid="stSidebar"] button[kind="header"] {{
         background-color: transparent !important;
         border: none !important;
@@ -184,6 +184,7 @@ def update_bankroll(worksheet, val):
 
 def calculate_logic(raw_data, br_base, af_base):
     processed = []
+    # Initialize defaults
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
@@ -192,6 +193,7 @@ def calculate_logic(raw_data, br_base, af_base):
             comp = str(row.get('Competition', 'Brighton')).strip()
             if not comp: comp = 'Brighton'
             
+            # Dynamic init if new track appears
             if comp not in next_bets:
                 next_bets[comp] = 30.0 
                 cycle_invest[comp] = 0.0
@@ -213,6 +215,7 @@ def calculate_logic(raw_data, br_base, af_base):
                 net = inc - cycle_invest[comp]
                 try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
                 except: roi = "0.0%"
+                # Reset Logic
                 base_reset = float(br_base if "Brighton" in comp else (af_base if "Africa" in comp else 30.0))
                 next_bets[comp] = base_reset
                 cycle_invest[comp] = 0.0
@@ -237,6 +240,7 @@ processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
 if processed:
     df = pd.DataFrame(processed)
+    # Calculate global balance change from Income - Expense (Fail-safe way)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
 else:
     df = pd.DataFrame(columns=["Comp", "Income", "Expense", "Net Profit", "Status"])
@@ -294,8 +298,10 @@ if track == "🏆 Overview":
     """, unsafe_allow_html=True)
 
     if not df.empty:
-        # 3. Calculate Summary Data CORRECTLY
-        # We do NOT sum 'Net Profit'. We sum Income - Expense.
+        # --- THE CORRECT CALCULATION LOGIC ---
+        # 1. Group by Competition
+        # 2. Sum Income and Expense separately
+        # 3. Derive Net Profit from (Income - Expense), NOT from summing 'Net Profit' column
         summary = df.groupby('Comp').agg({
             'Match': 'count',
             'Expense': 'sum',
@@ -303,13 +309,12 @@ if track == "🏆 Overview":
             'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
         
-        summary.columns = ['Competition', 'Games', 'Total Invested', 'Revenue', 'Wins']
+        summary.columns = ['Competition', 'Games', 'Expenses', 'Revenue', 'Wins']
         
-        # --- THE FIX IS HERE ---
-        # Calculate Net Profit based on totals, not sum of rows
-        summary['Net Profit'] = summary['Revenue'] - summary['Total Invested']
-        # -----------------------
+        # Calculate Net Profit Correctly Here:
+        summary['Net Profit'] = summary['Revenue'] - summary['Expenses']
         
+        # Calculate Win Rate
         summary['Win Rate'] = (summary['Wins'] / summary['Games'] * 100).apply(lambda x: f"{x:.1f}%")
         
         # 4. Global Metrics
@@ -318,9 +323,17 @@ if track == "🏆 Overview":
         total_wins = summary['Wins'].sum()
         global_win_rate = (total_wins / total_games * 100) if total_games > 0 else 0
         
+        # Display Cards
         c1, c2, c3 = st.columns(3)
+        
+        # Color Logic for Total Profit (Fail-safe syntax)
+        if total_profit >= 0:
+            color_total = "#2d6a4f"
+        else:
+            color_total = "#d32f2f"
+
         with c1: 
-            st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">ALL TIME PROFIT</div><div class="metric-card-value" style="color: {'#2d6a4f' if total_profit >=0 else '#d32f2f'} !important;">₪{total_profit:,.0f}</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">ALL TIME PROFIT</div><div class="metric-card-value" style="color: {color_total} !important;">₪{total_profit:,.0f}</div></div>""", unsafe_allow_html=True)
         with c2: 
             st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL GAMES</div><div class="metric-card-value">{total_games}</div></div>""", unsafe_allow_html=True)
         with c3: 
@@ -346,8 +359,10 @@ if track == "🏆 Overview":
         with c_table:
             st.subheader("Performance Breakdown")
             
+            # Prepare display table
             display_summary = summary[['Competition', 'Games', 'Wins', 'Win Rate', 'Revenue', 'Net Profit']].copy()
             
+            # Styling
             def style_summary(row):
                 return ['color: #000000; font-weight: 500;'] * len(row)
 
@@ -364,7 +379,7 @@ if track == "🏆 Overview":
         st.info("No data available yet.")
 
 else:
-    # --- SPECIFIC TRACK VIEW ---
+    # --- SPECIFIC TRACK VIEW (Existing & Correct Logic) ---
     brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
     afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
@@ -426,71 +441,4 @@ else:
         m_exp = f_df['Expense'].sum(); m_inc = f_df['Income'].sum(); m_net = m_inc - m_exp
     else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
 
-    c1, c2, c3 = st.columns(3)
-    with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
-    with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
-    with c3:
-        if m_net >= 0: color_net = "#2d6a4f"
-        else: color_net = "#d32f2f"
-        st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
-
-    next_val = next_stakes.get(track, 30.0)
-    st.markdown(f"""
-        <div style="text-align: center; margin: 30px 0;">
-            <span style="font-size: 1.4rem; color: white; font-weight: bold;">Next Bet: </span>
-            <span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900; text-shadow: 0 0 10px rgba(76,175,80,0.6);">₪{next_val:,.0f}</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-    col_form, col_chart = st.columns([1, 1])
-    with col_form:
-        with st.form("new_match"):
-            st.subheader("Add Match")
-            h_team = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
-            a_team = st.text_input("Away Team")
-            odds_val = st.number_input("Odds", value=3.2, step=0.1)
-            stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
-            result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
-            if st.form_submit_button("Submit Game", use_container_width=True):
-                if h_team and a_team:
-                    worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
-                    st.toast("Match Added!", icon="✅")
-                    st.rerun()
-                else: st.warning("Please enter team names")
-
-    with col_chart:
-        st.subheader("Performance")
-        if not f_df.empty:
-            f_df['Balance'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-            fig = px.line(f_df, y='Balance', x=f_df.index, title=None)
-            fig.update_traces(line_color='#00ff88', line_width=3)
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.2)',
-                font=dict(color='white'), margin=dict(l=20, r=20, t=20, b=20), height=300
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            wins = len(f_df[f_df['Status'] == "✅ Won"]); losses = len(f_df[f_df['Status'] == "❌ Lost"])
-            rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
-            st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
-
-    st.subheader("📜 Activity Log")
-    if not f_df.empty:
-        def highlight_results(row):
-            bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
-            return [f'background-color: {bg}'] * len(row)
-        display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
-        display_df = display_df.sort_index(ascending=False)
-        st.dataframe(
-            display_df.style.apply(highlight_results, axis=1).format({
-                "Odds": "{:.2f}", "Expense": "{:,.0f}", "Income": "{:,.0f}", "Net Profit": "{:,.0f}"
-            }),
-            use_container_width=True, hide_index=True
-        )
-    else: st.info("No matches found.")
-
-with st.expander("🛠️ Admin Actions"):
-    if st.button("Undo Last Entry"):
-        if len(raw_data) > 0:
-            try: worksheet.delete_rows(len(raw_data) + 1); st.rerun()
-            except: st.error("Error")
-        else: st.warning("Empty")
+    c1, c2,
