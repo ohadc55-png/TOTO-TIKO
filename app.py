@@ -7,7 +7,8 @@ import datetime
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-# הלינק החדש והנכון לרקע המטושטש בסרגל הצד
+
+# הלינק הטריקי (עם הגרשיים בפנים) - מטופל כעת בצורה בטוחה
 SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
@@ -17,25 +18,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Blurred Sidebar with Correct Image) ---
+# --- 2. CSS STYLING (Universal Background Fix) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* Hide default elements except header (needed for mobile menu) */
+    /* General Setup */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    
-    /* Transparent Header */
-    [data-testid="stHeader"] {{
-        background-color: rgba(0,0,0,0) !important;
-    }}
-    /* White Hamburger Menu Icon */
-    [data-testid="collapsedControl"] {{
-        color: #ffffff !important;
-    }}
+    [data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
+    [data-testid="collapsedControl"] {{ color: #ffffff !important; }}
 
-    /* --- MAIN BACKGROUND --- */
+    /* MAIN BACKGROUND (Stadium) */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -43,30 +37,33 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- SIDEBAR WITH BLURRED BACKGROUND IMAGE --- */
+    /* --- SIDEBAR BACKGROUND IMAGE LOGIC (APPLIES TO WEB & MOBILE) --- */
     
-    /* 1. Container: Relative position and semi-transparent overlay */
+    /* 1. Sidebar Container */
     [data-testid="stSidebar"] {{
         position: relative;
-        background-color: rgba(255, 255, 255, 0.6) !important; /* Light overlay for readability */
+        /* Using rgba(255, 255, 255, 0.85) to make it white but slightly see-through so we see the image */
+        background-color: rgba(255, 255, 255, 0.85) !important; 
         border-right: 1px solid rgba(255,255,255,0.2);
-        overflow: hidden;
     }}
 
-    /* 2. Pseudo-Element: The blurred image layer behind content */
+    /* 2. The Background Image Layer (Behind the content) */
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* CRITICAL FIX: Using double quotes around the URL in CSS to handle the single quotes in the filename */
         background-image: url("{SIDEBAR_BG_IMAGE_URL}");
         background-size: cover;
         background-position: center;
-        filter: blur(10px); /* Strong blur */
+        filter: blur(4px); /* Blur effect */
         z-index: -1;
-        transform: scale(1.1); /* Hide blurred edges */
     }}
-    
-    /* Force BLACK text on EVERYTHING in the sidebar */
+
+    /* --- SIDEBAR TEXT (FORCE BLACK) --- */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
@@ -80,23 +77,22 @@ st.markdown(f"""
     /* Sidebar Inputs */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
-        background-color: rgba(255, 255, 255, 0.85) !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
         border: 1px solid #ccc;
     }}
     
-    /* Sidebar Buttons (Keep White Text) */
+    /* Sidebar Buttons (White Text) */
     [data-testid="stSidebar"] button {{
         color: #ffffff !important;
     }}
 
-    /* --- MAIN AREA (Dark BG / White Text) --- */
+    /* --- MAIN AREA (White Text) --- */
     .main h1, .main h2, .main h3, .main h4, .main p {{
         color: #ffffff !important;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }}
 
-    /* --- COMPONENTS --- */
-    /* Tables, Forms, Cards remain white with black text */
+    /* --- COMPONENTS (Tables, Forms) --- */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
@@ -113,7 +109,7 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- MOBILE RESPONSIVE --- */
+    /* --- MOBILE RESPONSIVE TWEAKS --- */
     @media only screen and (max-width: 768px) {{
         .banner-text {{ display: none !important; }}
         .banner-container {{ justify-content: center !important; padding: 10px !important; }}
