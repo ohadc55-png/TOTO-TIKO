@@ -38,26 +38,26 @@ st.markdown(f"""
     /* ================================================================= */
 
     /* 1. OPEN SIDEBAR BUTTON (When sidebar is CLOSED) */
-    /* Target the container */
-    [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(0, 0, 0, 0.4) !important; /* Dark semi-transparent bubble */
-        border-radius: 8px !important;
-        padding: 2px !important;
-        color: #ffffff !important;
-        margin-top: 10px;
-        margin-left: 10px;
-    }}
+    [data-testid="stSidebarCollapsedControl"] 
+        {background-color: rgba(255, 255, 255, 0.2) !important; /* רקע בהיר חצי שקוף */
+        border: 1px solid rgba(255, 255, 255, 0.4) !important; /* מסגרת עדינה */
+        border-radius: 50% !important; /* עיגול במקום ריבוע */
+        padding: 5px !important;
+        margin-top: 15px;
+        margin-left: 15px;
+        transition: all 0.3s ease;}
+
     /* Force the Icon (SVG) to be WHITE */
-    [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] i {{
+      [data-testid="stSidebarCollapsedControl"] svg,
+      [data-testid="stSidebarCollapsedControl"] svg path {
         fill: #ffffff !important;
         stroke: #ffffff !important;
         color: #ffffff !important;
-    }}
+    }
 
     /* 2. CLOSE SIDEBAR BUTTON (When sidebar is OPEN) */
     /* This targets the specific 'X' or arrow button inside the sidebar header */
-    section[data-testid="stSidebar"] button[kind="header"] {{
+      section[data-testid="stSidebar"] button[kind="header"] {{
         background-color: transparent !important;
         border: none !important;
         color: #000000 !important; /* Force text black */
