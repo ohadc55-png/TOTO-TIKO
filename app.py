@@ -16,59 +16,63 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Professional Fix for Arrows) ---
+# --- 2. CSS STYLING (FRONTEND DEV FIX) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* --- 1. CLEANUP & HEADER --- */
-    /* Hide standard footer and top decoration bar */
-    footer {{display: none !important;}}
-    [data-testid="stDecoration"] {{display: none !important;}}
+    /* --- RESET & CLEANUP --- */
     #MainMenu {{visibility: hidden;}}
-
-    /* Make header transparent but keep it visible for interactive elements */
-    [data-testid="stHeader"] {{
-        background-color: transparent !important;
+    footer {{visibility: hidden;}}
+    [data-testid="stDecoration"] {{display: none;}}
+    
+    /* Header Container - Make Transparent */
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+        backdrop-filter: none !important;
         z-index: 100 !important;
     }}
 
-    /* --- 2. ARROW STYLING (THE FIX) --- */
-    
-    /* >>> CASE A: SIDEBAR CLOSED -> OPEN ARROW (Must be WHITE on dark background) <<< */
-    /* Target the container of the open button */
+    /* ================================================================= */
+    /* >>> CRITICAL FIX: ARROWS CONTRAST STRATEGY <<< */
+    /* ================================================================= */
+
+    /* 1. OPEN SIDEBAR BUTTON (When sidebar is CLOSED) */
+    /* Target the container */
     [data-testid="stSidebarCollapsedControl"] {{
+        background-color: rgba(0, 0, 0, 0.4) !important; /* Dark semi-transparent bubble */
+        border-radius: 8px !important;
+        padding: 2px !important;
         color: #ffffff !important;
-        z-index: 10000 !important; /* Ensure it's clickable */
+        margin-top: 10px;
+        margin-left: 10px;
     }}
-    /* Force the actual SVG icon inside to be bright WHITE */
+    /* Force the Icon (SVG) to be WHITE */
     [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg path {{
+    [data-testid="stSidebarCollapsedControl"] i {{
         fill: #ffffff !important;
         stroke: #ffffff !important;
+        color: #ffffff !important;
     }}
 
-    /* >>> CASE B: SIDEBAR OPEN -> CLOSE ARROW/X (Must be BLACK on light background) <<< */
-    /* We target the specific button located within the sidebar header area */
-    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button {{
-         border: none !important;
-         background: transparent !important;
+    /* 2. CLOSE SIDEBAR BUTTON (When sidebar is OPEN) */
+    /* This targets the specific 'X' or arrow button inside the sidebar header */
+    section[data-testid="stSidebar"] button[kind="header"] {{
+        background-color: transparent !important;
+        border: none !important;
+        color: #000000 !important; /* Force text black */
     }}
-    /* Force the SVG icon inside this specific button to be BLACK */
-    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button svg,
-    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button svg path {{
+    /* Force the Icon (SVG) to be BLACK */
+    section[data-testid="stSidebar"] button[kind="header"] svg,
+    section[data-testid="stSidebar"] button[kind="header"] svg path {{
         fill: #000000 !important;
         stroke: #000000 !important;
-    }}
-    
-    /* Add padding to sidebar content so it doesn't overlap the close button */
-    [data-testid="stSidebarUserContent"] {{
-        padding-top: 3rem !important; 
+        color: #000000 !important;
     }}
 
+    /* ================================================================= */
 
-    /* --- 3. BACKGROUNDS --- */
-    /* Main Stadium Background */
+    /* --- MAIN BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -76,12 +80,13 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* Sidebar Blurred Background */
+    /* --- SIDEBAR BACKGROUND --- */
     [data-testid="stSidebar"] {{
         position: relative;
-        background-color: rgba(255, 255, 255, 0.75) !important;
+        background-color: rgba(255, 255, 255, 0.8) !important;
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
+
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
@@ -94,8 +99,7 @@ st.markdown(f"""
         transform: scale(1.05);
     }}
 
-    /* --- 4. CONTENT STYLING --- */
-    /* Sidebar Text (Black) */
+    /* --- SIDEBAR CONTENT --- */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
@@ -113,19 +117,21 @@ st.markdown(f"""
         border: 1px solid #ccc;
     }}
     
-    /* Action Buttons (Green) */
+    /* Action Buttons */
     [data-testid="stSidebar"] [data-testid="stButton"] button {{
         color: #ffffff !important;
         background-color: #2E7D32 !important;
+        border: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }}
 
-    /* Main Area Text (White) */
+    /* --- MAIN AREA TEXT --- */
     .main h1, .main h2, .main h3, .main h4, .main p {{
         color: #ffffff !important;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }}
 
-    /* --- 5. COMPONENTS --- */
+    /* --- COMPONENTS --- */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
@@ -142,12 +148,18 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- 6. MOBILE RESPONSIVE --- */
+    /* --- MOBILE RESPONSIVE --- */
     @media only screen and (max-width: 768px) {{
         .banner-text {{ display: none !important; }}
         .banner-container {{ justify-content: center !important; padding: 10px !important; }}
         .banner-img {{ height: 120px !important; margin: 0 !important; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important; }}
         [data-testid="stDataFrame"] * {{ font-size: 12px !important; }}
+        
+        /* Ensure Open Arrow is visible on mobile too */
+        [data-testid="stSidebarCollapsedControl"] {{
+            margin-top: 5px;
+            margin-left: 5px;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -318,11 +330,8 @@ c1, c2, c3 = st.columns(3)
 with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
 with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
 with c3:
-    # ROBUST COLOR LOGIC
-    if m_net >= 0:
-        color_net = "#2d6a4f"
-    else:
-        color_net = "#d32f2f"
+    if m_net >= 0: color_net = "#2d6a4f"
+    else: color_net = "#d32f2f"
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
 # NEXT BET
