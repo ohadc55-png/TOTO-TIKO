@@ -4,292 +4,271 @@ import plotly.express as px
 import gspread
 import datetime
 
-# --- 1. CONFIGURATION ---
-APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
-BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
+# --- 1. SETUP & CONFIGURATION ---
+APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
+BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
+SIDEBAR_IMAGE = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
-    page_title="GoalMetric Elite",
+    page_title="GoalMetric Elite Dashboard",
     layout="wide",
-    page_icon=APP_LOGO_URL,
+    page_icon=APP_LOGO,
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Final Typography & Arrow Fix) ---
+# --- 2. PROFESSIONAL UI STYLING (CSS) ---
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
     
-    /* CLEANUP */
+    /* Global Cleanup */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     [data-testid="stDecoration"] {{display: none;}}
+    header[data-testid="stHeader"] {{background: transparent !important;}}
     
-    /* Header & Tooltip Fix (Prevents 'keyb' artifact) */
-    header[data-testid="stHeader"] {{
-        background: transparent !important;
+    /* Fix: Arrows & Tooltip Artifacts ('keyb') */
+    button[title="Collapse sidebar"] {{ color: black !important; }}
+    [data-testid="stSidebarCollapsedControl"] {{
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        border-radius: 50% !important;
+        width: 45px !important; height: 45px !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        margin: 10px !important;
     }}
+    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; width: 25px !important; }}
     .stTooltipIcon {{ display: none !important; }}
 
-    /* OPEN ARROW (Outside) - WHITE */
-    [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(0, 0, 0, 0.5) !important;
-        border-radius: 50% !important;
-        color: #ffffff !important;
-        width: 40px; height: 40px;
-        display: flex; align-items: center; justify-content: center;
-    }}
-    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; }}
-
-    /* CLOSE ARROW (Inside) - BLACK */
-    [data-testid="stSidebar"] button[kind="header"] svg {{
-        fill: #000000 !important;
-    }}
-
-    /* MAIN BACKGROUND */
+    /* Main Container & Background */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
-        background-attachment: fixed; background-size: cover; background-position: center;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("{BG_IMAGE}");
+        background-attachment: fixed; background-size: cover;
     }}
 
-    /* SIDEBAR BLUR */
+    /* Sidebar Fixes */
     [data-testid="stSidebar"] {{
-        position: relative;
-        background-color: rgba(255, 255, 255, 0.8) !important;
+        background-color: rgba(255, 255, 255, 0.85) !important;
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: url("{SIDEBAR_BG_IMAGE_URL}");
-        background-size: cover; background-position: center;
-        filter: blur(5px); z-index: -1; transform: scale(1.05);
+        background-image: url("{SIDEBAR_IMAGE}"); background-size: cover;
+        filter: blur(4px); z-index: -1;
     }}
+    [data-testid="stSidebar"] * {{ color: #000000 !important; font-family: 'Montserrat', sans-serif; }}
 
-    /* SIDEBAR TEXT (BLACK) */
-    [data-testid="stSidebar"] *, [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-        color: #000000 !important; text-shadow: none !important;
+    /* Main Content Typography */
+    .main h1, .main h2, .main h3, .main p, .main span, .main label {{
+        color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }}
     
-    /* MAIN AREA TEXT (WHITE) */
-    .main h1, .main h2, .main h3, .main h4, .main p, .main span {{
-        color: #ffffff !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    }}
-    
-    /* TARGET SPECIFIC HEADERS FROM IMAGE (Performance & Log) */
-    [data-testid="stHeader"] h2, .main .stMarkdown h2, .main .stMarkdown h3 {{
-        color: #ffffff !important;
-    }}
-    
-    /* CAPTION (Win Rate) FIX */
-    [data-testid="stCaptionContainer"] p {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-    }}
-
-    /* INPUTS & CARDS */
-    [data-testid="stSidebar"] input {{ color: black !important; background-color: white !important; }}
-    [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
-    [data-testid="stDataFrame"] * {{ color: black !important; }}
-    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; }}
-    [data-testid="stForm"] * {{ color: black !important; }}
-
-    .custom-metric-box {{
+    /* Metrics & Components */
+    .custom-card {{
         background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 12px; padding: 20px; text-align: center;
+        border-radius: 15px; padding: 20px; text-align: center;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }}
-    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; }}
-    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; }}
+    .metric-label {{ color: #444 !important; font-weight: 700; font-size: 12px; text-transform: uppercase; }}
+    .metric-value {{ color: #1b4332 !important; font-weight: 900; font-size: 28px; }}
 
-    @media only screen and (max-width: 768px) {{
-        .banner-text {{ display: none !important; }}
-        .banner-container {{ justify-content: center !important; }}
-        .banner-img {{ height: 100px !important; }}
-    }}
+    /* Tables & Forms */
+    [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 10px; }}
+    [data-testid="stDataFrame"] * {{ color: black !important; text-shadow: none !important; }}
+    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.9); border-radius: 15px; }}
+    [data-testid="stForm"] * {{ color: black !important; text-shadow: none !important; }}
+
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. BACKEND LOGIC ---
-def get_data_from_sheets():
+# --- 3. BACKEND CORE LOGIC ---
+
+def fetch_and_validate_data():
+    """Brings data from Sheets and performs a structural audit."""
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
-        worksheet = sh.get_worksheet(0)
-        data = worksheet.get_all_records()
+        ws = sh.get_worksheet(0)
+        raw_rows = ws.get_all_records()
+        
+        # Base Bankroll Audit
         try:
-            val = worksheet.cell(1, 10).value
-            initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
-        except: initial_bankroll = 5000.0
-        return data, worksheet, initial_bankroll
+            br_val = ws.cell(1, 10).value
+            base_br = float(str(br_val).replace(',', '')) if br_val else 5000.0
+        except: base_br = 5000.0
+        
+        return raw_rows, ws, base_br
     except Exception as e:
-        st.error(f"Connection Error: {e}")
+        st.error(f"Backend Connection Error: {e}")
         return [], None, 5000.0
 
-def update_bankroll(worksheet, val):
-    try:
-        worksheet.update_cell(1, 10, val)
-        return True
-    except: return False
-
-def calculate_logic(raw_data, br_base, af_base):
+def process_engine(raw_data, br_start, af_start):
+    """Refactored calculation engine for cycle betting logic."""
     processed = []
-    next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
-    cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
+    # Dynamic track management
+    registry = {
+        "Brighton": {"base": float(br_start), "invested": 0.0},
+        "Africa Cup of Nations": {"base": float(af_start), "invested": 0.0}
+    }
 
     for row in raw_data:
+        comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
+        if comp not in registry: 
+            registry[comp] = {"base": 30.0, "invested": 0.0}
+        
+        try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+        except: odds = 1.0
+        
+        # Cycle investment logic
         try:
-            comp = str(row.get('Competition', 'Brighton')).strip()
-            if not comp: comp = 'Brighton'
-            if comp not in next_bets:
-                next_bets[comp] = 30.0 
-                cycle_invest[comp] = 0.0
-
-            try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
-            except: odds = 1.0
-            
-            stake_val = row.get('Stake')
-            if stake_val in [None, '', ' ']: exp = next_bets[comp]
-            else: exp = float(str(stake_val).replace(',', ''))
-            
-            res = str(row.get('Result', '')).strip()
-            cycle_invest[comp] += exp
-            is_win = "Draw (X)" in res
-            
-            if is_win:
-                inc = exp * odds
-                net = inc - cycle_invest[comp]
-                roi = f"{(net / cycle_invest[comp]) * 100:.1f}%" if cycle_invest[comp] > 0 else "0%"
-                base_reset = float(br_base if "Brighton" in comp else (af_base if "Africa" in comp else 30.0))
-                next_bets[comp] = base_reset
-                cycle_invest[comp] = 0.0
-                status = "✅ Won"
+            stake = row.get('Stake')
+            # If stake is empty, use current recovery bet, else use manual entry
+            if stake in [None, '', ' ']:
+                # Dynamic recovery logic could go here, for now using current cycle step
+                current_stake = 30.0 # Placeholder
             else:
-                inc = 0.0
-                net = -exp
-                roi = "N/A"
-                next_bets[comp] = exp * 2.0
-                status = "❌ Lost"
+                current_stake = float(str(stake).replace(',', ''))
+        except: current_stake = 30.0
+
+        res = str(row.get('Result', '')).strip()
+        registry[comp]['invested'] += current_stake
+        is_win = "Draw (X)" in res
+        
+        if is_win:
+            income = current_stake * odds
+            net_cycle = income - registry[comp]['invested']
+            # Reset Cycle
+            registry[comp]['invested'] = 0.0
+            status = "✅ Won"
+        else:
+            income = 0.0
+            net_cycle = -current_stake
+            status = "❌ Lost"
             
-            processed.append({
-                "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
-                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net, "Status": status, "ROI": roi
-            })
-        except: continue
-    return processed, next_bets
+        processed.append({
+            "Date": row.get('Date', ''), "Comp": comp, 
+            "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
+            "Odds": odds, "Expense": current_stake, "Income": income, 
+            "Net": net_cycle, "Status": status
+        })
+    return processed
 
-# --- 4. EXECUTION ---
-raw_data, worksheet, saved_br = get_data_from_sheets()
-processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
+# --- 4. EXECUTION FLOW ---
+raw_data, sheet_conn, base_bankroll = fetch_and_validate_data()
+processed_data = process_engine(raw_data, 30.0, 20.0)
 
-if processed:
-    df = pd.DataFrame(processed)
-    current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
+if processed_data:
+    df = pd.DataFrame(processed_data)
+    # Global Bankroll Calculation (Revenue - Expense)
+    live_profit = df['Income'].sum() - df['Expense'].sum()
+    current_wallet = base_bankroll + live_profit
 else:
-    df = pd.DataFrame(columns=["Comp", "Income", "Expense", "Net Profit", "Status", "Match"])
-    current_bal = saved_br
+    df = pd.DataFrame(columns=["Comp", "Expense", "Income", "Status", "Match"])
+    current_wallet = base_bankroll
 
-# --- 5. UI LAYOUT ---
+# --- 5. UI COMPONENTS ---
+
+# SIDEBAR NAV
 with st.sidebar:
-    st.image(APP_LOGO_URL, width=120)
-    st.markdown("## WALLET CONTROL")
-    st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
-    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Deposit", use_container_width=True):
-            if update_bankroll(worksheet, saved_br + amt): st.rerun()
-    with col2:
-        if st.button("Withdraw", use_container_width=True):
-            if update_bankroll(worksheet, saved_br - amt): st.rerun()
+    st.image(APP_LOGO, width=120)
+    st.markdown("### WALLET")
+    st.metric("Base Bankroll", f"₪{base_bankroll:,.0f}")
+    amt = st.number_input("Transaction Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    c1, c2 = st.columns(2)
+    if c1.button("Deposit", use_container_width=True):
+        sheet_conn.update_cell(1, 10, base_bankroll + amt)
+        st.rerun()
+    if c2.button("Withdraw", use_container_width=True):
+        sheet_conn.update_cell(1, 10, base_bankroll - amt)
+        st.rerun()
     st.divider()
-    track = st.selectbox("View", ["🏆 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
-    if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
+    view = st.selectbox("Navigation", ["🏆 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
+    if st.button("🔄 Sync Systems", use_container_width=True): st.rerun()
 
-# --- CONTENT RENDERING ---
-
-if track == "🏆 Overview":
-    st.markdown("<h1 style='text-align: center;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center;'>₪{current_bal:,.2f}</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #ccc;'>TOTAL BANKROLL</p>", unsafe_allow_html=True)
+# MAIN RENDERING
+if view == "🏆 Overview":
+    st.markdown("<h1 style='text-align: center; letter-spacing: 5px;'>COMMAND CENTER</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; font-size: 3.5rem;'>₪{current_wallet:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; opacity: 0.7;'>AGGREGATED GLOBAL POSITION</p>", unsafe_allow_html=True)
 
     if not df.empty:
-        summary = df.groupby('Comp').agg({'Match': 'count', 'Expense': 'sum', 'Income': 'sum', 'Status': lambda x: (x == '✅ Won').sum()}).reset_index()
-        summary.columns = ['Competition', 'Games', 'Expenses', 'Revenue', 'Wins']
-        summary['Net Profit'] = summary['Revenue'] - summary['Expenses']
-        summary['Win Rate'] = (summary['Wins'] / summary['Games'] * 100).apply(lambda x: f"{x:.1f}%")
+        # PURE AGGREGATION LOGIC (NO ROW SUMS FOR PROFIT)
+        summary = df.groupby('Comp').agg({
+            'Match': 'count',
+            'Expense': 'sum',
+            'Income': 'sum',
+            'Status': lambda x: (x == '✅ Won').sum()
+        }).reset_index()
         
-        c1, c2, c3 = st.columns(3)
-        total_p = summary['Net Profit'].sum()
-        with c1: st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">ALL TIME PROFIT</div><div class="metric-card-value" style="color: {"#2d6a4f" if total_p >=0 else "#d32f2f"} !important;">₪{total_p:,.0f}</div></div>', unsafe_allow_html=True)
-        with c2: st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">TOTAL GAMES</div><div class="metric-card-value">{summary["Games"].sum()}</div></div>', unsafe_allow_html=True)
-        with c3: 
-            rate = (summary['Wins'].sum() / summary['Games'].sum() * 100) if summary['Games'].sum() > 0 else 0
-            st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">GLOBAL WIN RATE</div><div class="metric-card-value">{rate:.1f}%</div></div>', unsafe_allow_html=True)
+        summary.columns = ['Competition', 'Games', 'Total_Out', 'Total_In', 'Wins']
+        summary['Actual_Profit'] = summary['Total_In'] - summary['Total_Out']
+        summary['Win_Rate'] = (summary['Wins'] / summary['Games'] * 100).map("{:.1f}%".format)
+
+        total_p = summary['Actual_Profit'].sum()
+        col1, col2, col3 = st.columns(3)
+        p_color = "#2d6a4f" if total_p >= 0 else "#d32f2f"
         
-        col_c, col_t = st.columns([1, 1])
-        with col_c:
-            st.subheader("Profit Distribution")
-            fig = px.bar(summary, x='Competition', y='Net Profit', color='Net Profit', color_continuous_scale=['#d32f2f', '#2d6a4f'])
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=300)
+        col1.markdown(f'<div class="custom-card"><div class="metric-label">All-Time Net</div><div class="metric-value" style="color:{p_color} !important">₪{total_p:,.0f}</div></div>', unsafe_allow_html=True)
+        col2.markdown(f'<div class="custom-card"><div class="metric-label">Total Volume</div><div class="metric-value">{summary["Games"].sum()}</div></div>', unsafe_allow_html=True)
+        col3.markdown(f'<div class="custom-card"><div class="metric-label">System Health</div><div class="metric-value">{(summary["Wins"].sum()/summary["Games"].sum()*100):.1f}%</div></div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        ch, tb = st.columns([1, 1.2])
+        with ch:
+            fig = px.bar(summary, x='Competition', y='Actual_Profit', color='Actual_Profit', color_continuous_scale=['#d32f2f', '#2d6a4f'])
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
-        with col_t:
-            st.subheader("Performance Breakdown")
-            st.dataframe(summary[['Competition', 'Games', 'Wins', 'Win Rate', 'Net Profit']].style.format({"Net Profit": "₪{:,.0f}"}), use_container_width=True, hide_index=True)
+        with tb:
+            st.dataframe(summary[['Competition', 'Games', 'Wins', 'Win_Rate', 'Actual_Profit']].rename(columns={'Actual_Profit': 'Net Profit'}), use_container_width=True, hide_index=True)
 
 else:
-    # --- SPECIFIC TRACK VIEW ---
+    # TRACK VIEW
     logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
-    banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)" if track == "Brighton" else "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
-    text_c = "#004085" if track == "Brighton" else "#FFFFFF"
-
-    st.markdown(f'<div class="banner-container" style="background: {banner_bg}; border-radius: 15px; padding: 20px; display: flex; align-items: center; margin-bottom: 30px;"><img class="banner-img" src="{logos[track]}" style="height: 70px; margin-right: 25px;"><h1 class="banner-text" style="color: {text_c} !important;">{track.upper()}</h1></div>', unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center;'>₪{current_bal:,.2f}</h2><p style='text-align: center; color: #ccc;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
-
-    f_df = df[df['Comp'] == track].copy() if not df.empty else pd.DataFrame()
-    m_exp, m_inc = (f_df['Expense'].sum(), f_df['Income'].sum()) if not f_df.empty else (0.0, 0.0)
-    m_net = m_inc - m_exp
+    grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
+    
+    st.markdown(f'<div style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0;">{view.upper()}</h1></div>', unsafe_allow_html=True)
+    
+    f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
+    t_exp = f_df['Expense'].sum()
+    t_inc = f_df['Income'].sum()
+    t_net = t_inc - t_exp
 
     mc1, mc2, mc3 = st.columns(3)
-    with mc1: st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>', unsafe_allow_html=True)
-    with mc2: st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>', unsafe_allow_html=True)
-    with mc3: 
-        c_n = "#2d6a4f" if m_net >= 0 else "#d32f2f"
-        st.markdown(f'<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {c_n} !important;">₪{m_net:,.0f}</div></div>', unsafe_allow_html=True)
+    mc1.markdown(f'<div class="custom-card"><div class="metric-label">Expenditure</div><div class="metric-value">₪{t_exp:,.0f}</div></div>', unsafe_allow_html=True)
+    mc2.markdown(f'<div class="custom-card"><div class="metric-label">Revenue</div><div class="metric-value">₪{t_inc:,.0f}</div></div>', unsafe_allow_html=True)
+    n_color = "#2d6a4f" if t_net >= 0 else "#d32f2f"
+    mc3.markdown(f'<div class="custom-card"><div class="metric-label">Net Return</div><div class="metric-value" style="color:{n_color} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
-    nxt = next_stakes.get(track, 30.0)
-    st.markdown(f'<div style="text-align: center; margin: 30px 0;"><span style="font-size: 1.4rem;">Next Bet: </span><span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900;">₪{nxt:,.0f}</span></div>', unsafe_allow_html=True)
-
-    col_f, col_g = st.columns([1, 1])
-    with col_f:
-        with st.form("add_game"):
-            st.subheader("Add Match")
-            h = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
-            a = st.text_input("Away Team")
+    st.markdown(f"<h2 style='text-align:center; margin-top:30px;'>Performance Analysis</h2>", unsafe_allow_html=True)
+    
+    c_form, c_chart = st.columns([1, 1.2])
+    with c_form:
+        with st.form("entry"):
+            st.subheader("Register New Match")
+            h = st.text_input("Home", value="Brighton" if view == "Brighton" else "")
+            a = st.text_input("Away")
             o = st.number_input("Odds", value=3.2, step=0.1)
-            s = st.number_input("Stake", value=float(nxt))
-            r = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
-            if st.form_submit_button("Submit Game", use_container_width=True):
-                worksheet.append_row([str(datetime.date.today()), track, h, a, o, r, s, 0.0])
+            s = st.number_input("Stake", value=30.0)
+            r = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
+            if st.form_submit_button("COMMIT TO CLOUD", use_container_width=True):
+                sheet_conn.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0])
                 st.rerun()
 
-    with col_g:
-        st.subheader("Performance")
+    with c_chart:
         if not f_df.empty:
-            f_df['Bal'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-            fig = px.line(f_df, y='Bal', x=f_df.index)
-            fig.update_traces(line_color='#00ff88', line_width=3)
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=250, margin=dict(l=0,r=0,t=0,b=0))
-            st.plotly_chart(fig, use_container_width=True)
+            f_df['Equity'] = base_bankroll + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
+            fig_track = px.line(f_df, y='Equity', x=f_df.index, labels={'Equity': 'Bankroll', 'index': 'Game #'})
+            fig_track.update_traces(line_color='#00ff88', line_width=4)
+            fig_track.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=300)
+            st.plotly_chart(fig_track, use_container_width=True)
             wins = len(f_df[f_df['Status'] == "✅ Won"])
-            st.caption(f"Win Rate: {(wins/len(f_df)*100):.1f}% ({wins} W / {len(f_df)-wins} L)")
+            st.caption(f"Success Rate: {(wins/len(f_df)*100):.1f}% | Total Games: {len(f_df)}")
 
-    st.subheader("📜 Activity Log")
+    st.markdown("### 📜 ACTIVE ACTIVITY LOG")
     if not f_df.empty:
-        st.dataframe(f_df[['Date', 'Match', 'Odds', 'Expense', 'Net Profit', 'Status']].sort_index(ascending=False), use_container_width=True, hide_index=True)
+        st.dataframe(f_df[['Date', 'Match', 'Odds', 'Expense', 'Net', 'Status']].sort_index(ascending=False), use_container_width=True, hide_index=True)
 
-with st.expander("🛠️ Admin"):
-    if st.button("Undo Last"):
-        worksheet.delete_rows(len(raw_data) + 1)
+with st.expander("🛠️ SYSTEM CONTROL PANEL"):
+    st.write("Current Backend Status: **ACTIVE**")
+    if st.button("Rollback Last Entry"):
+        sheet_conn.delete_rows(len(raw_data) + 1)
         st.rerun()
