@@ -7,57 +7,47 @@ from datetime import datetime
 # ==========================================
 st.set_page_config(page_title="ProTrade Journal", layout="wide", page_icon="📈")
 
-# לינק לתמונה שלך
-BG_IMAGE_URL = "https://i.postimg.cc/DzpDHPfJ/Gemini-Generated-Image-k2czqtk2czqtk2cz.png"
-
-# CSS מעודכן עם הטיפ הטכני - רקע תמונה + שכבת כהות (Overlay)
-st.markdown(f"""
+# CSS נקי ומקצועי ללא תמונת רקע
+st.markdown("""
 <style>
-    .stApp {{
-        background: linear-gradient(rgba(14, 17, 23, 0.85), rgba(14, 17, 23, 0.85)), 
-                    url('{BG_IMAGE_URL}');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        font-family: 'Roboto', sans-serif;
-    }}
+    .stApp { background-color: #0E1117; font-family: 'Roboto', sans-serif; }
     
-    /* עיצוב כרטיסי KPI */
-    .metric-card {{
-        background: rgba(31, 41, 55, 0.7); /* שקיפות עדינה לכרטיסים */
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(55, 65, 81, 0.5);
+    /* כרטיסי KPI */
+    .metric-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border: 1px solid #374151;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 10px;
-    }}
-    .metric-label {{ color: #9CA3AF; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }}
-    .metric-value {{ color: #F3F4F6; font-size: 1.8rem; font-weight: 700; }}
-    .text-green {{ color: #34D399 !important; }}
-    .text-red {{ color: #F87171 !important; }}
+    }
+    .metric-label { color: #9CA3AF; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+    .metric-value { color: #F3F4F6; font-size: 1.8rem; font-weight: 700; }
+    .text-green { color: #34D399 !important; }
+    .text-red { color: #F87171 !important; }
     
-    /* עיצוב רשימת הטריידים וההיסטוריה */
-    .trade-container {{ 
-        background-color: rgba(17, 24, 39, 0.8); 
+    /* מיכלי טריידים */
+    .trade-container { 
+        background-color: #111827; 
         border: 1px solid #374151; 
         border-radius: 10px; 
         padding: 15px; 
         margin-bottom: 15px; 
-    }}
+    }
     
-    .history-card {{
-        background-color: rgba(31, 41, 55, 0.9);
+    /* כרטיסי היסטוריה */
+    .history-card {
+        background-color: #1F2937;
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 15px;
-        border-right: 8px solid #374151;
-    }}
-    .history-win {{ border-right: 8px solid #34D399; }}
-    .history-loss {{ border-right: 8px solid #F87171; }}
+        border-left: 8px solid #374151;
+    }
+    .history-win { border-left: 8px solid #34D399; }
+    .history-loss { border-left: 8px solid #F87171; }
     
-    .detail-label {{ color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }}
-    .detail-value {{ color: #E5E7EB; font-weight: 600; font-size: 1rem; }}
-    .divider {{ border-top: 1px solid #374151; margin: 10px 0; }}
+    .detail-label { color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
+    .detail-value { color: #E5E7EB; font-weight: 600; font-size: 1rem; }
+    .divider { border-top: 1px solid #374151; margin: 10px 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,7 +58,11 @@ if 'initial_capital' not in st.session_state:
     st.session_state.initial_capital = 10000.0
 
 # --- CONSTANTS ---
-FUTURE_MULTIPLIERS = { "ES (S&P 500)": 50, "MES (Micro S&P)": 5, "NQ (Nasdaq 100)": 20, "MNQ (Micro Nasdaq)": 2, "GC (Gold)": 100, "CL (Crude Oil)": 1000 }
+FUTURE_MULTIPLIERS = { 
+    "ES (S&P 500)": 50, "MES (Micro S&P)": 5, 
+    "NQ (Nasdaq 100)": 20, "MNQ (Micro Nasdaq)": 2, 
+    "GC (Gold)": 100, "CL (Crude Oil)": 1000 
+}
 
 # ==========================================
 # --- MODAL: NEW TRADE ENTRY ---
@@ -121,7 +115,7 @@ with st.sidebar:
         st.session_state.trades = []
         st.rerun()
 
-# חישובים מאובטחים
+# חישובים מאובטחים למניעת KeyError
 total_pnl = sum(t.get('Total Realized P&L', 0.0) for t in st.session_state.trades)
 curr_equity = st.session_state.initial_capital + total_pnl
 roi = (total_pnl / st.session_state.initial_capital * 100) if st.session_state.initial_capital > 0 else 0.0
@@ -148,35 +142,63 @@ with c4: st.markdown(kpi_box("Open Trades", len([t for t in st.session_state.tra
 st.markdown("---")
 t_act, t_hist = st.tabs(["📂 Active Trades", "📜 Detailed History"])
 
+# --- ניהול טריידים פעילים ---
 with t_act:
     active = [t for t in st.session_state.trades if t.get('Status') == 'Open']
     if not active: st.info("No active trades.")
     else:
         for i, trade in enumerate(st.session_state.trades):
             if trade.get('Status') == 'Open':
-                st.markdown(f'<div class="trade-container"><b>{trade["Symbol"]}</b> ({trade["Direction"]}) | Entry: ${trade["Entry Price"]}</div>', unsafe_allow_html=True)
-                with st.expander(f"Manage {trade['Symbol']}"):
+                st.markdown(f'<div class="trade-container"><b>{trade.get("Symbol")}</b> | Entry: ${trade.get("Entry Price")} | Qty: {trade.get("Remaining Qty")}</div>', unsafe_allow_html=True)
+                with st.expander(f"Manage {trade.get('Symbol')}"):
                     cq, cp, cc = st.columns(3)
-                    sq = cq.number_input("Qty to Sell", 1, trade['Remaining Qty'], key=f"q_{i}")
+                    sq = cq.number_input("Qty to Sell", 1, trade.get('Remaining Qty', 1), key=f"q_{i}")
                     sp = cp.number_input("Exit Price", 0.0, format="%.2f", key=f"p_{i}")
                     sc = cc.number_input("Comm ($)", 0.0, key=f"c_{i}")
                     if st.button("Execute Partial Sale", key=f"b_{i}", use_container_width=True):
                         mult = trade.get('Multiplier', 1.0)
-                        pnl = ((sp - trade['Entry Price']) if trade['Direction'] == "Long" else (trade['Entry Price'] - sp)) * sq * mult - sc
+                        # חישוב P&L לחלק שנמכר
+                        if trade.get('Direction') == "Long":
+                            pnl = (sp - trade.get('Entry Price', 0)) * sq * mult - sc
+                        else:
+                            pnl = (trade.get('Entry Price', 0) - sp) * sq * mult - sc
+                        
                         trade.setdefault('Exits', []).append({"qty": sq, "price": sp, "pnl": pnl, "date": datetime.now().strftime("%Y-%m-%d %H:%M")})
                         trade['Remaining Qty'] -= sq
                         trade['Total Realized P&L'] += pnl
                         if trade['Remaining Qty'] <= 0: trade['Status'] = "Closed"
                         st.rerun()
 
+# --- היסטוריה פיננסית מפורטת ---
 with t_hist:
     closed = [t for t in st.session_state.trades if t.get('Status') == 'Closed']
     if not closed: st.write("History is empty.")
     else:
         for t in closed:
             mult = t.get('Multiplier', 1.0)
-            invested = t['Original Qty'] * t['Entry Price'] * mult
+            invested = t.get('Original Qty', 0) * t.get('Entry Price', 0) * mult
             exits = t.get('Exits', [])
             sold_val = sum(e['qty'] * e['price'] * mult for e in exits)
             sold_qty = sum(e['qty'] for e in exits)
-            avg_exit = (sold_val / (sold_qty * mult))
+            avg_exit = (sold_val / (sold_qty * mult)) if (sold_qty * mult) > 0 else 0
+            pnl = t.get('Total Realized P&L', 0.0)
+            roi_t = (pnl / invested * 100) if invested > 0 else 0
+            
+            cls = "history-win" if pnl >= 0 else "history-loss"
+            txt = "text-green" if pnl >= 0 else "text-red"
+            
+            st.markdown(f"""
+            <div class="history-card {cls}">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 1.4rem; font-weight: bold;">{t.get('Symbol')} <small>({t.get('Asset Class')})</small></span>
+                    <span class="{txt}" style="font-size: 1.4rem; font-weight: bold;">{pnl:+,.2f}$ ({roi_t:+.2f}%)</span>
+                </div>
+                <div class="divider"></div>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                    <div><div class="detail-label">Entry / Last Exit Date</div><div class="detail-value">{t.get('Entry Date')} / {exits[-1]['date'] if exits else 'N/A'}</div></div>
+                    <div><div class="detail-label">Entry / Avg Exit Price</div><div class="detail-value">${t.get('Entry Price', 0):.2f} / ${avg_exit:.2f}</div></div>
+                    <div><div class="detail-label">Quantity (Bought/Sold)</div><div class="detail-value">{t.get('Original Qty', 0)} / {sold_qty}</div></div>
+                    <div><div class="detail-label">Invested / Sold Value</div><div class="detail-value">${invested:,.2f} / ${sold_val:,.2f}</div></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
