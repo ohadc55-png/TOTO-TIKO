@@ -5,14 +5,14 @@ import gspread
 import datetime
 
 # --- LOGO URL ---
-# הלוגו החדש שלך
-APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/'yzwb-ll'-sm.png"
+# שימוש בגרשיים כפולים כדי למנוע שגיאה בגלל הגרש בשם הקובץ
+APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Elite Football Tracker",
     layout="wide",
-    page_icon=APP_LOGO_URL, # הלוגו בטאב של הדפדפן
+    page_icon=APP_LOGO_URL,
     initial_sidebar_state="expanded"
 )
 
@@ -241,16 +241,21 @@ processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 if processed:
     df = pd.DataFrame(processed)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
+    
+    # Filter for current track to display stats
+    f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
+    
+    # Calculate totals safely
     total_expenses = df['Expense'].sum()
     total_revenue = df['Income'].sum()
     net_profit = total_revenue - total_expenses
 else:
     current_bal, df = saved_br, pd.DataFrame()
+    f_df = pd.DataFrame()
     total_expenses, total_revenue, net_profit = 0.0, 0.0, 0.0
 
 # --- SIDEBAR ---
 with st.sidebar:
-    # הלוגו החדש בסרגל הצד
     st.image(APP_LOGO_URL, use_container_width=True)
     
     st.markdown("## WALLET CONTROL")
@@ -274,7 +279,6 @@ brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
 afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
 if track == "Brighton":
-    # באנר ברייטון עם קונטרסט משופר
     banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
     text_color = "#0057B8"
     logo_src = brighton_logo
@@ -340,8 +344,118 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- METRIC CARDS ---
-f_df = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
+# Re-filter just in case
+f_df_metrics = df[df['Comp'] == track] if not df.empty else pd.DataFrame()
 
-if not f_df.empty:
-    m_exp = f_df['Expense'].sum()
-    m_inc = f_df['
+if not f_df_metrics.empty:
+    m_exp = f_df_metrics['Expense'].sum()
+    m_inc = f_df_metrics['Income'].sum()
+    m_net = m_inc - m_exp
+else:
+    m_exp, m_inc, m_net = 0.0, 0.0, 0.0
+
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown(f"""
+        <div class="custom-metric-box">
+            <div class="metric-card-label">TOTAL EXPENSES</div>
+            <div class="metric-card-value">₪{m_exp:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+with c2:
+    st.markdown(f"""
+        <div class="custom-metric-box">
+            <div class="metric-card-label">TOTAL REVENUE</div>
+            <div class="metric-card-value">₪{m_inc:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+with c3:
+    st.markdown(f"""
+        <div class="custom-metric-box">
+            <div class="metric-card-label">NET PROFIT</div>
+            <div class="metric-card-value" style="color: {'#2d6a4f' if m_net >= 0 else '#d32f2f'} !important;">₪{m_net:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# --- NEXT BET ---
+st.markdown(f"""
+    <div style="text-align: center; margin: 30px 0;">
+        <p style="font-size: 1.5rem; font-weight: bold; color: white; text-shadow: 3px 3px 6px #000;">
+            Next Bet: <span style="color: #4CAF50; text-shadow: 2px 2px 4px #000;">₪{next_stakes.get(track, 30.0):,.0f}</span>
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- FORM ---
+col_form, col_intel = st.columns([1, 1])
+
+with col_form:
+    with st.form("match_entry"):
+        st.subheader("Add Match")
+        h = st.text_input("Home", value="Brighton" if track == "Brighton" else "")
+        a = st.text_input("Away")
+        od = st.number_input("Odds", value=3.2, step=0.1, min_value=1.0)
+        suggested_stake = next_stakes.get(track, 30.0)
+        stk = st.number_input("Stake to Bet", value=float(suggested_stake), min_value=1.0, step=5.0)
+        res = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+        if st.form_submit_button("Sync Game"):
+            if h and a:
+                worksheet.append_row([str(datetime.date.today()), track, h, a, od, res, stk, 0.0])
+                st.toast("Match Saved!", icon="✅")
+                st.rerun()
+            else:
+                st.warning("Enter Team Names")
+
+with col_intel:
+    st.subheader("Strategy & Stats")
+    if not f_df_metrics.empty:
+        f_df_metrics['Chart'] = saved_br + (f_df_metrics['Income'].cumsum() - f_df_metrics['Expense'].cumsum())
+        fig = px.line(f_df_metrics, y='Chart', title="Track Performance", labels={'Chart': 'Balance (₪)', 'index': 'Match'})
+        fig.update_traces(line_color='#2d6a4f', line_width=3)
+        fig.update_layout(
+            height=300, margin=dict(l=0, r=0, t=30, b=0),
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', size=12), title_font=dict(color='white', size=16)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        wins = len(f_df_metrics[f_df_metrics['Status'] == "✅ Won"])
+        losses = len(f_df_metrics[f_df_metrics['Status'] == "❌ Lost"])
+        win_rate = (wins / len(f_df_metrics) * 100) if len(f_df_metrics) > 0 else 0
+        st.markdown(f"""
+            <div style="background-color: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; color: #1b5e20;">
+                <b>Win Rate:</b> {win_rate:.1f}% ({wins}W / {losses}L)
+            </div>
+        """, unsafe_allow_html=True)
+
+# --- ACTIVITY LOG ---
+st.subheader("📜 Activity Log")
+if not f_df_metrics.empty:
+    # 1. Force Styling Function
+    def highlight_results(row):
+        bg = '#d4edda' if 'Won' in str(row['Status']) else '#f8d7da'
+        # Force Black Text in the Styler as well for double safety
+        return [f'background-color: {bg}; color: #000000 !important;'] * len(row)
+    
+    display_df = f_df_metrics[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
+    display_df = display_df.sort_index(ascending=False)
+    
+    st.dataframe(
+        display_df.style.apply(highlight_results, axis=1),
+        use_container_width=True,
+        hide_index=True
+    )
+else:
+    st.info("No data available")
+
+with st.expander("🛠️ Admin"):
+    if st.button("Undo Last"):
+        if len(raw_data) > 0:
+            try:
+                worksheet.delete_rows(len(raw_data) + 1)
+                st.toast("Last entry removed", icon="🗑️")
+                st.rerun()
+            except:
+                st.error("Error deleting")
+        else:
+            st.warning("No entries")
