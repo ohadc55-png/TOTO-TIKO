@@ -4,9 +4,8 @@ import plotly.express as px
 import gspread
 import datetime
 
-# --- 1. CONFIG & ASSETS ---
-# שימוש במרכאות כפולות כי הלינק מכיל גרשיים בתוכו
-APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/'yzwb-ll'-sm.png"
+# --- 1. CONFIGURATION ---
+APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
 st.set_page_config(
@@ -16,65 +15,93 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. SMART CSS (THE FIX) ---
+# --- 2. CSS STYLING (Split Design: Light Sidebar / Dark Main) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* BACKGROUND IMAGE */
+    /* --- HIDE STREAMLIT ELEMENTS --- */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}} /* Hide the top header bar */
+    
+    /* Main Background Image */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("{BG_IMAGE_URL}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
     }}
-    [data-testid="stHeader"] {{ background: transparent !important; }}
 
-    /* --- ZONE 1: DARK AREAS (White Text) --- */
-    /* Headers, Markdown text directly on background, Metrics, Sidebar */
-    h1, h2, h3, h4, h5, h6, 
-    .stMarkdown, .stText, 
-    [data-testid="stMetricLabel"], 
-    [data-testid="stMetricValue"],
-    [data-testid="stSidebar"] *,
-    [data-testid="stSidebar"] label {{
-        color: #ffffff !important;
+    /* --- SIDEBAR STYLING (LIGHT & BLACK TEXT) --- */
+    [data-testid="stSidebar"] {{
+        background-color: #f8f9fa !important; /* Very Light Grey Background */
+        border-right: 1px solid #ddd;
+    }}
+    
+    /* FORCE BLACK TEXT IN SIDEBAR */
+    /* Use * selector to hit every element inside the sidebar */
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] div, 
+    [data-testid="stSidebar"] span, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {{
+        color: #000000 !important; /* Pure Black */
+        text-shadow: none !important;
         font-family: 'Montserrat', sans-serif;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Shadow for readability */
+    }}
+    
+    /* Exception: Keep Button Text White */
+    [data-testid="stSidebar"] button {{
+        color: #ffffff !important;
+        font-weight: bold;
+    }}
+    
+    /* Sidebar Inputs */
+    [data-testid="stSidebar"] input {{
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #ccc !important;
     }}
 
-    /* --- ZONE 2: LIGHT AREAS (Dark Text) --- */
+    /* --- MAIN PAGE STYLING (DARK & WHITE TEXT) --- */
+    /* Headers and Text on the Stadium Background */
+    .main h1, .main h2, .main h3, .main h4, .main p, .main li, 
+    .main .stMetricLabel, .main .stMetricValue {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }}
+
+    /* --- COMPONENTS (Tables & Forms) --- */
     
-    /* A. DataFrames & Tables (CRITICAL FIX) */
+    /* Dataframe - White Background, Black Text */
     [data-testid="stDataFrame"] {{
         background-color: white !important;
         border-radius: 8px;
         padding: 5px;
     }}
-    /* Force all text inside tables to be dark grey/black */
     [data-testid="stDataFrame"] *, 
-    [data-testid="stDataFrame"] td, 
     [data-testid="stDataFrame"] th, 
-    [data-testid="stDataFrame"] div {{
-        color: #111111 !important; 
+    [data-testid="stDataFrame"] td {{
+        color: #000000 !important;
         text-shadow: none !important;
-        font-family: 'Inter', sans-serif;
     }}
 
-    /* B. Forms (White container) */
+    /* Forms */
     [data-testid="stForm"] {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
         padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    /* Force text inside forms to be black */
-    [data-testid="stForm"] label, [data-testid="stForm"] p, [data-testid="stForm"] div {{
-        color: #111111 !important;
+    [data-testid="stForm"] label, [data-testid="stForm"] p {{
+        color: #000000 !important;
         text-shadow: none !important;
     }}
 
-    /* C. Metric Cards (Custom HTML) */
+    /* Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -86,7 +113,6 @@ st.markdown(f"""
         color: #555555 !important;
         font-size: 13px;
         font-weight: 700;
-        text-transform: uppercase;
         text-shadow: none !important;
     }}
     .metric-card-value {{
@@ -95,34 +121,15 @@ st.markdown(f"""
         font-weight: 900;
         text-shadow: none !important;
     }}
-
-    /* D. Input Fields */
-    input {{
-        color: #000000 !important;
-        font-weight: 600;
-    }}
     
-    /* E. Expander (Admin) */
-    .streamlit-expanderContent {{
-        background-color: #f0f2f6;
-        color: #000000 !important;
-    }}
-    .streamlit-expanderContent p {{
-        color: #000000 !important;
-        text-shadow: none !important;
-    }}
-
-    /* Sidebar Buttons */
-    [data-testid="stSidebar"] button {{
-        background-color: rgba(45, 106, 79, 0.9);
-        color: white !important;
-        border: none;
-        font-weight: 600;
+    /* Remove top padding in sidebar to hide empty space/decorations */
+    [data-testid="stSidebarUserContent"] {{
+        padding-top: 1rem;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA LOGIC ---
+# --- 3. BACKEND LOGIC ---
 def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -197,7 +204,7 @@ def calculate_logic(raw_data, br_base, af_base):
         except: continue
     return processed, next_bets
 
-# --- 4. APP EXECUTION ---
+# --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
@@ -212,14 +219,17 @@ else:
 
 # SIDEBAR
 with st.sidebar:
+    # Logo
     try:
         st.image(APP_LOGO_URL, use_container_width=True)
     except:
-        st.write("⚽ GoalMetric")
+        pass
         
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
-    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0)
+    
+    st.write("Transaction Amount:")
+    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
     
     c1, c2 = st.columns(2)
     with c1:
@@ -230,7 +240,8 @@ with st.sidebar:
             if update_bankroll(worksheet, saved_br - amt): st.rerun()
             
     st.divider()
-    track = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
+    st.write("Current Track:")
+    track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
     if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
 
 # BANNER
@@ -269,6 +280,8 @@ st.markdown(f"""
             text-shadow: {shadow_style};
             font-family: 'Montserrat', sans-serif;
             letter-spacing: 2px;
+            flex: 1;
+            text-align: left;
         ">{track.upper()}</h1>
     </div>
 """, unsafe_allow_html=True)
@@ -327,7 +340,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# INPUT FORM & CHART
+# FORM & CHART
 col_form, col_chart = st.columns([1, 1])
 
 with col_form:
@@ -367,22 +380,18 @@ with col_chart:
         rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
         st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
-# --- ACTIVITY LOG ---
+# LOG
 st.subheader("📜 Activity Log")
-
 if not f_df.empty:
+    def highlight_results(row):
+        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
+        return [f'background-color: {bg}; color: #000000 !important; font-weight: 500;'] * len(row)
+    
     display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
     display_df = display_df.sort_index(ascending=False)
     
-    # CSS Styling is handled in the main <style> block above (Zone 2A)
-    # But we add background colors here for Rows
-    def style_rows(row):
-        bg_color = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
-        # Note: Text color is forced to black by CSS, we only set background here
-        return [f'background-color: {bg_color}'] * len(row)
-
     st.dataframe(
-        display_df.style.apply(style_rows, axis=1).format({
+        display_df.style.apply(highlight_results, axis=1).format({
             "Odds": "{:.2f}", 
             "Expense": "{:,.0f}", 
             "Income": "{:,.0f}", 
@@ -392,15 +401,13 @@ if not f_df.empty:
         hide_index=True
     )
 else:
-    st.info("No matches found for this track.")
+    st.info("No matches found.")
 
-# --- ADMIN ---
 with st.expander("🛠️ Admin Actions"):
-    st.write("Manage last entry:")
     if st.button("Undo Last Entry"):
         if len(raw_data) > 0:
-            worksheet.delete_rows(len(raw_data) + 1)
-            st.success("Deleted last row.")
-            st.rerun()
-        else:
-            st.warning("Sheet is empty.")
+            try:
+                worksheet.delete_rows(len(raw_data) + 1)
+                st.rerun()
+            except: st.error("Error")
+        else: st.warning("Empty")
