@@ -17,18 +17,27 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Universal Background Fix) ---
+# --- 2. CSS STYLING (Fixed Close Button & Colors) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* General Setup */
+    /* --- GENERAL HEADER SETUP --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    [data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
-    [data-testid="collapsedControl"] {{ color: #ffffff !important; }}
+    
+    /* Transparent Header - Allows buttons to be seen */
+    [data-testid="stHeader"] {{
+        background-color: transparent !important;
+        z-index: 1 !important;
+    }}
+    
+    /* THE HAMBURGER MENU (Open Sidebar) - White on Dark Background */
+    [data-testid="collapsedControl"] {{
+        color: #ffffff !important;
+    }}
 
-    /* MAIN BACKGROUND (Stadium) */
+    /* --- MAIN BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -36,32 +45,28 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- SIDEBAR BACKGROUND IMAGE LOGIC --- */
-    
-    /* 1. Sidebar Container */
+    /* --- SIDEBAR BACKGROUND (BLURRED) --- */
     [data-testid="stSidebar"] {{
         position: relative;
-        /* Background layer is slightly transparent to let image show through */
-        background-color: rgba(255, 255, 255, 0.75) !important; 
+        background-color: rgba(255, 255, 255, 0.75) !important; /* Semi-transparent white */
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
 
-    /* 2. The Blurred Image Layer */
+    /* The Blurred Image Layer */
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
-        /* CRITICAL: Double quotes handle single quotes in url */
         background-image: url("{SIDEBAR_BG_IMAGE_URL}");
         background-size: cover;
         background-position: center;
-        /* >>> CHANGE 1: BLUR REDUCED FROM 10px TO 5px <<< */
         filter: blur(5px); 
         z-index: -1;
-        transform: scale(1.05); /* Slight zoom to hide blurred edges */
+        transform: scale(1.05);
     }}
 
-    /* --- SIDEBAR TEXT (FORCE BLACK) --- */
+    /* --- SIDEBAR CONTENT (BLACK TEXT) --- */
+    /* Force everything in sidebar to be black */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
@@ -72,6 +77,14 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
     
+    /* --- FIX FOR THE SIDEBAR CLOSE BUTTON (ARROWS) --- */
+    /* Target the button inside the sidebar specifically */
+    [data-testid="stSidebar"] button {{
+        color: #000000 !important; /* Make the arrow BLACK */
+        background-color: transparent !important;
+        border: none !important;
+    }}
+    
     /* Sidebar Inputs */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
@@ -79,18 +92,19 @@ st.markdown(f"""
         border: 1px solid #ccc;
     }}
     
-    /* Sidebar Buttons (White Text) */
-    [data-testid="stSidebar"] button {{
+    /* Action Buttons (Deposit/Withdraw) - White Text on Green */
+    [data-testid="stSidebar"] [data-testid="stButton"] button {{
         color: #ffffff !important;
+        background-color: #2E7D32 !important; /* Restore green background */
     }}
 
-    /* --- MAIN AREA (White Text) --- */
+    /* --- MAIN AREA (WHITE TEXT) --- */
     .main h1, .main h2, .main h3, .main h4, .main p {{
         color: #ffffff !important;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }}
 
-    /* --- COMPONENTS (Tables, Forms) --- */
+    /* --- COMPONENTS --- */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
@@ -107,7 +121,7 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- MOBILE RESPONSIVE TWEAKS --- */
+    /* --- MOBILE RESPONSIVE --- */
     @media only screen and (max-width: 768px) {{
         .banner-text {{ display: none !important; }}
         .banner-container {{ justify-content: center !important; padding: 10px !important; }}
@@ -194,11 +208,8 @@ else:
 
 # SIDEBAR
 with st.sidebar:
-    try:
-        # >>> CHANGE 2: LOGO WIDTH SET TO 120px <<<
-        st.image(APP_LOGO_URL, width=120)
-    except:
-        pass
+    try: st.image(APP_LOGO_URL, width=120)
+    except: pass
     
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
