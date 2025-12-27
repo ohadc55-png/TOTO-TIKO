@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Final Arrows Fix) ---
+# --- 2. CSS STYLING (Fixed Arrows & Syntax) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
@@ -24,31 +24,23 @@ st.markdown(f"""
     /* --- GENERAL SETUP --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
+    [data-testid="stDecoration"] {{display: none;}}
     
-    /* Remove the colored decoration bar at the top */
-    [data-testid="stDecoration"] {{
-        display: none;
-    }}
-    
-    /* Transparent Header - Critical for buttons to appear */
+    /* Transparent Header */
     [data-testid="stHeader"] {{
         background-color: transparent !important;
         z-index: 100 !important;
     }}
     
-    /* >>> FIX 1: OPEN SIDEBAR BUTTON (Visible on Dark Stadium) <<< */
-    /* Target the container of the arrow */
+    /* >>> FIX: OPEN SIDEBAR ARROW (Visible on Dark Stadium) <<< */
     [data-testid="stSidebarCollapsedControl"] {{
-        background-color: transparent !important;
         color: #ffffff !important;
+        background-color: transparent !important;
         z-index: 1000 !important;
     }}
-    /* Force the actual SVG icon inside to be WHITE */
     [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg path,
     [data-testid="stSidebarCollapsedControl"] i {{
         fill: #ffffff !important;
-        stroke: #ffffff !important;
         color: #ffffff !important;
     }}
 
@@ -90,18 +82,13 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* >>> FIX 2: CLOSE SIDEBAR BUTTON (Inside the Sidebar) <<< */
-    /* This targets the 'X' or arrow inside the expanded sidebar header */
-    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
-        padding-top: 2rem; /* Add space so it doesn't overlap */
-    }}
-    
-    /* Target the close button specifically */
-    section[data-testid="stSidebar"] > div > div > button {{
-        color: #000000 !important; /* Make it BLACK */
+    /* >>> FIX: CLOSE SIDEBAR ARROW (Inside Sidebar) <<< */
+    [data-testid="stSidebar"] button {{
+        color: #000000 !important;
         background-color: transparent !important;
+        border: none !important;
     }}
-    section[data-testid="stSidebar"] > div > div > button svg {{
+    [data-testid="stSidebar"] button svg {{
         fill: #000000 !important;
         stroke: #000000 !important;
     }}
@@ -113,7 +100,7 @@ st.markdown(f"""
         border: 1px solid #ccc;
     }}
     
-    /* Action Buttons (Deposit/Withdraw) */
+    /* Action Buttons */
     [data-testid="stSidebar"] [data-testid="stButton"] button {{
         color: #ffffff !important;
         background-color: #2E7D32 !important;
@@ -318,7 +305,8 @@ c1, c2, c3 = st.columns(3)
 with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
 with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
 with c3:
-    color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
+    # THIS WAS THE BROKEN LINE - FIXED NOW
+    color_net = "#2d6a4f" if m_net >= 0 else "#d32f2f"
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
 # NEXT BET
