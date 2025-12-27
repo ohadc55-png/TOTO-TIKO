@@ -7,7 +7,6 @@ import datetime
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-# הלינק לתמונת הרקע של הסרגל (המטושטשת)
 SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
@@ -17,24 +16,32 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Fixed Close Button & Colors) ---
+# --- 2. CSS STYLING (Fixed White Arrows on Dark Background) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* --- GENERAL HEADER SETUP --- */
+    /* --- GENERAL SETUP --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     
-    /* Transparent Header - Allows buttons to be seen */
+    /* Make Header Transparent so we see the stadium behind it */
     [data-testid="stHeader"] {{
         background-color: transparent !important;
         z-index: 1 !important;
     }}
     
-    /* THE HAMBURGER MENU (Open Sidebar) - White on Dark Background */
+    /* >>> CRITICAL FIX: OPEN SIDEBAR BUTTON (ON DARK STADIUM) <<< */
+    /* This targets the arrow button when the sidebar is CLOSED */
     [data-testid="collapsedControl"] {{
-        color: #ffffff !important;
+        color: #ffffff !important; /* Force text color white */
+        background-color: transparent !important;
+    }}
+    
+    /* Also force the icon inside (SVG) to be white */
+    [data-testid="collapsedControl"] svg {{
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
     }}
 
     /* --- MAIN BACKGROUND --- */
@@ -48,11 +55,10 @@ st.markdown(f"""
     /* --- SIDEBAR BACKGROUND (BLURRED) --- */
     [data-testid="stSidebar"] {{
         position: relative;
-        background-color: rgba(255, 255, 255, 0.75) !important; /* Semi-transparent white */
+        background-color: rgba(255, 255, 255, 0.75) !important;
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
 
-    /* The Blurred Image Layer */
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
@@ -66,7 +72,6 @@ st.markdown(f"""
     }}
 
     /* --- SIDEBAR CONTENT (BLACK TEXT) --- */
-    /* Force everything in sidebar to be black */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
@@ -77,10 +82,10 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* --- FIX FOR THE SIDEBAR CLOSE BUTTON (ARROWS) --- */
-    /* Target the button inside the sidebar specifically */
+    /* >>> CLOSE SIDEBAR BUTTON (INSIDE SIDEBAR) <<< */
+    /* This targets the 'X' or arrow inside the white sidebar, so it must be BLACK */
     [data-testid="stSidebar"] button {{
-        color: #000000 !important; /* Make the arrow BLACK */
+        color: #000000 !important;
         background-color: transparent !important;
         border: none !important;
     }}
@@ -95,7 +100,7 @@ st.markdown(f"""
     /* Action Buttons (Deposit/Withdraw) - White Text on Green */
     [data-testid="stSidebar"] [data-testid="stButton"] button {{
         color: #ffffff !important;
-        background-color: #2E7D32 !important; /* Restore green background */
+        background-color: #2E7D32 !important;
     }}
 
     /* --- MAIN AREA (WHITE TEXT) --- */
