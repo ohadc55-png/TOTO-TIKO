@@ -7,8 +7,7 @@ import datetime
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-
-# הלינק הטריקי (עם הגרשיים בפנים) - מטופל כעת בצורה בטוחה
+# הלינק לתמונת הרקע של הסרגל (המטושטשת)
 SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
@@ -37,30 +36,29 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- SIDEBAR BACKGROUND IMAGE LOGIC (APPLIES TO WEB & MOBILE) --- */
+    /* --- SIDEBAR BACKGROUND IMAGE LOGIC --- */
     
     /* 1. Sidebar Container */
     [data-testid="stSidebar"] {{
         position: relative;
-        /* Using rgba(255, 255, 255, 0.85) to make it white but slightly see-through so we see the image */
-        background-color: rgba(255, 255, 255, 0.85) !important; 
+        /* Background layer is slightly transparent to let image show through */
+        background-color: rgba(255, 255, 255, 0.75) !important; 
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
 
-    /* 2. The Background Image Layer (Behind the content) */
+    /* 2. The Blurred Image Layer */
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        /* CRITICAL FIX: Using double quotes around the URL in CSS to handle the single quotes in the filename */
+        top: 0; left: 0; width: 100%; height: 100%;
+        /* CRITICAL: Double quotes handle single quotes in url */
         background-image: url("{SIDEBAR_BG_IMAGE_URL}");
         background-size: cover;
         background-position: center;
-        filter: blur(4px); /* Blur effect */
+        /* >>> CHANGE 1: BLUR REDUCED FROM 10px TO 5px <<< */
+        filter: blur(5px); 
         z-index: -1;
+        transform: scale(1.05); /* Slight zoom to hide blurred edges */
     }}
 
     /* --- SIDEBAR TEXT (FORCE BLACK) --- */
@@ -196,8 +194,11 @@ else:
 
 # SIDEBAR
 with st.sidebar:
-    try: st.image(APP_LOGO_URL, use_container_width=True)
-    except: pass
+    try:
+        # >>> CHANGE 2: LOGO WIDTH SET TO 120px <<<
+        st.image(APP_LOGO_URL, width=120)
+    except:
+        pass
     
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
