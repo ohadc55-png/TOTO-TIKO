@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. THE "ULTIMATE" CSS (FORCE STYLING) ---
+# --- 2. THE "ULTIMATE" CSS (FORCE STYLING V3) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
@@ -27,24 +27,36 @@ st.markdown(f"""
     [data-testid="stDecoration"] {{display: none;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* 1. ARROW FIX & KEYB REMOVAL */
+    /* 1. ARROW FIX V3 - AGGRESSIVE TEXT HIDING */
+    /* Outer Arrow (Open Sidebar) */
     [data-testid="stSidebarCollapsedControl"] {{
         background-color: rgba(0, 0, 0, 0.5) !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         width: 45px !important; height: 45px !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         margin: 15px !important;
-        color: white !important;
+        /* Ensure container text is transparent, only show SVG icon color */
+        color: transparent !important; 
     }}
-    /* This specific line kills the "keyb" text artifact */
-    [data-testid="stSidebarCollapsedControl"]::after {{ content: none !important; display: none !important; }}
-    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; width: 25px !important; height: 25px !important; }}
+    [data-testid="stSidebarCollapsedControl"] svg {{ 
+        fill: white !important; 
+        width: 25px !important; height: 25px !important; 
+    }}
     
-    /* Inside Sidebar Close Button (Black Arrow) */
-    [data-testid="stSidebar"] button[kind="header"] svg {{ fill: #000000 !important; }}
+    /* Inner Arrow (Close Sidebar) */
+    section[data-testid="stSidebar"] button[kind="header"] {{
+        color: transparent !important; /* Hide text like "Collapse" */
+    }}
+    section[data-testid="stSidebar"] button[kind="header"] svg {{
+        fill: #000000 !important; /* Force icon black */
+        width: 25px !important; height: 25px !important;
+    }}
+
+    /* Kill tooltips globally */
+    .stTooltipIcon, [data-testid="stTooltipContent"] {{ display: none !important; }}
+
 
     /* 2. MAIN AREA TEXT - FORCE WHITE & SHADOW */
-    /* Target everything in the main view container */
     [data-testid="stAppViewContainer"] h1, 
     [data-testid="stAppViewContainer"] h2, 
     [data-testid="stAppViewContainer"] h3, 
@@ -56,8 +68,6 @@ st.markdown(f"""
         text-shadow: 2px 2px 8px rgba(0,0,0,1) !important;
         font-family: 'Montserrat', sans-serif !important;
     }}
-
-    /* Metrics specifically (The big numbers on cards) */
     [data-testid="stMetricValue"] {{ color: white !important; text-shadow: 2px 2px 4px black !important; }}
     [data-testid="stMetricLabel"] {{ color: #eeeeee !important; }}
 
@@ -77,22 +87,21 @@ st.markdown(f"""
     }}
 
     /* 4. SIDEBAR CONTENT (BLACK) */
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, 
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] span {{
+    [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
 
-    /* 5. ACTIVITY LOG BANNER CARDS */
+    /* 5. ACTIVITY LOG BANNER CARDS (V2 - Enhanced Data) */
     .activity-banner {{
-        padding: 20px;
+        padding: 15px 20px;
         border-radius: 15px;
         margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        border-left: 10px solid;
+        border-left: 8px solid;
     }}
     .banner-win {{
         background: linear-gradient(90deg, rgba(20, 50, 40, 0.95), rgba(40, 90, 70, 0.95));
@@ -101,6 +110,10 @@ st.markdown(f"""
     .banner-loss {{
         background: linear-gradient(90deg, rgba(80, 10, 10, 0.95), rgba(130, 20, 20, 0.95));
         border-color: #ff4b4b;
+    }}
+    .banner-details-right {{
+        text-align: right;
+        line-height: 1.2;
     }}
 
     /* 6. FORM & CARDS */
@@ -114,7 +127,7 @@ st.markdown(f"""
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }}
     .card-lbl {{ color: #444 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
-    .card-val {{ color: #1b4332 !important; font-weight: 900; font-size: 28px; text-shadow: none !important; }}
+    .card-val {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
     </style>
 """, unsafe_allow_html=True)
@@ -180,79 +193,3 @@ if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center; font-size: 3.5rem;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
     st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_br:,.2f}</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>GLOBAL POSITION</p>", unsafe_allow_html=True)
-
-    if not df.empty:
-        summary = df.groupby('Comp').agg({'Match': 'count', 'Out': 'sum', 'In': 'sum', 'Status': lambda x: (x == '✅ Won').sum()}).reset_index()
-        summary['Profit'] = summary['In'] - summary['Out']
-        summary['Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
-        
-        t_p = summary['Profit'].sum()
-        col1, col2, col3 = st.columns(3)
-        p_color = "#00ff88" if t_p >= 0 else "#ff4b4b"
-        
-        col1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Profit</div><div class="card-val" style="color:{p_color}!important">₪{t_p:,.0f}</div></div>', unsafe_allow_html=True)
-        col2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Games Played</div><div class="card-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
-        col3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Win Ratio</div><div class="card-val">{(summary["Status"].sum()/summary["Match"].sum()*100):.1f}%</div></div>', unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        c_ch, c_tb = st.columns([1, 1.2])
-        with c_ch:
-            fig = px.bar(summary, x='Comp', y='Profit', color='Profit', color_continuous_scale=['#ff4b4b', '#00ff88'])
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        with c_tb:
-            st.markdown("### Performance Table")
-            st.table(summary[['Comp', 'Match', 'Rate', 'Profit']].rename(columns={'Comp': 'Track', 'Profit': 'Net'}).style.format({"Net": "₪{:,.0f}"}))
-
-else:
-    # SPECIFIC TRACK
-    logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
-    grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
-    
-    st.markdown(f'<div style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0; text-shadow:none !important;">{view.upper()}</h1></div>', unsafe_allow_html=True)
-    
-    f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
-    track_net = f_df['In'].sum() - f_df['Out'].sum() if not f_df.empty else 0.0
-
-    mc1, mc2, mc3 = st.columns(3)
-    mc1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Invested</div><div class="card-val">₪{f_df["Out"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    mc2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Revenue</div><div class="card-val">₪{f_df["In"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    n_c = "#2d6a4f" if track_net >= 0 else "#d32f2f"
-    mc3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Track</div><div class="card-val" style="color:{n_c} !important">₪{track_net:,.0f}</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<br><h3>Performance Strategy</h3>", unsafe_allow_html=True)
-    cf, cg = st.columns([1, 1.2])
-    with cf:
-        with st.form("add"):
-            st.subheader("New Entry")
-            h, a = st.text_input("Home", value="Brighton" if view == "Brighton" else ""), st.text_input("Away")
-            o, s = st.number_input("Odds", 3.2), st.number_input("Stake", 30.0)
-            r = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
-            if st.form_submit_button("COMMIT"):
-                worksheet.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0]); st.rerun()
-    with cg:
-        if not f_df.empty:
-            f_df['Eq'] = initial_br + (f_df['In'].cumsum() - f_df['Out'].cumsum())
-            fig_l = px.line(f_df, y='Eq', x=f_df.index)
-            fig_l.update_traces(line_color='#00ff88', line_width=4)
-            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=280)
-            st.plotly_chart(fig_l, use_container_width=True)
-            st.markdown(f"**Track Success Rate: {(len(f_df[f_df['Status']=='✅ Won'])/len(f_df)*100):.1f}%**")
-
-    st.markdown("### 📜 Activity Log")
-    if not f_df.empty:
-        for _, row in f_df.sort_index(ascending=False).iterrows():
-            b_class = "banner-win" if "Won" in row['Status'] else "banner-loss"
-            diff = row['In'] - row['Out']
-            st.markdown(f"""
-                <div class="activity-banner {b_class}">
-                    <div>
-                        <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
-                        <span style="font-size: 0.85rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']} | Stake: ₪{row['Out']}</span>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="font-size: 1.4rem; font-weight: 900;">₪{diff:,.0f}</span><br>
-                        <span style="font-size: 0.75rem; font-weight: bold;">{row['Status']}</span>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
