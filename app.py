@@ -4,11 +4,15 @@ import plotly.express as px
 import gspread
 import datetime
 
+# --- LOGO URL ---
+# הגדרתי את הכתובת במשתנה כדי שיהיה קל להשתמש בה בכמה מקומות
+APP_LOGO_URL = "https://i.postimg.cc/65DbKPtp/Gemini_Generated_Image_hg9cahhg9cahhg9c.png"
+
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Elite Football Tracker",
     layout="wide",
-    page_icon="🏟️",
+    page_icon=APP_LOGO_URL, # <<< שינוי 1: הלוגו בטאב של הדפדפן
     initial_sidebar_state="expanded"
 )
 
@@ -33,47 +37,56 @@ st.markdown(f"""
         background: rgba(0,0,0,0) !important; 
     }}
 
-    /* --- SMART CONTRAST STRATEGY --- */
-
-    /* ZONE A: DARK BACKGROUNDS (Main Page Text, Headers, Sidebar) -> WHITE TEXT */
-    h1, h2, h3, h4, h5, h6, 
-    .stMarkdown, .stText, 
-    [data-testid="stMetricLabel"], 
-    [data-testid="stMetricValue"],
-    [data-testid="stSidebar"] {{
+    /* 3. Global Text - White with Shadow (DEFAULT) */
+    h1, h2, h3, h4, h5, h6, p, label, 
+    .stMarkdown, 
+    div[data-testid="stMetricLabel"],
+    div[data-testid="stMetricValue"],
+    .stSubheader,
+    .stText {{
         color: #ffffff !important;
-        text-shadow: 2px 2px 4px #000000; /* Shadow ensures readability on image */
+        text-shadow: 3px 3px 6px #000000, 1px 1px 2px #000000 !important;
         font-family: 'Montserrat', sans-serif;
+        font-weight: 700 !important;
     }}
-
-    /* ZONE B: LIGHT BACKGROUNDS (Forms, DataFrames, Custom Cards) -> BLACK TEXT */
-    /* This overrides the white text rule specifically for these containers */
     
-    /* 1. Forms */
-    [data-testid="stForm"] {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        border: 2px solid rgba(255,255,255,0.3);
+    /* 4. THE NUCLEAR FIX: Force BLACK Text for DataFrames */
+    /* We target every possible child element of the dataframe to override the global white */
+    [data-testid="stDataFrame"],
+    [data-testid="stDataFrame"] *,
+    [data-testid="stDataFrame"] div,
+    [data-testid="stDataFrame"] span,
+    [data-testid="stDataFrame"] p,
+    [data-testid="stDataFrame"] td,
+    [data-testid="stDataFrame"] th,
+    [data-testid="stDataFrame"] table {{
+        color: #000000 !important;
+        text-shadow: none !important;
+        font-weight: 500 !important;
     }}
-    [data-testid="stForm"] *, [data-testid="stForm"] label, [data-testid="stForm"] p {{
+    
+    /* Fix for Forms and Metric Boxes */
+    div[data-testid="stForm"],
+    div[data-testid="stForm"] *,
+    .custom-metric-box,
+    .custom-metric-box * {{
         color: #111111 !important;
         text-shadow: none !important;
     }}
 
-    /* 2. Activity Log Table (DataFrame) */
-    [data-testid="stDataFrame"] {{
-        background-color: white;
-        border-radius: 10px;
-        padding: 10px;
+    /* 5. Sidebar Styling */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(0, 0, 0, 0.75) !important;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255,255,255,0.2);
     }}
-    [data-testid="stDataFrame"] * {{
-        color: #111111 !important; /* Force Black Text inside tables */
-        text-shadow: none !important;
+    
+    [data-testid="stSidebar"] * {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px #000000 !important;
     }}
 
-    /* 3. Custom Metric Cards */
+    /* 6. Custom Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
@@ -82,10 +95,6 @@ st.markdown(f"""
         box-shadow: 0 6px 20px rgba(0,0,0,0.6);
         margin-bottom: 20px;
         border: 2px solid rgba(255,255,255,0.3);
-    }}
-    .custom-metric-box * {{
-        color: #111111 !important;
-        text-shadow: none !important;
     }}
     .metric-card-label {{
         font-size: 14px;
@@ -101,7 +110,16 @@ st.markdown(f"""
         line-height: 1.2;
     }}
 
-    /* 4. Sidebar Buttons */
+    /* 7. Form Styling */
+    div[data-testid="stForm"] {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        border: 2px solid rgba(255,255,255,0.3);
+    }}
+    
+    /* 8. Sidebar Buttons Fix */
     [data-testid="stSidebar"] div[data-testid="stButton"] button {{
         background-color: rgba(45, 106, 79, 0.9) !important;
         color: white !important;
@@ -116,19 +134,12 @@ st.markdown(f"""
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        text-shadow: none !important;
     }}
     
     [data-testid="stSidebar"] div[data-testid="stButton"] button:hover {{
         background-color: rgba(27, 67, 50, 1) !important;
         transform: scale(1.02);
     }}
-    
-    /* 5. Inputs */
-    input {{
-        color: #000000 !important;
-    }}
-
     </style>
 """, unsafe_allow_html=True)
 
@@ -222,6 +233,7 @@ processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 if processed:
     df = pd.DataFrame(processed)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
+    
     total_expenses = df['Expense'].sum()
     total_revenue = df['Income'].sum()
     net_profit = total_revenue - total_expenses
@@ -231,6 +243,8 @@ else:
 
 # --- SIDEBAR ---
 with st.sidebar:
+    # <<< שינוי 2: הוספת הלוגו בראש הסרגל >>>
+    st.image(APP_LOGO_URL, use_container_width=True)
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
     amt = st.number_input("Transaction Amount", min_value=0.0, value=100.0)
@@ -395,39 +409,4 @@ with col_intel:
         losses = len(f_df[f_df['Status'] == "❌ Lost"])
         win_rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
         st.markdown(f"""
-            <div style="background-color: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; color: #1b5e20;">
-                <b>Win Rate:</b> {win_rate:.1f}% ({wins}W / {losses}L)
-            </div>
-        """, unsafe_allow_html=True)
-
-# --- ACTIVITY LOG ---
-st.subheader("📜 Activity Log")
-if not f_df.empty:
-    # 1. Force Styling Function (Cleaner)
-    def highlight_results(row):
-        bg = '#d4edda' if 'Won' in str(row['Status']) else '#f8d7da'
-        # Simple color forcing here, relying on CSS for the rest
-        return [f'background-color: {bg}'] * len(row)
-    
-    display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
-    display_df = display_df.sort_index(ascending=False)
-    
-    st.dataframe(
-        display_df.style.apply(highlight_results, axis=1),
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.info("No data available")
-
-with st.expander("🛠️ Admin"):
-    if st.button("Undo Last"):
-        if len(raw_data) > 0:
-            try:
-                worksheet.delete_rows(len(raw_data) + 1)
-                st.toast("Last entry removed", icon="🗑️")
-                st.rerun()
-            except:
-                st.error("Error deleting")
-        else:
-            st.warning("No entries")
+            <div style="background-color: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; color: #1b5e
