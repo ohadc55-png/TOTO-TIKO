@@ -5,8 +5,7 @@ import gspread
 import datetime
 
 # --- 1. CONFIG & ASSETS ---
-# שימוש במרכאות כפולות כי הלינק מכיל גרשיים בתוכו
-APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/'yzwb-ll'-sm.png"
+APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
 st.set_page_config(
@@ -16,12 +15,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. SMART CSS (THE FIX) ---
+# --- 2. UI/UX STYLING (FINAL FIX) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* BACKGROUND IMAGE */
+    /* BACKGROUND */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -30,28 +29,42 @@ st.markdown(f"""
     }}
     [data-testid="stHeader"] {{ background: transparent !important; }}
 
-    /* --- ZONE 1: DARK AREAS (White Text) --- */
-    /* Headers, Markdown text directly on background, Metrics, Sidebar */
+    /* --- ZONE A: MAIN PAGE (Dark Background -> White Text) --- */
     h1, h2, h3, h4, h5, h6, 
     .stMarkdown, .stText, 
     [data-testid="stMetricLabel"], 
-    [data-testid="stMetricValue"],
-    [data-testid="stSidebar"] *,
-    [data-testid="stSidebar"] label {{
+    [data-testid="stMetricValue"] {{
         color: #ffffff !important;
         font-family: 'Montserrat', sans-serif;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Shadow for readability */
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     }}
 
-    /* --- ZONE 2: LIGHT AREAS (Dark Text) --- */
+    /* --- ZONE B: SIDEBAR (Light Background -> Dark Text) --- */
+    /* THE FIX: Specifically targeting the sidebar to have dark, readable text */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(245, 245, 245, 0.95) !important; /* Light grey backdrop */
+        border-right: 1px solid rgba(0,0,0,0.1);
+    }}
     
-    /* A. DataFrames & Tables (CRITICAL FIX) */
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] label, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {{
+        color: #0b1e33 !important; /* Dark Navy Blue - Elite Look */
+        text-shadow: none !important;
+        font-family: 'Montserrat', sans-serif;
+    }}
+
+    /* --- ZONE C: COMPONENTS (Tables, Forms, Cards) --- */
+    
+    /* 1. DataFrames */
     [data-testid="stDataFrame"] {{
         background-color: white !important;
         border-radius: 8px;
         padding: 5px;
     }}
-    /* Force all text inside tables to be dark grey/black */
     [data-testid="stDataFrame"] *, 
     [data-testid="stDataFrame"] td, 
     [data-testid="stDataFrame"] th, 
@@ -61,20 +74,19 @@ st.markdown(f"""
         font-family: 'Inter', sans-serif;
     }}
 
-    /* B. Forms (White container) */
+    /* 2. Forms */
     [data-testid="stForm"] {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
         padding: 25px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    /* Force text inside forms to be black */
     [data-testid="stForm"] label, [data-testid="stForm"] p, [data-testid="stForm"] div {{
         color: #111111 !important;
         text-shadow: none !important;
     }}
 
-    /* C. Metric Cards (Custom HTML) */
+    /* 3. Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -96,33 +108,24 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* D. Input Fields */
+    /* 4. Inputs */
     input {{
         color: #000000 !important;
         font-weight: 600;
     }}
     
-    /* E. Expander (Admin) */
-    .streamlit-expanderContent {{
-        background-color: #f0f2f6;
-        color: #000000 !important;
-    }}
-    .streamlit-expanderContent p {{
-        color: #000000 !important;
-        text-shadow: none !important;
-    }}
-
-    /* Sidebar Buttons */
+    /* 5. Sidebar Buttons */
     [data-testid="stSidebar"] button {{
-        background-color: rgba(45, 106, 79, 0.9);
+        background-color: #2c3e50 !important; /* Dark button for contrast */
         color: white !important;
         border: none;
         font-weight: 600;
+        text-shadow: none !important;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA LOGIC ---
+# --- 3. BACKEND LOGIC ---
 def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -197,7 +200,7 @@ def calculate_logic(raw_data, br_base, af_base):
         except: continue
     return processed, next_bets
 
-# --- 4. APP EXECUTION ---
+# --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
 
@@ -208,14 +211,14 @@ else:
     df = pd.DataFrame()
     current_bal = saved_br
 
-# --- 5. UI LAYOUT ---
+# --- 5. DASHBOARD LAYOUT ---
 
 # SIDEBAR
 with st.sidebar:
     try:
         st.image(APP_LOGO_URL, use_container_width=True)
     except:
-        st.write("⚽ GoalMetric")
+        st.subheader("⚽ GoalMetric")
         
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
@@ -233,7 +236,7 @@ with st.sidebar:
     track = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
     if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
 
-# BANNER
+# HEADER
 brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
 afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
@@ -269,11 +272,13 @@ st.markdown(f"""
             text-shadow: {shadow_style};
             font-family: 'Montserrat', sans-serif;
             letter-spacing: 2px;
+            flex: 1;
+            text-align: left;
         ">{track.upper()}</h1>
     </div>
 """, unsafe_allow_html=True)
 
-# LIVE BANKROLL
+# BANKROLL
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 35px;">
         <div style="
@@ -296,7 +301,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# METRICS
+# STATS
 if not df.empty:
     f_df = df[df['Comp'] == track].copy()
 else:
@@ -318,7 +323,7 @@ with c3:
     color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
-# NEXT BET
+# NEXT BET & FORM
 next_val = next_stakes.get(track, 30.0)
 st.markdown(f"""
     <div style="text-align: center; margin: 30px 0;">
@@ -327,7 +332,6 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# INPUT FORM & CHART
 col_form, col_chart = st.columns([1, 1])
 
 with col_form:
@@ -367,40 +371,29 @@ with col_chart:
         rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
         st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
-# --- ACTIVITY LOG ---
+# LOG
 st.subheader("📜 Activity Log")
-
 if not f_df.empty:
+    def highlight_results(row):
+        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
+        return [f'background-color: {bg}; color: #000000 !important; font-weight: 500;'] * len(row)
+    
     display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
     display_df = display_df.sort_index(ascending=False)
     
-    # CSS Styling is handled in the main <style> block above (Zone 2A)
-    # But we add background colors here for Rows
-    def style_rows(row):
-        bg_color = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
-        # Note: Text color is forced to black by CSS, we only set background here
-        return [f'background-color: {bg_color}'] * len(row)
-
     st.dataframe(
-        display_df.style.apply(style_rows, axis=1).format({
-            "Odds": "{:.2f}", 
-            "Expense": "{:,.0f}", 
-            "Income": "{:,.0f}", 
-            "Net Profit": "{:,.0f}"
-        }),
+        display_df.style.apply(highlight_results, axis=1),
         use_container_width=True,
         hide_index=True
     )
 else:
-    st.info("No matches found for this track.")
+    st.info("No matches found.")
 
-# --- ADMIN ---
-with st.expander("🛠️ Admin Actions"):
-    st.write("Manage last entry:")
-    if st.button("Undo Last Entry"):
+with st.expander("🛠️ Admin"):
+    if st.button("Undo Last"):
         if len(raw_data) > 0:
-            worksheet.delete_rows(len(raw_data) + 1)
-            st.success("Deleted last row.")
-            st.rerun()
-        else:
-            st.warning("Sheet is empty.")
+            try:
+                worksheet.delete_rows(len(raw_data) + 1)
+                st.rerun()
+            except: st.error("Error")
+        else: st.warning("Empty")
