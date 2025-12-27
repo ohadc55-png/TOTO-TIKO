@@ -193,3 +193,86 @@ if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center; font-size: 3.5rem;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
     st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_br:,.2f}</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>GLOBAL POSITION</p>", unsafe_allow_html=True)
+
+    if not df.empty:
+        summary = df.groupby('Comp').agg({'Match': 'count', 'Out': 'sum', 'In': 'sum', 'Status': lambda x: (x == '✅ Won').sum()}).reset_index()
+        summary['Profit'] = summary['In'] - summary['Out']
+        summary['Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
+        
+        t_p = summary['Profit'].sum()
+        col1, col2, col3 = st.columns(3)
+        p_color = "#00ff88" if t_p >= 0 else "#ff4b4b"
+        
+        col1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Profit</div><div class="card-val" style="color:{p_color}!important">₪{t_p:,.0f}</div></div>', unsafe_allow_html=True)
+        col2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Games Played</div><div class="card-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
+        col3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Win Ratio</div><div class="card-val">{(summary["Status"].sum()/summary["Match"].sum()*100):.1f}%</div></div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        c_ch, c_tb = st.columns([1, 1.2])
+        with c_ch:
+            fig = px.bar(summary, x='Comp', y='Profit', color='Profit', color_continuous_scale=['#ff4b4b', '#00ff88'])
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        with c_tb:
+            st.markdown("### Performance Table")
+            st.table(summary[['Comp', 'Match', 'Rate', 'Profit']].rename(columns={'Comp': 'Track', 'Profit': 'Net'}).style.format({"Net": "₪{:,.0f}"}))
+
+else:
+    # SPECIFIC TRACK
+    logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
+    grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
+    
+    # Banner
+    st.markdown(f'<div style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:30px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0; text-shadow:none !important;">{view.upper()}</h1></div>', unsafe_allow_html=True)
+    
+    # --- NEW: Live Bankroll in Track View ---
+    st.markdown(f"<h2 style='text-align: center; font-size: 2.5rem;'>₪{live_br:,.2f}</h2><p style='text-align: center; opacity: 0.8;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
+    # ----------------------------------------
+
+    f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
+    track_net = f_df['In'].sum() - f_df['Out'].sum() if not f_df.empty else 0.0
+
+    mc1, mc2, mc3 = st.columns(3)
+    mc1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Invested</div><div class="card-val">₪{f_df["Out"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    mc2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Revenue</div><div class="card-val">₪{f_df["In"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    n_c = "#2d6a4f" if track_net >= 0 else "#d32f2f"
+    mc3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Track</div><div class="card-val" style="color:{n_c} !important">₪{track_net:,.0f}</div></div>', unsafe_allow_html=True)
+
+    st.markdown("<br><h3>Performance Strategy</h3>", unsafe_allow_html=True)
+    cf, cg = st.columns([1, 1.2])
+    with cf:
+        with st.form("add"):
+            st.subheader("New Entry")
+            h, a = st.text_input("Home", value="Brighton" if view == "Brighton" else ""), st.text_input("Away")
+            o, s = st.number_input("Odds", 3.2), st.number_input("Stake", 30.0)
+            r = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+            if st.form_submit_button("COMMIT"):
+                worksheet.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0]); st.rerun()
+    with cg:
+        if not f_df.empty:
+            f_df['Eq'] = initial_br + (f_df['In'].cumsum() - f_df['Out'].cumsum())
+            fig_l = px.line(f_df, y='Eq', x=f_df.index)
+            fig_l.update_traces(line_color='#00ff88', line_width=4)
+            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=280)
+            st.plotly_chart(fig_l, use_container_width=True)
+            st.markdown(f"**Track Success Rate: {(len(f_df[f_df['Status']=='✅ Won'])/len(f_df)*100):.1f}%**")
+
+    st.markdown("### 📜 Activity Log")
+    if not f_df.empty:
+        for _, row in f_df.sort_index(ascending=False).iterrows():
+            b_class = "banner-win" if "Won" in row['Status'] else "banner-loss"
+            diff = row['In'] - row['Out']
+            # --- NEW: Enhanced Data in Banner ---
+            st.markdown(f"""
+                <div class="activity-banner {b_class}">
+                    <div>
+                        <span style="font-size: 1.3rem; font-weight: 900;">{row['Match']}</span><br>
+                        <span style="font-size: 0.9rem; opacity: 0.9;">{row['Date']} | Odds: {row['Odds']}</span>
+                    </div>
+                    <div class="banner-details-right">
+                        <span style="font-size: 0.85rem; opacity: 0.9;">Stake: ₪{row['Out']:,.0f} | Gross: ₪{row['In']:,.0f}</span><br>
+                        <span style="font-size: 1.6rem; font-weight: 900;">₪{diff:,.0f} (Net)</span><br>
+                        <span style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{row['Status']}</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
