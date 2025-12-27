@@ -16,46 +16,52 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. ELITE UI STYLING (CSS) ---
+# --- 2. THE "ULTIMATE" CSS (FORCE STYLING) ---
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
     
-    /* 1. Global Cleanup */
+    /* Global Reset & Cleanup */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     [data-testid="stDecoration"] {{display: none;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* 2. Arrows & keyb Artifact Fix */
+    /* 1. ARROW FIX & KEYB REMOVAL */
     [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(5px);
+        background-color: rgba(0, 0, 0, 0.5) !important;
         border-radius: 10px !important;
         width: 45px !important; height: 45px !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         margin: 15px !important;
+        color: white !important;
     }}
-    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; }}
-    /* Kill the 'keyb' text */
-    [data-testid="stSidebarCollapsedControl"]::after {{ content: none !important; }}
-    .stTooltipIcon, [data-testid="stTooltipContent"] {{ display: none !important; }}
+    /* This specific line kills the "keyb" text artifact */
+    [data-testid="stSidebarCollapsedControl"]::after {{ content: none !important; display: none !important; }}
+    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; width: 25px !important; height: 25px !important; }}
     
-    /* Sidebar Close Button */
+    /* Inside Sidebar Close Button (Black Arrow) */
     [data-testid="stSidebar"] button[kind="header"] svg {{ fill: #000000 !important; }}
 
-    /* 3. Main Text Whitening & Shadow */
-    .main h1, .main h2, .main h3, .main p, .main span, .main label, .main div {{
+    /* 2. MAIN AREA TEXT - FORCE WHITE & SHADOW */
+    /* Target everything in the main view container */
+    [data-testid="stAppViewContainer"] h1, 
+    [data-testid="stAppViewContainer"] h2, 
+    [data-testid="stAppViewContainer"] h3, 
+    [data-testid="stAppViewContainer"] p, 
+    [data-testid="stAppViewContainer"] span,
+    [data-testid="stAppViewContainer"] label,
+    .stMarkdown p {{
         color: #ffffff !important;
         text-shadow: 2px 2px 8px rgba(0,0,0,1) !important;
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat', sans-serif !important;
     }}
-    
-    /* Special fix for Metrics inside main area */
-    [data-testid="stMetricValue"] {{ color: white !important; }}
-    [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
-    /* 4. Backgrounds */
+    /* Metrics specifically (The big numbers on cards) */
+    [data-testid="stMetricValue"] {{ color: white !important; text-shadow: 2px 2px 4px black !important; }}
+    [data-testid="stMetricLabel"] {{ color: #eeeeee !important; }}
+
+    /* 3. BACKGROUND ARCHITECTURE */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url("{BG_IMAGE}");
         background-attachment: fixed; background-size: cover; background-position: center;
@@ -70,183 +76,183 @@ st.markdown(f"""
         filter: blur(4px); z-index: -1;
     }}
 
-    /* 5. Sidebar Text (Black) */
-    [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
+    /* 4. SIDEBAR CONTENT (BLACK) */
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] span {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
 
-    /* 6. Activity Log Banner Styling */
-    .log-card {{
-        padding: 15px;
-        border-radius: 12px;
-        margin-bottom: 10px;
+    /* 5. ACTIVITY LOG BANNER CARDS */
+    .activity-banner {{
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-left: 8px solid;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        border-left: 10px solid;
     }}
-    .log-win {{
-        background: linear-gradient(90deg, rgba(27, 67, 50, 0.9), rgba(45, 106, 79, 0.9));
-        border-color: #52b788;
+    .banner-win {{
+        background: linear-gradient(90deg, rgba(20, 50, 40, 0.95), rgba(40, 90, 70, 0.95));
+        border-color: #00ff88;
     }}
-    .log-loss {{
-        background: linear-gradient(90deg, rgba(102, 7, 8, 0.9), rgba(186, 24, 27, 0.9));
-        border-color: #e5383b;
+    .banner-loss {{
+        background: linear-gradient(90deg, rgba(80, 10, 10, 0.95), rgba(130, 20, 20, 0.95));
+        border-color: #ff4b4b;
     }}
 
-    /* 7. Components */
+    /* 6. FORM & CARDS */
     [data-testid="stForm"] {{ 
         background-color: rgba(255, 255, 255, 0.1) !important; 
-        border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px; border: 1px solid rgba(255,255,255,0.25);
     }}
-    .custom-card {{
+    .metric-card-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px; padding: 20px; text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }}
-    .c-label {{ color: #555 !important; font-weight: 700; font-size: 12px; text-shadow: none !important; }}
-    .c-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
+    .card-lbl {{ color: #444 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
+    .card-val {{ color: #1b4332 !important; font-weight: 900; font-size: 28px; text-shadow: none !important; }}
 
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA & LOGIC ENGINE ---
-def get_connection():
+# --- 3. DATA BACKEND ---
+def connect_to_cloud():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
         ws = sh.get_worksheet(0)
-        data = ws.get_all_records()
+        raw = ws.get_all_records()
         try:
-            br_cell = ws.cell(1, 10).value
-            base_br = float(str(br_cell).replace(',', '')) if br_cell else 5000.0
+            br_val = ws.cell(1, 10).value
+            base_br = float(str(br_val).replace(',', '')) if br_val else 5000.0
         except: base_br = 5000.0
-        return data, ws, base_br
+        return raw, ws, base_br
     except Exception as e:
-        st.error(f"Sync Error: {e}")
+        st.error(f"Sync Lost: {e}")
         return [], None, 5000.0
 
-def process_data(raw_data):
-    if not raw_data: return pd.DataFrame()
-    processed = []
-    for row in raw_data:
+def process_engine(data):
+    if not data: return pd.DataFrame()
+    rows = []
+    for r in data:
         try:
-            comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
-            odds = float(str(row.get('Odds', 1)).replace(',', '.'))
-            stake = float(str(row.get('Stake', 0)).replace(',', '')) if row.get('Stake') else 0.0
-            res = str(row.get('Result', '')).strip()
-            is_win = "Draw (X)" in res
-            income = stake * odds if is_win else 0.0
-            processed.append({
-                "Date": row.get('Date', ''), "Comp": comp,
-                "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
-                "Odds": odds, "Expense": stake, "Income": income,
-                "Status": "✅ Won" if is_win else "❌ Lost"
+            c = str(r.get('Competition', 'Brighton')).strip() or 'Brighton'
+            o = float(str(r.get('Odds', 1)).replace(',', '.'))
+            s = float(str(r.get('Stake', 0)).replace(',', '')) if r.get('Stake') else 0.0
+            res = str(r.get('Result', '')).strip()
+            win = "Draw (X)" in res
+            inc = s * o if win else 0.0
+            rows.append({
+                "Date": r.get('Date', ''), "Comp": c,
+                "Match": f"{r.get('Home Team','')} vs {r.get('Away Team','')}",
+                "Odds": o, "Out": s, "In": inc,
+                "Status": "✅ Won" if win else "❌ Lost"
             })
         except: continue
-    return pd.DataFrame(processed)
+    return pd.DataFrame(rows)
 
 # --- 4. EXECUTION ---
-raw_rows, sheet_ws, initial_bankroll = get_connection()
-df = process_data(raw_rows)
-live_bankroll = initial_bankroll + (df['Income'].sum() - df['Expense'].sum()) if not df.empty else initial_bankroll
+raw_data, worksheet, initial_br = connect_to_cloud()
+df = process_engine(raw_data)
+live_br = initial_br + (df['In'].sum() - df['Out'].sum()) if not df.empty else initial_br
 
-# --- 5. SIDEBAR NAVIGATION ---
+# --- 5. SIDEBAR ---
 with st.sidebar:
     st.image(APP_LOGO, width=120)
-    st.markdown("### WALLET")
-    st.metric("Base Bankroll", f"₪{initial_bankroll:,.0f}")
-    amt = st.number_input("Transaction", min_value=0.0, value=100.0, step=50.0)
+    st.markdown("### WALLET CONTROL")
+    st.metric("Base Bankroll", f"₪{initial_br:,.0f}")
+    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0)
     c1, c2 = st.columns(2)
     if c1.button("Deposit", use_container_width=True):
-        sheet_ws.update_cell(1, 10, initial_bankroll + amt); st.rerun()
+        worksheet.update_cell(1, 10, initial_br + amt); st.rerun()
     if c2.button("Withdraw", use_container_width=True):
-        sheet_ws.update_cell(1, 10, initial_bankroll - amt); st.rerun()
+        worksheet.update_cell(1, 10, initial_br - amt); st.rerun()
     st.divider()
     view = st.selectbox("View", ["🏆 Overview", "Brighton", "Africa Cup of Nations"])
     if st.button("🔄 Sync Systems", use_container_width=True): st.rerun()
 
-# --- 6. CONTENT RENDERING ---
+# --- 6. DISPLAY ---
 if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center; font-size: 3.5rem;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-weight: bold;'>GLOBAL LIQUIDITY</p>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_br:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>GLOBAL POSITION</p>", unsafe_allow_html=True)
 
     if not df.empty:
-        summary = df.groupby('Comp').agg({'Match': 'count', 'Expense': 'sum', 'Income': 'sum', 'Status': lambda x: (x == '✅ Won').sum()}).reset_index()
-        summary['Net Profit'] = summary['Income'] - summary['Expense']
-        summary['Win Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
+        summary = df.groupby('Comp').agg({'Match': 'count', 'Out': 'sum', 'In': 'sum', 'Status': lambda x: (x == '✅ Won').sum()}).reset_index()
+        summary['Profit'] = summary['In'] - summary['Out']
+        summary['Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
         
-        total_p = summary['Net Profit'].sum()
+        t_p = summary['Profit'].sum()
         col1, col2, col3 = st.columns(3)
-        p_c = "#52b788" if total_p >= 0 else "#e5383b"
+        p_color = "#00ff88" if t_p >= 0 else "#ff4b4b"
         
-        col1.markdown(f'<div class="custom-card"><div class="c-label">Total Profit</div><div class="c-value" style="color:{p_c} !important">₪{total_p:,.0f}</div></div>', unsafe_allow_html=True)
-        col2.markdown(f'<div class="custom-card"><div class="c-label">Total Volume</div><div class="c-value">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
-        col3.markdown(f'<div class="custom-card"><div class="c-label">Avg Success</div><div class="c-value">{(summary["Status"].sum()/summary["Match"].sum()*100):.1f}%</div></div>', unsafe_allow_html=True)
+        col1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Profit</div><div class="card-val" style="color:{p_color}!important">₪{t_p:,.0f}</div></div>', unsafe_allow_html=True)
+        col2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Games Played</div><div class="card-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
+        col3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Win Ratio</div><div class="card-val">{(summary["Status"].sum()/summary["Match"].sum()*100):.1f}%</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        ch, tb = st.columns([1, 1.2])
-        with ch:
-            fig = px.bar(summary, x='Comp', y='Net Profit', color='Net Profit', color_continuous_scale=['#e5383b', '#52b788'])
+        c_ch, c_tb = st.columns([1, 1.2])
+        with c_ch:
+            fig = px.bar(summary, x='Comp', y='Profit', color='Profit', color_continuous_scale=['#ff4b4b', '#00ff88'])
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
-        with tb:
-            st.markdown("### Track Performance")
-            st.table(summary[['Comp', 'Match', 'Win Rate', 'Net Profit']].rename(columns={'Comp': 'Track'}).style.format({"Net Profit": "₪{:,.0f}"}))
+        with c_tb:
+            st.markdown("### Performance Table")
+            st.table(summary[['Comp', 'Match', 'Rate', 'Profit']].rename(columns={'Comp': 'Track', 'Profit': 'Net'}).style.format({"Net": "₪{:,.0f}"}))
 
 else:
-    # SPECIFIC TRACK VIEW
+    # SPECIFIC TRACK
     logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
     grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
     
     st.markdown(f'<div style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0; text-shadow:none !important;">{view.upper()}</h1></div>', unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
-
+    
     f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
-    t_net = f_df['Income'].sum() - f_df['Expense'].sum() if not f_df.empty else 0.0
+    track_net = f_df['In'].sum() - f_df['Out'].sum() if not f_df.empty else 0.0
 
     mc1, mc2, mc3 = st.columns(3)
-    mc1.markdown(f'<div class="custom-card"><div class="c-label">Expenses</div><div class="c-value">₪{f_df["Expense"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    mc2.markdown(f'<div class="custom-card"><div class="c-label">Revenue</div><div class="c-value">₪{f_df["Income"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    mc3.markdown(f'<div class="custom-card"><div class="c-label">Net Profit</div><div class="c-value" style="color:{"#2d6a4f" if t_net >= 0 else "#d32f2f"} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
+    mc1.markdown(f'<div class="metric-card-box"><div class="card-lbl">Invested</div><div class="card-val">₪{f_df["Out"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    mc2.markdown(f'<div class="metric-card-box"><div class="card-lbl">Revenue</div><div class="card-val">₪{f_df["In"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    n_c = "#2d6a4f" if track_net >= 0 else "#d32f2f"
+    mc3.markdown(f'<div class="metric-card-box"><div class="card-lbl">Net Track</div><div class="card-val" style="color:{n_c} !important">₪{track_net:,.0f}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("<br><h2 style='text-align: center;'>Performance</h2>", unsafe_allow_html=True)
-    c_f, c_c = st.columns([1, 1.2])
-    with c_f:
-        with st.form("entry"):
-            h = st.text_input("Home", value="Brighton" if view == "Brighton" else "")
-            a = st.text_input("Away")
-            o = st.number_input("Odds", 3.2)
-            s = st.number_input("Stake", 30.0)
-            r = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
+    st.markdown("<br><h3>Performance Strategy</h3>", unsafe_allow_html=True)
+    cf, cg = st.columns([1, 1.2])
+    with cf:
+        with st.form("add"):
+            st.subheader("New Entry")
+            h, a = st.text_input("Home", value="Brighton" if view == "Brighton" else ""), st.text_input("Away")
+            o, s = st.number_input("Odds", 3.2), st.number_input("Stake", 30.0)
+            r = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
             if st.form_submit_button("COMMIT"):
-                sheet_ws.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0]); st.rerun()
-    with c_c:
+                worksheet.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0]); st.rerun()
+    with cg:
         if not f_df.empty:
-            f_df['Equity'] = initial_bankroll + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-            fig_l = px.line(f_df, y='Equity', x=f_df.index)
+            f_df['Eq'] = initial_br + (f_df['In'].cumsum() - f_df['Out'].cumsum())
+            fig_l = px.line(f_df, y='Eq', x=f_df.index)
             fig_l.update_traces(line_color='#00ff88', line_width=4)
             fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=280)
             st.plotly_chart(fig_l, use_container_width=True)
-            w = len(f_df[f_df['Status'] == "✅ Won"])
-            st.markdown(f"**Win Rate: {(w/len(f_df)*100):.1f}%**")
+            st.markdown(f"**Track Success Rate: {(len(f_df[f_df['Status']=='✅ Won'])/len(f_df)*100):.1f}%**")
 
     st.markdown("### 📜 Activity Log")
     if not f_df.empty:
         for _, row in f_df.sort_index(ascending=False).iterrows():
-            style_class = "log-win" if "Won" in row['Status'] else "log-loss"
+            b_class = "banner-win" if "Won" in row['Status'] else "banner-loss"
+            diff = row['In'] - row['Out']
             st.markdown(f"""
-                <div class="log-card {style_class}">
+                <div class="activity-banner {b_class}">
                     <div>
-                        <span style="font-size: 1.1rem; font-weight: 900;">{row['Match']}</span><br>
-                        <span style="font-size: 0.8rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']}</span>
+                        <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
+                        <span style="font-size: 0.85rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']} | Stake: ₪{row['Out']}</span>
                     </div>
                     <div style="text-align: right;">
-                        <span style="font-size: 1.2rem; font-weight: 900;">₪{row['Income'] - row['Expense']:,.0f}</span><br>
-                        <span style="font-size: 0.7rem; font-weight: bold;">{row['Status']}</span>
+                        <span style="font-size: 1.4rem; font-weight: 900;">₪{diff:,.0f}</span><br>
+                        <span style="font-size: 0.75rem; font-weight: bold;">{row['Status']}</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
