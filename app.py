@@ -4,7 +4,8 @@ import plotly.express as px
 import gspread
 import datetime
 
-# --- 1. CONFIG & ASSETS ---
+# --- 1. CONFIGURATION ---
+# שימוש במרכאות כפולות למניעת שגיאות
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
@@ -15,61 +16,64 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. UI/UX STYLING (FINAL FIX) ---
+# --- 2. CSS STYLING (The Professional Fix) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* BACKGROUND */
+    /* MAIN BACKGROUND IMAGE */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("{BG_IMAGE_URL}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
     }}
     [data-testid="stHeader"] {{ background: transparent !important; }}
 
-    /* --- ZONE A: MAIN PAGE (Dark Background -> White Text) --- */
-    h1, h2, h3, h4, h5, h6, 
-    .stMarkdown, .stText, 
-    [data-testid="stMetricLabel"], 
-    [data-testid="stMetricValue"] {{
+    /* --- SIDEBAR DESIGN (Deep Navy & Clean) --- */
+    [data-testid="stSidebar"] {{
+        background-color: #0B1E33 !important; /* Elite Navy Blue */
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }}
+    
+    /* Sidebar Text - Naturally White on Dark Background */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] label, 
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] p {{
         color: #ffffff !important;
         font-family: 'Montserrat', sans-serif;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    }}
-
-    /* --- ZONE B: SIDEBAR (Light Background -> Dark Text) --- */
-    /* THE FIX: Specifically targeting the sidebar to have dark, readable text */
-    [data-testid="stSidebar"] {{
-        background-color: rgba(245, 245, 245, 0.95) !important; /* Light grey backdrop */
-        border-right: 1px solid rgba(0,0,0,0.1);
+        text-shadow: none !important; /* Clean text, no blur */
     }}
     
-    [data-testid="stSidebar"] *, 
-    [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] div,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {{
-        color: #0b1e33 !important; /* Dark Navy Blue - Elite Look */
-        text-shadow: none !important;
-        font-family: 'Montserrat', sans-serif;
+    /* Sidebar Metrics */
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #4CAF50 !important; /* Green for money */
+        font-weight: bold;
     }}
 
-    /* --- ZONE C: COMPONENTS (Tables, Forms, Cards) --- */
-    
-    /* 1. DataFrames */
+    /* --- MAIN PAGE CONTENT --- */
+    /* Headers and big text on the main page (over the stadium) */
+    .main h1, .main h2, .main h3, .main .stMetricLabel, .main .stMetricValue {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }}
+
+    /* --- LIGHT ZONES (Tables & Forms) --- */
+    /* These areas have WHITE backgrounds, so text must be DARK */
+
+    /* 1. The Dataframe (Activity Log) */
     [data-testid="stDataFrame"] {{
         background-color: white !important;
         border-radius: 8px;
         padding: 5px;
     }}
     [data-testid="stDataFrame"] *, 
-    [data-testid="stDataFrame"] td, 
     [data-testid="stDataFrame"] th, 
-    [data-testid="stDataFrame"] div {{
-        color: #111111 !important; 
+    [data-testid="stDataFrame"] td {{
+        color: #111111 !important; /* Dark Grey/Black */
         text-shadow: none !important;
         font-family: 'Inter', sans-serif;
     }}
@@ -79,14 +83,14 @@ st.markdown(f"""
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
         padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }}
-    [data-testid="stForm"] label, [data-testid="stForm"] p, [data-testid="stForm"] div {{
+    [data-testid="stForm"] label, [data-testid="stForm"] p, [data-testid="stForm"] h3 {{
         color: #111111 !important;
         text-shadow: none !important;
     }}
 
-    /* 3. Metric Cards */
+    /* 3. Metric Cards (Custom HTML) */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -108,19 +112,34 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* 4. Inputs */
+    /* --- UI ELEMENTS --- */
+    /* Inputs */
     input {{
         color: #000000 !important;
         font-weight: 600;
     }}
     
-    /* 5. Sidebar Buttons */
-    [data-testid="stSidebar"] button {{
-        background-color: #2c3e50 !important; /* Dark button for contrast */
-        color: white !important;
+    /* Buttons */
+    div[data-testid="stButton"] button {{
+        background-color: #2E7D32; /* Solid Green */
+        color: white;
         border: none;
+        border-radius: 6px;
         font-weight: 600;
-        text-shadow: none !important;
+        transition: all 0.3s;
+    }}
+    div[data-testid="stButton"] button:hover {{
+        background-color: #1B5E20;
+        border-color: white;
+    }}
+    
+    /* Expander (Admin) */
+    .streamlit-expanderContent {{
+        background-color: #f8f9fa;
+        color: #000000 !important;
+    }}
+    .streamlit-expanderContent p {{
+        color: #000000 !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -175,7 +194,6 @@ def calculate_logic(raw_data, br_base, af_base):
                 net = inc - cycle_invest[comp]
                 try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
                 except: roi = "0.0%"
-                
                 next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_invest[comp] = 0.0
                 status = "✅ Won"
@@ -211,7 +229,7 @@ else:
     df = pd.DataFrame()
     current_bal = saved_br
 
-# --- 5. DASHBOARD LAYOUT ---
+# --- 5. UI LAYOUT ---
 
 # SIDEBAR
 with st.sidebar:
@@ -220,23 +238,27 @@ with st.sidebar:
     except:
         st.subheader("⚽ GoalMetric")
         
-    st.markdown("## WALLET CONTROL")
+    st.markdown("---") # Divider
+    st.markdown("### 🏦 WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
-    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0)
     
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("Deposit", use_container_width=True):
+    st.write("Transaction:")
+    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("➕ Deposit", use_container_width=True):
             if update_bankroll(worksheet, saved_br + amt): st.rerun()
-    with c2:
-        if st.button("Withdraw", use_container_width=True):
+    with col_btn2:
+        if st.button("➖ Withdraw", use_container_width=True):
             if update_bankroll(worksheet, saved_br - amt): st.rerun()
             
-    st.divider()
-    track = st.selectbox("Current Track", ["Brighton", "Africa Cup of Nations"])
-    if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
+    st.markdown("---")
+    st.write("Select Track:")
+    track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
+    if st.button("🔄 Sync Data", use_container_width=True): st.rerun()
 
-# HEADER
+# BANNER
 brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
 afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
@@ -278,7 +300,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# BANKROLL
+# LIVE BANKROLL
 st.markdown(f"""
     <div style="text-align: center; margin-bottom: 35px;">
         <div style="
@@ -301,7 +323,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# STATS
+# METRICS
 if not df.empty:
     f_df = df[df['Comp'] == track].copy()
 else:
@@ -321,79 +343,4 @@ with c2:
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
 with c3:
     color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
-    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
-
-# NEXT BET & FORM
-next_val = next_stakes.get(track, 30.0)
-st.markdown(f"""
-    <div style="text-align: center; margin: 30px 0;">
-        <span style="font-size: 1.4rem; color: white; font-weight: bold;">Next Bet: </span>
-        <span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900; text-shadow: 0 0 10px rgba(76,175,80,0.6);">₪{next_val:,.0f}</span>
-    </div>
-""", unsafe_allow_html=True)
-
-col_form, col_chart = st.columns([1, 1])
-
-with col_form:
-    with st.form("new_match"):
-        st.subheader("Add Match")
-        h_team = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
-        a_team = st.text_input("Away Team")
-        odds_val = st.number_input("Odds", value=3.2, step=0.1)
-        stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
-        result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
-        
-        if st.form_submit_button("Submit Game", use_container_width=True):
-            if h_team and a_team:
-                worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
-                st.toast("Match Added!", icon="✅")
-                st.rerun()
-            else:
-                st.warning("Please enter team names")
-
-with col_chart:
-    st.subheader("Performance")
-    if not f_df.empty:
-        f_df['Balance'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-        fig = px.line(f_df, y='Balance', x=f_df.index, title=None)
-        fig.update_traces(line_color='#00ff88', line_width=3)
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0.2)',
-            font=dict(color='white'),
-            margin=dict(l=20, r=20, t=20, b=20),
-            height=300
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        wins = len(f_df[f_df['Status'] == "✅ Won"])
-        losses = len(f_df[f_df['Status'] == "❌ Lost"])
-        rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
-        st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
-
-# LOG
-st.subheader("📜 Activity Log")
-if not f_df.empty:
-    def highlight_results(row):
-        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
-        return [f'background-color: {bg}; color: #000000 !important; font-weight: 500;'] * len(row)
-    
-    display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
-    display_df = display_df.sort_index(ascending=False)
-    
-    st.dataframe(
-        display_df.style.apply(highlight_results, axis=1),
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.info("No matches found.")
-
-with st.expander("🛠️ Admin"):
-    if st.button("Undo Last"):
-        if len(raw_data) > 0:
-            try:
-                worksheet.delete_rows(len(raw_data) + 1)
-                st.rerun()
-            except: st.error("Error")
-        else: st.warning("Empty")
+    st.markdown(f"""<div class="custom-
