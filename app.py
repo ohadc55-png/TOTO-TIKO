@@ -7,7 +7,8 @@ import datetime
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-# הוסר: לינק לתמונת רקע לסרגל
+# הלינק לתמונת הרקע של הסרגל (המטושטשת)
+SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
 st.set_page_config(
     page_title="Elite Football Tracker",
@@ -16,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Dark Green Sidebar Fix) ---
+# --- 2. CSS STYLING (Universal Background Fix) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
@@ -25,7 +26,6 @@ st.markdown(f"""
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     [data-testid="stHeader"] {{ background-color: rgba(0,0,0,0) !important; }}
-    /* Hamburger menu color (keep white so it's visible on dark header background) */
     [data-testid="collapsedControl"] {{ color: #ffffff !important; }}
 
     /* MAIN BACKGROUND (Stadium) */
@@ -36,44 +36,52 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- SIDEBAR STYLING (DARK GREEN MATCHING LOGO) --- */
+    /* --- SIDEBAR BACKGROUND IMAGE LOGIC --- */
     
-    /* 1. Sidebar Container Background */
+    /* 1. Sidebar Container */
     [data-testid="stSidebar"] {{
-        background-color: #0e2b1f !important; /* Deep Emerald Green matching the logo background */
-        border-right: 1px solid rgba(255,255,255,0.1); /* Subtle light border */
+        position: relative;
+        /* Background layer is slightly transparent to let image show through */
+        background-color: rgba(255, 255, 255, 0.75) !important; 
+        border-right: 1px solid rgba(255,255,255,0.2);
     }}
 
-    /* 2. Force WHITE text on EVERYTHING in the sidebar for contrast */
+    /* 2. The Blurred Image Layer */
+    [data-testid="stSidebar"]::before {{
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        /* CRITICAL: Double quotes handle single quotes in url */
+        background-image: url("{SIDEBAR_BG_IMAGE_URL}");
+        background-size: cover;
+        background-position: center;
+        /* >>> CHANGE 1: BLUR REDUCED FROM 10px TO 5px <<< */
+        filter: blur(5px); 
+        z-index: -1;
+        transform: scale(1.05); /* Slight zoom to hide blurred edges */
+    }}
+
+    /* --- SIDEBAR TEXT (FORCE BLACK) --- */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
     [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown,
-    [data-testid="stSidebar"] [data-testid="stMetricValue"],
-    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
-        color: #ffffff !important;
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #000000 !important;
         text-shadow: none !important;
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* Sidebar Inputs (Keep them light so they look editable) */
+    /* Sidebar Inputs */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border: 1px solid transparent;
-        font-weight: bold;
-    }}
-    
-    /* Sidebar Selectbox */
-    [data-testid="stSidebar"] [data-baseweb="select"] > div {{
-         background-color: rgba(255, 255, 255, 0.95) !important;
-         color: black !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #ccc;
     }}
     
     /* Sidebar Buttons (White Text) */
     [data-testid="stSidebar"] button {{
         color: #ffffff !important;
-        border-color: rgba(255,255,255,0.2) !important;
     }}
 
     /* --- MAIN AREA (White Text) --- */
@@ -187,7 +195,7 @@ else:
 # SIDEBAR
 with st.sidebar:
     try:
-        # לוגו מוקטן ל-120 פיקסלים
+        # >>> CHANGE 2: LOGO WIDTH SET TO 120px <<<
         st.image(APP_LOGO_URL, width=120)
     except:
         pass
