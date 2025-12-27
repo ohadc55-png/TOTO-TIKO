@@ -184,7 +184,6 @@ def update_bankroll(worksheet, val):
 
 def calculate_logic(raw_data, br_base, af_base):
     processed = []
-    # Initialize defaults for known tracks
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
@@ -193,9 +192,8 @@ def calculate_logic(raw_data, br_base, af_base):
             comp = str(row.get('Competition', 'Brighton')).strip()
             if not comp: comp = 'Brighton'
             
-            # Init dynamically if new competition appears
             if comp not in next_bets:
-                next_bets[comp] = 30.0 # Default base
+                next_bets[comp] = 30.0 
                 cycle_invest[comp] = 0.0
 
             try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
@@ -215,7 +213,6 @@ def calculate_logic(raw_data, br_base, af_base):
                 net = inc - cycle_invest[comp]
                 try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
                 except: roi = "0.0%"
-                # Reset Logic
                 base_reset = float(br_base if "Brighton" in comp else (af_base if "Africa" in comp else 30.0))
                 next_bets[comp] = base_reset
                 cycle_invest[comp] = 0.0
@@ -268,7 +265,6 @@ with st.sidebar:
             
     st.divider()
     st.write("Navigation:")
-    # Added "🏆 Overview" as the first option
     track = st.selectbox("View", ["🏆 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
     
     if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
@@ -277,8 +273,6 @@ with st.sidebar:
 
 if track == "🏆 Overview":
     # --- DASHBOARD VIEW ---
-    
-    # 1. Main Title
     st.markdown("""
         <div style="text-align: center; margin-bottom: 20px;">
             <h1 style="font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">
@@ -288,7 +282,6 @@ if track == "🏆 Overview":
         </div>
     """, unsafe_allow_html=True)
     
-    # 2. Live Bankroll Display
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 35px;">
         <div style="font-size: 2.3rem; font-weight: 300; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.3); line-height: 1; margin-bottom: 8px;">
@@ -301,20 +294,25 @@ if track == "🏆 Overview":
     """, unsafe_allow_html=True)
 
     if not df.empty:
-        # 3. Calculate Summary Data
-        # Group by Competition
+        # 3. Calculate Summary Data CORRECTLY
+        # We do NOT sum 'Net Profit'. We sum Income - Expense.
         summary = df.groupby('Comp').agg({
             'Match': 'count',
             'Expense': 'sum',
             'Income': 'sum',
-            'Net Profit': 'sum',
-            'Status': lambda x: (x == '✅ Won').sum() # Count wins
+            'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
         
-        summary.columns = ['Competition', 'Games', 'Total Invested', 'Revenue', 'Net Profit', 'Wins']
+        summary.columns = ['Competition', 'Games', 'Total Invested', 'Revenue', 'Wins']
+        
+        # --- THE FIX IS HERE ---
+        # Calculate Net Profit based on totals, not sum of rows
+        summary['Net Profit'] = summary['Revenue'] - summary['Total Invested']
+        # -----------------------
+        
         summary['Win Rate'] = (summary['Wins'] / summary['Games'] * 100).apply(lambda x: f"{x:.1f}%")
         
-        # 4. Global Metrics (Cards)
+        # 4. Global Metrics
         total_profit = summary['Net Profit'].sum()
         total_games = summary['Games'].sum()
         total_wins = summary['Wins'].sum()
@@ -348,10 +346,8 @@ if track == "🏆 Overview":
         with c_table:
             st.subheader("Performance Breakdown")
             
-            # Format columns for display
             display_summary = summary[['Competition', 'Games', 'Wins', 'Win Rate', 'Revenue', 'Net Profit']].copy()
             
-            # Styling the table black text
             def style_summary(row):
                 return ['color: #000000; font-weight: 500;'] * len(row)
 
@@ -368,9 +364,7 @@ if track == "🏆 Overview":
         st.info("No data available yet.")
 
 else:
-    # --- SPECIFIC TRACK VIEW (Existing Logic) ---
-    
-    # BANNER
+    # --- SPECIFIC TRACK VIEW ---
     brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
     afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
@@ -412,7 +406,6 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # LIVE BANKROLL
     st.markdown(f"""
         <div style="text-align: center; margin-bottom: 35px;">
             <div style="font-size: 2.3rem; font-weight: 300; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.3); line-height: 1; margin-bottom: 8px;">
@@ -424,7 +417,6 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # Filter Data for specific track
     if not df.empty:
         f_df = df[df['Comp'] == track].copy()
     else:
@@ -434,7 +426,6 @@ else:
         m_exp = f_df['Expense'].sum(); m_inc = f_df['Income'].sum(); m_net = m_inc - m_exp
     else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
 
-    # METRICS
     c1, c2, c3 = st.columns(3)
     with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
     with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
@@ -443,7 +434,6 @@ else:
         else: color_net = "#d32f2f"
         st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
-    # NEXT BET
     next_val = next_stakes.get(track, 30.0)
     st.markdown(f"""
         <div style="text-align: center; margin: 30px 0;">
@@ -452,7 +442,6 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # FORM & CHART
     col_form, col_chart = st.columns([1, 1])
     with col_form:
         with st.form("new_match"):
@@ -484,7 +473,6 @@ else:
             rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
             st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
-    # LOG
     st.subheader("📜 Activity Log")
     if not f_df.empty:
         def highlight_results(row):
