@@ -15,17 +15,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (Aggressive Fix) ---
+# --- 2. CSS STYLING (Fixed Colors per Request) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* Hide default elements */
+    /* --- HIDE ELEMENTS --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    header {{visibility: hidden;}} /* Hide Top Bar */
+    [data-testid="stSidebarNav"] {{display: none;}} /* Hide Sidebar Navigation/Decoration */
 
-    /* MAIN BACKGROUND */
+    /* --- BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -33,93 +34,92 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* --- ZONE A: MAIN CONTENT (White Text) --- */
-    .main .stMarkdown, .main h1, .main h2, .main h3, .main p, .main span {{
-        color: #ffffff !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    /* --- SIDEBAR: LIGHT BACKGROUND -> BLACK TEXT --- */
+    [data-testid="stSidebar"] {{
+        background-color: #f8f9fa !important; /* Light Grey */
+        border-right: 1px solid #ddd;
+    }}
+    
+    /* Force BLACK text on EVERYTHING in the sidebar */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stMarkdown {{
+        color: #000000 !important;
+        text-shadow: none !important;
+        font-family: 'Montserrat', sans-serif;
+    }}
+    
+    /* Metric Values in Sidebar (The Big Numbers) */
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #000000 !important;
+    }}
+    
+    /* Input Fields in Sidebar */
+    [data-testid="stSidebar"] input {{
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #ccc;
+    }}
+    
+    /* Sidebar Buttons */
+    [data-testid="stSidebar"] button {{
+        color: #ffffff !important; /* Keep button text white */
     }}
 
-    /* --- ZONE B: SIDEBAR (White BG -> Black Text) --- */
-    
-    /* 1. Sidebar Container Background */
-    [data-testid="stSidebar"] {{
-        background-color: #ffffff !important;
-        border-right: 1px solid #e0e0e0;
+    /* --- MAIN AREA: DARK BACKGROUND -> WHITE TEXT --- */
+    /* Specifically target Headers (Performance, Activity Log) in the main area */
+    .main h1, .main h2, .main h3, .main h4 {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }}
     
-    /* 2. Sidebar General Text (P, Div, Span) */
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3 {{
+    /* General Text in Main Area */
+    .main p, .main li {{
+        color: #ffffff !important;
+    }}
+
+    /* --- COMPONENTS (Cards & Tables) --- */
+    
+    /* Forms (White card) */
+    [data-testid="stForm"] {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+    }}
+    /* Text inside Forms (needs to be black) */
+    [data-testid="stForm"] h1, [data-testid="stForm"] h2, [data-testid="stForm"] h3,
+    [data-testid="stForm"] p, [data-testid="stForm"] label {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
 
-    /* 3. Sidebar Metrics (Base Bankroll) */
-    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
-        color: #333333 !important; /* Dark Grey Label */
-        font-weight: 600;
-    }}
-    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-        color: #000000 !important; /* Black Value */
-        font-weight: 900;
-    }}
-
-    /* 4. Sidebar Widget Labels (Amount, Track, etc.) */
-    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
-        color: #000000 !important;
-        font-weight: 600;
-        font-size: 14px;
-    }}
-
-    /* 5. Sidebar Inputs (Text/Number Box) */
-    [data-testid="stSidebar"] input {{
-        color: #000000 !important;
-        background-color: #f0f2f6 !important; /* Light Grey Input */
-        border: 1px solid #ccc;
-    }}
-    
-    /* 6. Sidebar Selectbox Text */
-    [data-testid="stSidebar"] [data-testid="stSelectbox"] div {{
-        color: #000000 !important;
-    }}
-
-    /* 7. Sidebar Buttons */
-    [data-testid="stSidebar"] button {{
-        background-color: #2E7D32 !important; /* Green Buttons */
-        color: #ffffff !important;
-        border: none;
-    }}
-
-    /* --- ZONE C: DATA TABLES (White BG -> Black Text) --- */
+    /* Activity Log Table (White BG, Black Text) */
     [data-testid="stDataFrame"] {{
         background-color: white !important;
+        border-radius: 8px;
     }}
     [data-testid="stDataFrame"] *, 
     [data-testid="stDataFrame"] th, 
     [data-testid="stDataFrame"] td {{
         color: #000000 !important;
+        text-shadow: none !important;
     }}
 
-    /* --- ZONE D: FORMS --- */
-    [data-testid="stForm"] {{
-        background-color: rgba(255, 255, 255, 0.95);
-    }}
-    [data-testid="stForm"] label, [data-testid="stForm"] p {{
-        color: #000000 !important;
-    }}
-    
-    /* Custom Metric Cards */
+    /* Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
         padding: 20px;
         text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 12px; }}
-    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 24px; }}
+    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
+    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
     
     </style>
 """, unsafe_allow_html=True)
@@ -174,7 +174,6 @@ def calculate_logic(raw_data, br_base, af_base):
                 net = inc - cycle_invest[comp]
                 try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
                 except: roi = "0.0%"
-                
                 next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_invest[comp] = 0.0
                 status = "✅ Won"
@@ -222,7 +221,7 @@ with st.sidebar:
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
     
-    st.markdown("**Transaction Amount**")
+    st.write("Transaction Amount:")
     amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
     
     c1, c2 = st.columns(2)
@@ -234,7 +233,7 @@ with st.sidebar:
             if update_bankroll(worksheet, saved_br - amt): st.rerun()
             
     st.divider()
-    st.markdown("**Current Track**")
+    st.write("Current Track:")
     track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
     if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
 
