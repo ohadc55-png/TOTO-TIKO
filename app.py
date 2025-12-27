@@ -16,35 +16,59 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING ---
+# --- 2. CSS STYLING (Professional Fix for Arrows) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* General Setup */
+    /* --- 1. CLEANUP & HEADER --- */
+    /* Hide standard footer and top decoration bar */
+    footer {{display: none !important;}}
+    [data-testid="stDecoration"] {{display: none !important;}}
     #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display: none;}}
-    
-    /* Transparent Header */
+
+    /* Make header transparent but keep it visible for interactive elements */
     [data-testid="stHeader"] {{
         background-color: transparent !important;
         z-index: 100 !important;
     }}
+
+    /* --- 2. ARROW STYLING (THE FIX) --- */
     
-    /* OPEN SIDEBAR ARROW (Visible on Dark Stadium) */
+    /* >>> CASE A: SIDEBAR CLOSED -> OPEN ARROW (Must be WHITE on dark background) <<< */
+    /* Target the container of the open button */
     [data-testid="stSidebarCollapsedControl"] {{
         color: #ffffff !important;
-        background-color: transparent !important;
-        z-index: 1000 !important;
+        z-index: 10000 !important; /* Ensure it's clickable */
     }}
+    /* Force the actual SVG icon inside to be bright WHITE */
     [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] i {{
+    [data-testid="stSidebarCollapsedControl"] svg path {{
         fill: #ffffff !important;
-        color: #ffffff !important;
+        stroke: #ffffff !important;
     }}
 
-    /* MAIN BACKGROUND */
+    /* >>> CASE B: SIDEBAR OPEN -> CLOSE ARROW/X (Must be BLACK on light background) <<< */
+    /* We target the specific button located within the sidebar header area */
+    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button {{
+         border: none !important;
+         background: transparent !important;
+    }}
+    /* Force the SVG icon inside this specific button to be BLACK */
+    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button svg,
+    [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div:first-child button svg path {{
+        fill: #000000 !important;
+        stroke: #000000 !important;
+    }}
+    
+    /* Add padding to sidebar content so it doesn't overlap the close button */
+    [data-testid="stSidebarUserContent"] {{
+        padding-top: 3rem !important; 
+    }}
+
+
+    /* --- 3. BACKGROUNDS --- */
+    /* Main Stadium Background */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed;
@@ -52,13 +76,12 @@ st.markdown(f"""
         background-position: center;
     }}
 
-    /* SIDEBAR BACKGROUND */
+    /* Sidebar Blurred Background */
     [data-testid="stSidebar"] {{
         position: relative;
         background-color: rgba(255, 255, 255, 0.75) !important;
         border-right: 1px solid rgba(255,255,255,0.2);
     }}
-
     [data-testid="stSidebar"]::before {{
         content: "";
         position: absolute;
@@ -71,7 +94,8 @@ st.markdown(f"""
         transform: scale(1.05);
     }}
 
-    /* SIDEBAR CONTENT (BLACK TEXT) */
+    /* --- 4. CONTENT STYLING --- */
+    /* Sidebar Text (Black) */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
@@ -82,17 +106,6 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* CLOSE SIDEBAR ARROW (Inside Sidebar) */
-    [data-testid="stSidebar"] button {{
-        color: #000000 !important;
-        background-color: transparent !important;
-        border: none !important;
-    }}
-    [data-testid="stSidebar"] button svg {{
-        fill: #000000 !important;
-        stroke: #000000 !important;
-    }}
-    
     /* Sidebar Inputs */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
@@ -100,19 +113,19 @@ st.markdown(f"""
         border: 1px solid #ccc;
     }}
     
-    /* Action Buttons */
+    /* Action Buttons (Green) */
     [data-testid="stSidebar"] [data-testid="stButton"] button {{
         color: #ffffff !important;
         background-color: #2E7D32 !important;
     }}
 
-    /* MAIN AREA (WHITE TEXT) */
+    /* Main Area Text (White) */
     .main h1, .main h2, .main h3, .main h4, .main p {{
         color: #ffffff !important;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }}
 
-    /* COMPONENTS */
+    /* --- 5. COMPONENTS --- */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
@@ -129,7 +142,7 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* MOBILE RESPONSIVE */
+    /* --- 6. MOBILE RESPONSIVE --- */
     @media only screen and (max-width: 768px) {{
         .banner-text {{ display: none !important; }}
         .banner-container {{ justify-content: center !important; padding: 10px !important; }}
@@ -305,12 +318,11 @@ c1, c2, c3 = st.columns(3)
 with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
 with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
 with c3:
-    # --- REFACTORED LOGIC TO PREVENT SYNTAX ERROR ---
+    # ROBUST COLOR LOGIC
     if m_net >= 0:
         color_net = "#2d6a4f"
     else:
         color_net = "#d32f2f"
-    
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
 # NEXT BET
