@@ -1,204 +1,365 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+import plotly.express as px
+import gspread
+import datetime
 
-# ==========================================
-# --- CONFIGURATION & PRO UI STYLING ---
-# ==========================================
-st.set_page_config(page_title="ProTrade Journal", layout="wide", page_icon="📈")
+# --- 1. CONFIGURATION ---
+APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
+BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
+# הלינק לתמונת הרקע של הסרגל (המטושטשת)
+SIDEBAR_BG_IMAGE_URL = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
-# CSS נקי ומקצועי ללא תמונת רקע
-st.markdown("""
-<style>
-    .stApp { background-color: #0E1117; font-family: 'Roboto', sans-serif; }
+st.set_page_config(
+    page_title="Elite Football Tracker",
+    layout="wide",
+    page_icon=APP_LOGO_URL,
+    initial_sidebar_state="expanded"
+)
+
+# --- 2. CSS STYLING (Fixed Close Button & Colors) ---
+st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* כרטיסי KPI */
-    .metric-card {
-        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        border: 1px solid #374151;
+    /* --- GENERAL HEADER SETUP --- */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    
+    /* Transparent Header - Allows buttons to be seen */
+    [data-testid="stHeader"] {{
+        background-color: transparent !important;
+        z-index: 1 !important;
+    }}
+    
+    /* THE HAMBURGER MENU (Open Sidebar) - White on Dark Background */
+    [data-testid="collapsedControl"] {{
+        color: #ffffff !important;
+    }}
+
+    /* --- MAIN BACKGROUND --- */
+    [data-testid="stAppViewContainer"] {{
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+    }}
+
+    /* --- SIDEBAR BACKGROUND (BLURRED) --- */
+    [data-testid="stSidebar"] {{
+        position: relative;
+        background-color: rgba(255, 255, 255, 0.75) !important; /* Semi-transparent white */
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }}
+
+    /* The Blurred Image Layer */
+    [data-testid="stSidebar"]::before {{
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("{SIDEBAR_BG_IMAGE_URL}");
+        background-size: cover;
+        background-position: center;
+        filter: blur(5px); 
+        z-index: -1;
+        transform: scale(1.05);
+    }}
+
+    /* --- SIDEBAR CONTENT (BLACK TEXT) --- */
+    /* Force everything in sidebar to be black */
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] label, [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #000000 !important;
+        text-shadow: none !important;
+        font-family: 'Montserrat', sans-serif;
+    }}
+    
+    /* --- FIX FOR THE SIDEBAR CLOSE BUTTON (ARROWS) --- */
+    /* Target the button inside the sidebar specifically */
+    [data-testid="stSidebar"] button {{
+        color: #000000 !important; /* Make the arrow BLACK */
+        background-color: transparent !important;
+        border: none !important;
+    }}
+    
+    /* Sidebar Inputs */
+    [data-testid="stSidebar"] input {{
+        color: #000000 !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #ccc;
+    }}
+    
+    /* Action Buttons (Deposit/Withdraw) - White Text on Green */
+    [data-testid="stSidebar"] [data-testid="stButton"] button {{
+        color: #ffffff !important;
+        background-color: #2E7D32 !important; /* Restore green background */
+    }}
+
+    /* --- MAIN AREA (WHITE TEXT) --- */
+    .main h1, .main h2, .main h3, .main h4, .main p {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }}
+
+    /* --- COMPONENTS --- */
+    [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
+    [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
+
+    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; }}
+    [data-testid="stForm"] * {{ color: #000000 !important; text-shadow: none !important; }}
+
+    .custom-metric-box {{
+        background-color: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 10px;
-    }
-    .metric-label { color: #9CA3AF; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-    .metric-value { color: #F3F4F6; font-size: 1.8rem; font-weight: 700; }
-    .text-green { color: #34D399 !important; }
-    .text-red { color: #F87171 !important; }
-    
-    /* מיכלי טריידים */
-    .trade-container { 
-        background-color: #111827; 
-        border: 1px solid #374151; 
-        border-radius: 10px; 
-        padding: 15px; 
-        margin-bottom: 15px; 
-    }
-    
-    /* כרטיסי היסטוריה */
-    .history-card {
-        background-color: #1F2937;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border-left: 8px solid #374151;
-    }
-    .history-win { border-left: 8px solid #34D399; }
-    .history-loss { border-left: 8px solid #F87171; }
-    
-    .detail-label { color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
-    .detail-value { color: #E5E7EB; font-weight: 600; font-size: 1rem; }
-    .divider { border-top: 1px solid #374151; margin: 10px 0; }
-</style>
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }}
+    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
+    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
+
+    /* --- MOBILE RESPONSIVE --- */
+    @media only screen and (max-width: 768px) {{
+        .banner-text {{ display: none !important; }}
+        .banner-container {{ justify-content: center !important; padding: 10px !important; }}
+        .banner-img {{ height: 120px !important; margin: 0 !important; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important; }}
+        [data-testid="stDataFrame"] * {{ font-size: 12px !important; }}
+    }}
+    </style>
 """, unsafe_allow_html=True)
 
-# --- INITIALIZE STATE ---
-if 'trades' not in st.session_state:
-    st.session_state.trades = []
-if 'initial_capital' not in st.session_state:
-    st.session_state.initial_capital = 10000.0
+# --- 3. BACKEND LOGIC ---
+def get_data_from_sheets():
+    try:
+        gc = gspread.service_account_from_dict(st.secrets["service_account"])
+        sh = gc.open_by_url(st.secrets["sheet_url"])
+        worksheet = sh.get_worksheet(0)
+        data = worksheet.get_all_records()
+        try:
+            val = worksheet.cell(1, 10).value
+            initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
+        except: initial_bankroll = 5000.0
+        return data, worksheet, initial_bankroll
+    except Exception as e:
+        st.error(f"Connection Error: {e}")
+        return [], None, 5000.0
 
-# --- CONSTANTS ---
-FUTURE_MULTIPLIERS = { 
-    "ES (S&P 500)": 50, "MES (Micro S&P)": 5, 
-    "NQ (Nasdaq 100)": 20, "MNQ (Micro Nasdaq)": 2, 
-    "GC (Gold)": 100, "CL (Crude Oil)": 1000 
-}
+def update_bankroll(worksheet, val):
+    try:
+        worksheet.update_cell(1, 10, val)
+        return True
+    except: return False
 
-# ==========================================
-# --- MODAL: NEW TRADE ENTRY ---
-# ==========================================
-@st.dialog("🚀 New Trade Entry")
-def open_trade_modal():
-    asset_class = st.selectbox("Asset Class", ["Stock", "Future", "Option"])
-    symbol = ""
-    multiplier = 1.0
-    if asset_class == "Stock": symbol = st.text_input("Ticker Symbol").upper()
-    elif asset_class == "Future":
-        fut = st.selectbox("Contract", list(FUTURE_MULTIPLIERS.keys()))
-        symbol = fut.split(" ")[0]
-        multiplier = FUTURE_MULTIPLIERS[fut]
-    else: # Option
-        und = st.text_input("Underlying").upper()
-        o_type = st.selectbox("Type", ["Call", "Put"])
-        strike = st.text_input("Strike")
-        symbol = f"{und} {o_type} {strike}"
-        multiplier = 100.0
+def calculate_logic(raw_data, br_base, af_base):
+    processed = []
+    next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
+    cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
-    col1, col2 = st.columns(2)
-    with col1: direction = st.radio("Direction", ["Long", "Short"], horizontal=True)
-    with col2: qty = st.number_input("Size / Quantity", min_value=1, value=1)
-    
-    c_date, c_price = st.columns(2)
-    with c_date: entry_date = st.date_input("Entry Date", datetime.today())
-    with c_price: entry_price = st.number_input("Entry Price ($)", min_value=0.00, format="%.2f")
-    
-    if st.button("Open Position", type="primary", use_container_width=True):
-        new_trade = {
-            "ID": len(st.session_state.trades) + 1, "Asset Class": asset_class, "Symbol": symbol,
-            "Direction": direction, "Entry Date": entry_date.strftime("%Y-%m-%d"), 
-            "Entry Price": entry_price, "Original Qty": qty, "Remaining Qty": qty, 
-            "Multiplier": multiplier, "Exits": [], "Total Realized P&L": 0.0,
-            "Status": "Open"
-        }
-        st.session_state.trades.append(new_trade)
-        st.rerun()
+    for row in raw_data:
+        try:
+            comp = str(row.get('Competition', 'Brighton')).strip()
+            if not comp: comp = 'Brighton'
+            try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+            except: odds = 1.0
+            try:
+                stake_val = row.get('Stake')
+                if stake_val in [None, '', ' ']: exp = next_bets[comp]
+                else: exp = float(str(stake_val).replace(',', ''))
+            except: exp = next_bets[comp]
+            res = str(row.get('Result', '')).strip()
+            cycle_invest[comp] += exp
+            is_win = "Draw (X)" in res
+            
+            if is_win:
+                inc = exp * odds
+                net = inc - cycle_invest[comp]
+                try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                except: roi = "0.0%"
+                next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
+                cycle_invest[comp] = 0.0
+                status = "✅ Won"
+            else:
+                inc = 0.0
+                net = -exp
+                roi = "N/A"
+                next_bets[comp] = exp * 2.0
+                status = "❌ Lost"
+            processed.append({
+                "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
+                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net, "Status": status, "ROI": roi
+            })
+        except: continue
+    return processed, next_bets
 
-# ==========================================
-# --- SIDEBAR & CALCULATIONS ---
-# ==========================================
+# --- 4. EXECUTION ---
+raw_data, worksheet, saved_br = get_data_from_sheets()
+processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
+if processed:
+    df = pd.DataFrame(processed)
+    current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
+else:
+    df = pd.DataFrame()
+    current_bal = saved_br
+
+# --- 5. UI LAYOUT ---
+
+# SIDEBAR
 with st.sidebar:
-    st.title("⚙️ Controls")
-    if st.button("➕ NEW TRADE", type="primary", use_container_width=True): open_trade_modal()
-    st.markdown("---")
-    st.session_state.initial_capital = st.number_input("Account Start ($)", value=st.session_state.initial_capital)
-    if st.button("⚠️ CLEAR DATA", use_container_width=True):
-        st.session_state.trades = []
-        st.rerun()
-
-# חישובים מאובטחים למניעת KeyError
-total_pnl = sum(t.get('Total Realized P&L', 0.0) for t in st.session_state.trades)
-curr_equity = st.session_state.initial_capital + total_pnl
-roi = (total_pnl / st.session_state.initial_capital * 100) if st.session_state.initial_capital > 0 else 0.0
-
-# ==========================================
-# --- DASHBOARD UI ---
-# ==========================================
-st.markdown("## 📊 Portfolio Dashboard")
-c1, c2, c3, c4 = st.columns(4)
-
-def kpi_box(t, v, m=True, c=False, p=False):
-    cl = ("text-green" if v > 0 else "text-red") if c else ""
-    val = f"${v:,.2f}" if m else (f"{v:+.2f}%" if p else str(v))
-    return f'<div class="metric-card"><div class="metric-label">{t}</div><div class="metric-value {cl}">{val}</div></div>'
-
-with c1: st.markdown(kpi_box("Current Equity", curr_equity), unsafe_allow_html=True)
-with c2: st.markdown(kpi_box("Total Realized P&L", total_pnl, True, True), unsafe_allow_html=True)
-with c3: st.markdown(kpi_box("Account ROI", roi, False, True, True), unsafe_allow_html=True)
-with c4: st.markdown(kpi_box("Open Trades", len([t for t in st.session_state.trades if t.get('Status') == 'Open']), False), unsafe_allow_html=True)
-
-# ==========================================
-# --- TABS: ACTIVE & HISTORY ---
-# ==========================================
-st.markdown("---")
-t_act, t_hist = st.tabs(["📂 Active Trades", "📜 Detailed History"])
-
-# --- ניהול טריידים פעילים ---
-with t_act:
-    active = [t for t in st.session_state.trades if t.get('Status') == 'Open']
-    if not active: st.info("No active trades.")
-    else:
-        for i, trade in enumerate(st.session_state.trades):
-            if trade.get('Status') == 'Open':
-                st.markdown(f'<div class="trade-container"><b>{trade.get("Symbol")}</b> | Entry: ${trade.get("Entry Price")} | Qty: {trade.get("Remaining Qty")}</div>', unsafe_allow_html=True)
-                with st.expander(f"Manage {trade.get('Symbol')}"):
-                    cq, cp, cc = st.columns(3)
-                    sq = cq.number_input("Qty to Sell", 1, trade.get('Remaining Qty', 1), key=f"q_{i}")
-                    sp = cp.number_input("Exit Price", 0.0, format="%.2f", key=f"p_{i}")
-                    sc = cc.number_input("Comm ($)", 0.0, key=f"c_{i}")
-                    if st.button("Execute Partial Sale", key=f"b_{i}", use_container_width=True):
-                        mult = trade.get('Multiplier', 1.0)
-                        # חישוב P&L לחלק שנמכר
-                        if trade.get('Direction') == "Long":
-                            pnl = (sp - trade.get('Entry Price', 0)) * sq * mult - sc
-                        else:
-                            pnl = (trade.get('Entry Price', 0) - sp) * sq * mult - sc
-                        
-                        trade.setdefault('Exits', []).append({"qty": sq, "price": sp, "pnl": pnl, "date": datetime.now().strftime("%Y-%m-%d %H:%M")})
-                        trade['Remaining Qty'] -= sq
-                        trade['Total Realized P&L'] += pnl
-                        if trade['Remaining Qty'] <= 0: trade['Status'] = "Closed"
-                        st.rerun()
-
-# --- היסטוריה פיננסית מפורטת ---
-with t_hist:
-    closed = [t for t in st.session_state.trades if t.get('Status') == 'Closed']
-    if not closed: st.write("History is empty.")
-    else:
-        for t in closed:
-            mult = t.get('Multiplier', 1.0)
-            invested = t.get('Original Qty', 0) * t.get('Entry Price', 0) * mult
-            exits = t.get('Exits', [])
-            sold_val = sum(e['qty'] * e['price'] * mult for e in exits)
-            sold_qty = sum(e['qty'] for e in exits)
-            avg_exit = (sold_val / (sold_qty * mult)) if (sold_qty * mult) > 0 else 0
-            pnl = t.get('Total Realized P&L', 0.0)
-            roi_t = (pnl / invested * 100) if invested > 0 else 0
+    try: st.image(APP_LOGO_URL, width=120)
+    except: pass
+    
+    st.markdown("## WALLET CONTROL")
+    st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
+    
+    st.write("Transaction Amount:")
+    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Deposit", use_container_width=True):
+            if update_bankroll(worksheet, saved_br + amt): st.rerun()
+    with c2:
+        if st.button("Withdraw", use_container_width=True):
+            if update_bankroll(worksheet, saved_br - amt): st.rerun()
             
-            cls = "history-win" if pnl >= 0 else "history-loss"
-            txt = "text-green" if pnl >= 0 else "text-red"
-            
-            st.markdown(f"""
-            <div class="history-card {cls}">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 1.4rem; font-weight: bold;">{t.get('Symbol')} <small>({t.get('Asset Class')})</small></span>
-                    <span class="{txt}" style="font-size: 1.4rem; font-weight: bold;">{pnl:+,.2f}$ ({roi_t:+.2f}%)</span>
-                </div>
-                <div class="divider"></div>
-                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-                    <div><div class="detail-label">Entry / Last Exit Date</div><div class="detail-value">{t.get('Entry Date')} / {exits[-1]['date'] if exits else 'N/A'}</div></div>
-                    <div><div class="detail-label">Entry / Avg Exit Price</div><div class="detail-value">${t.get('Entry Price', 0):.2f} / ${avg_exit:.2f}</div></div>
-                    <div><div class="detail-label">Quantity (Bought/Sold)</div><div class="detail-value">{t.get('Original Qty', 0)} / {sold_qty}</div></div>
-                    <div><div class="detail-label">Invested / Sold Value</div><div class="detail-value">${invested:,.2f} / ${sold_val:,.2f}</div></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    st.divider()
+    st.write("Current Track:")
+    track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
+    if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
+
+# BANNER
+brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
+afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
+
+if track == "Brighton":
+    banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
+    text_color = "#004085"
+    logo_src = brighton_logo
+    shadow_style = "none"
+else:
+    banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
+    text_color = "#FFFFFF"
+    logo_src = afcon_logo
+    shadow_style = "2px 2px 4px #000000"
+
+st.markdown(f"""
+    <div class="banner-container" style="
+        background: {banner_bg};
+        border-radius: 15px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 2px solid rgba(255,255,255,0.4);
+    ">
+        <img class="banner-img" src="{logo_src}" style="height: 70px; margin-right: 25px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: all 0.3s;">
+        <h1 class="banner-text" style="
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: {text_color} !important;
+            text-shadow: {shadow_style};
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 2px;
+            flex: 1;
+            text-align: left;
+        ">{track.upper()}</h1>
+    </div>
+""", unsafe_allow_html=True)
+
+# LIVE BANKROLL
+st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 35px;">
+        <div style="font-size: 2.3rem; font-weight: 300; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.3); line-height: 1; margin-bottom: 8px;">
+            ₪{current_bal:,.2f}
+        </div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: #cccccc; letter-spacing: 3px; text-transform: uppercase;">
+            LIVE BANKROLL
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# METRICS
+if not df.empty:
+    f_df = df[df['Comp'] == track].copy()
+else:
+    f_df = pd.DataFrame()
+if not f_df.empty:
+    m_exp = f_df['Expense'].sum(); m_inc = f_df['Income'].sum(); m_net = m_inc - m_exp
+else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
+
+c1, c2, c3 = st.columns(3)
+with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
+with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
+with c3:
+    color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
+    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
+
+# NEXT BET
+next_val = next_stakes.get(track, 30.0)
+st.markdown(f"""
+    <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 1.4rem; color: white; font-weight: bold;">Next Bet: </span>
+        <span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900; text-shadow: 0 0 10px rgba(76,175,80,0.6);">₪{next_val:,.0f}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# FORM & CHART
+col_form, col_chart = st.columns([1, 1])
+with col_form:
+    with st.form("new_match"):
+        st.subheader("Add Match")
+        h_team = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
+        a_team = st.text_input("Away Team")
+        odds_val = st.number_input("Odds", value=3.2, step=0.1)
+        stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
+        result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+        if st.form_submit_button("Submit Game", use_container_width=True):
+            if h_team and a_team:
+                worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
+                st.toast("Match Added!", icon="✅")
+                st.rerun()
+            else: st.warning("Please enter team names")
+
+with col_chart:
+    st.subheader("Performance")
+    if not f_df.empty:
+        f_df['Balance'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
+        fig = px.line(f_df, y='Balance', x=f_df.index, title=None)
+        fig.update_traces(line_color='#00ff88', line_width=3)
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.2)',
+            font=dict(color='white'), margin=dict(l=20, r=20, t=20, b=20), height=300
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        wins = len(f_df[f_df['Status'] == "✅ Won"]); losses = len(f_df[f_df['Status'] == "❌ Lost"])
+        rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
+        st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
+
+# LOG
+st.subheader("📜 Activity Log")
+if not f_df.empty:
+    def highlight_results(row):
+        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
+        return [f'background-color: {bg}'] * len(row)
+    display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
+    display_df = display_df.sort_index(ascending=False)
+    st.dataframe(
+        display_df.style.apply(highlight_results, axis=1).format({
+            "Odds": "{:.2f}", "Expense": "{:,.0f}", "Income": "{:,.0f}", "Net Profit": "{:,.0f}"
+        }),
+        use_container_width=True, hide_index=True
+    )
+else: st.info("No matches found.")
+
+with st.expander("🛠️ Admin Actions"):
+    if st.button("Undo Last Entry"):
+        if len(raw_data) > 0:
+            try: worksheet.delete_rows(len(raw_data) + 1); st.rerun()
+            except: st.error("Error")
+        else: st.warning("Empty")
