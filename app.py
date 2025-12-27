@@ -12,19 +12,28 @@ st.set_page_config(
     page_title="Elite Football Tracker",
     layout="wide",
     page_icon=APP_LOGO_URL,
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded" # This tries to open sidebar on desktop by default
 )
 
-# --- 2. CSS STYLING (Responsive & Fixed Colors) ---
+# --- 2. CSS STYLING (Fixed Mobile Menu) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* --- HIDE DEFAULT ELEMENTS --- */
+    /* --- GENERAL SETUP --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-    [data-testid="stSidebarNav"] {{display: none;}}
+    /* Removed 'header {{visibility: hidden}}' because it hides the sidebar button! */
+    
+    /* Make the top header transparent so we only see the button */
+    [data-testid="stHeader"] {{
+        background-color: rgba(0,0,0,0) !important;
+    }}
+    
+    /* Color the sidebar toggle button (Hamburger) White */
+    [data-testid="collapsedControl"] {{
+        color: #ffffff !important;
+    }}
 
     /* --- BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
@@ -39,18 +48,37 @@ st.markdown(f"""
         background-color: #f8f9fa !important;
         border-right: 1px solid #ddd;
     }}
-    [data-testid="stSidebar"] * {{
+    
+    /* Force BLACK text in sidebar */
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] div, 
+    [data-testid="stSidebar"] span, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] .stMarkdown {{
         color: #000000 !important;
         text-shadow: none !important;
         font-family: 'Montserrat', sans-serif;
     }}
+    
+    /* Sidebar Input Fields */
     [data-testid="stSidebar"] input {{
         color: #000000 !important;
         background-color: #ffffff !important;
         border: 1px solid #ccc;
     }}
+    
+    /* Sidebar Buttons (Keep White Text) */
     [data-testid="stSidebar"] button {{
-        color: #ffffff !important; /* Button text stays white */
+        color: #ffffff !important;
+    }}
+    
+    /* Sidebar Metric Value */
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #000000 !important;
     }}
 
     /* --- MAIN AREA (Dark BG / White Text) --- */
@@ -60,7 +88,8 @@ st.markdown(f"""
     }}
 
     /* --- COMPONENTS --- */
-    /* Table: White BG, Black Text */
+    
+    /* Dataframe (White BG, Black Text) */
     [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
     [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
@@ -79,28 +108,26 @@ st.markdown(f"""
     .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
     .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- MOBILE RESPONSIVE LOGIC (The Magic Part) --- */
+    /* --- MOBILE RESPONSIVE LOGIC --- */
     @media only screen and (max-width: 768px) {{
         
-        /* 1. Hide the Text in the Banner */
-        .banner-text {{
-            display: none !important;
-        }}
+        /* Hide Banner Text on Mobile */
+        .banner-text {{ display: none !important; }}
         
-        /* 2. Center the Logo since text is gone */
+        /* Center Logo on Mobile */
         .banner-container {{
             justify-content: center !important;
             padding: 10px !important;
         }}
         
-        /* 3. Make Logo Bigger on Mobile */
+        /* Resize Logo on Mobile */
         .banner-img {{
             height: 120px !important;
             margin: 0 !important;
             filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important;
         }}
         
-        /* 4. Fix Table Font Size for Mobile */
+        /* Adjust Table Font Size */
         [data-testid="stDataFrame"] * {{
             font-size: 12px !important;
         }}
@@ -174,6 +201,7 @@ def calculate_logic(raw_data, br_base, af_base):
 # --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
+
 if processed:
     df = pd.DataFrame(processed)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
@@ -187,10 +215,13 @@ else:
 with st.sidebar:
     try: st.image(APP_LOGO_URL, use_container_width=True)
     except: pass
+    
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
+    
     st.write("Transaction Amount:")
     amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    
     c1, c2 = st.columns(2)
     with c1:
         if st.button("Deposit", use_container_width=True):
@@ -198,12 +229,13 @@ with st.sidebar:
     with c2:
         if st.button("Withdraw", use_container_width=True):
             if update_bankroll(worksheet, saved_br - amt): st.rerun()
+            
     st.divider()
     st.write("Current Track:")
     track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
     if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
 
-# BANNER (With Mobile Logic Classes)
+# BANNER
 brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
 afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
@@ -218,7 +250,6 @@ else:
     logo_src = afcon_logo
     shadow_style = "2px 2px 4px #000000"
 
-# Note the specific classes: 'banner-container', 'banner-img', 'banner-text'
 st.markdown(f"""
     <div class="banner-container" style="
         background: {banner_bg};
