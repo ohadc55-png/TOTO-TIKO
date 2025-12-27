@@ -270,4 +270,70 @@ else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
 c1, c2, c3 = st.columns(3)
 with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
 with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
-with c3
+with c3:
+    color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
+    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
+
+# NEXT BET
+next_val = next_stakes.get(track, 30.0)
+st.markdown(f"""
+    <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 1.4rem; color: white; font-weight: bold;">Next Bet: </span>
+        <span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900; text-shadow: 0 0 10px rgba(76,175,80,0.6);">₪{next_val:,.0f}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# FORM & CHART
+col_form, col_chart = st.columns([1, 1])
+with col_form:
+    with st.form("new_match"):
+        st.subheader("Add Match")
+        h_team = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
+        a_team = st.text_input("Away Team")
+        odds_val = st.number_input("Odds", value=3.2, step=0.1)
+        stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
+        result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+        if st.form_submit_button("Submit Game", use_container_width=True):
+            if h_team and a_team:
+                worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
+                st.toast("Match Added!", icon="✅")
+                st.rerun()
+            else: st.warning("Please enter team names")
+
+with col_chart:
+    st.subheader("Performance")
+    if not f_df.empty:
+        f_df['Balance'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
+        fig = px.line(f_df, y='Balance', x=f_df.index, title=None)
+        fig.update_traces(line_color='#00ff88', line_width=3)
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.2)',
+            font=dict(color='white'), margin=dict(l=20, r=20, t=20, b=20), height=300
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        wins = len(f_df[f_df['Status'] == "✅ Won"]); losses = len(f_df[f_df['Status'] == "❌ Lost"])
+        rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
+        st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
+
+# LOG
+st.subheader("📜 Activity Log")
+if not f_df.empty:
+    def highlight_results(row):
+        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
+        return [f'background-color: {bg}'] * len(row)
+    display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
+    display_df = display_df.sort_index(ascending=False)
+    st.dataframe(
+        display_df.style.apply(highlight_results, axis=1).format({
+            "Odds": "{:.2f}", "Expense": "{:,.0f}", "Income": "{:,.0f}", "Net Profit": "{:,.0f}"
+        }),
+        use_container_width=True, hide_index=True
+    )
+else: st.info("No matches found.")
+
+with st.expander("🛠️ Admin Actions"):
+    if st.button("Undo Last Entry"):
+        if len(raw_data) > 0:
+            try: worksheet.delete_rows(len(raw_data) + 1); st.rerun()
+            except: st.error("Error")
+        else: st.warning("Empty")
