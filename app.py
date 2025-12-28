@@ -382,8 +382,33 @@ with st.sidebar:
 
 # ==================== OVERVIEW PAGE ====================
 if track == "📊 Overview":
-    # PAGE TITLE using Streamlit
-    st.title("OVERVIEW")
+    # OVERVIEW BANNER (like competition banners)
+    st.markdown(f"""
+        <div class="banner-container" style="
+            background: linear-gradient(90deg, #1b4332 0%, #52b788 50%, #1b4332 100%);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.4);
+        ">
+            <img class="banner-img" src="{APP_LOGO_URL}" style="height: 70px; margin-right: 25px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: all 0.3s;">
+            <h1 class="banner-text" style="
+                margin: 0;
+                font-size: 2.2rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                color: #FFFFFF !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                font-family: 'Montserrat', sans-serif;
+                letter-spacing: 2px;
+                flex: 1;
+                text-align: left;
+            ">OVERVIEW</h1>
+        </div>
+    """, unsafe_allow_html=True)
     
     # LIVE BANKROLL
     st.markdown(f"""
