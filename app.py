@@ -9,6 +9,10 @@ APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
+# ICONS FOR ARROWS (You can change these links to any GIF/PNG you want)
+ICON_ARROW_WHITE = "https://img.icons8.com/ios-filled/50/ffffff/chevron-right.png"
+ICON_ARROW_BLACK = "https://img.icons8.com/ios-filled/50/000000/chevron-left.png"
+
 st.set_page_config(
     page_title="GoalMetric Elite Dashboard",
     layout="wide",
@@ -16,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (FOCUSED ARROW FIX) ---
+# --- 2. CSS STYLING (IMAGE REPLACEMENT STRATEGY) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
@@ -26,42 +30,51 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* --- 2. ARROW FIX (THE CHANGE) --- */
+    /* --- 2. ARROW REPLACEMENT (THE IMAGE FIX) --- */
     
-    /* A. Open Sidebar Arrow (The one floating on the stadium) */
+    /* A. OPEN BUTTON (Floating on Stadium) - Needs WHITE Arrow */
     [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(0, 0, 0, 0.7) !important; /* Dark bubble background */
-        border-radius: 10px !important;
-        color: transparent !important; /* Hides any text */
-        margin-top: 15px !important;
-        margin-left: 15px !important;
-        width: 40px !important;
-        height: 40px !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 12px !important;
+        width: 45px !important; height: 45px !important;
+        margin-top: 20px !important;
+        
+        /* IMAGE MAGIC HERE */
+        background-image: url('{ICON_ARROW_WHITE}') !important;
+        background-size: 24px 24px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        
+        /* Hide original text/content */
+        color: transparent !important;
+        font-size: 0px !important;
     }}
     
-    /* Force the SVG Icon inside to be WHITE */
-    [data-testid="stSidebarCollapsedControl"] svg {{
-        fill: #ffffff !important;
-        stroke: #ffffff !important;
-        width: 24px !important;
-        height: 24px !important;
-    }}
+    /* Hide the original SVG icon completely */
+    [data-testid="stSidebarCollapsedControl"] svg {{ display: none !important; }}
 
-    /* B. Close Sidebar Arrow (The one inside the white menu) */
+    /* B. CLOSE BUTTON (Inside White Sidebar) - Needs BLACK Arrow */
     [data-testid="stSidebar"] button[kind="header"] {{
-        color: transparent !important; /* Hides text */
+        width: 45px !important; height: 45px !important;
+        background-color: transparent !important;
+        border: none !important;
+        
+        /* IMAGE MAGIC HERE */
+        background-image: url('{ICON_ARROW_BLACK}') !important;
+        background-size: 24px 24px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        
+        /* Hide original text */
+        color: transparent !important;
+        font-size: 0px !important;
     }}
     
-    /* Force the SVG Icon inside to be BLACK */
-    [data-testid="stSidebar"] button[kind="header"] svg {{
-        fill: #000000 !important;
-        stroke: #000000 !important;
-        width: 24px !important;
-        height: 24px !important;
-    }}
+    /* Hide the original SVG icon completely */
+    [data-testid="stSidebar"] button[kind="header"] svg {{ display: none !important; }}
     
-    /* Hide tooltips that might show text */
+    /* Hide tooltips */
     .stTooltipIcon {{ display: none !important; }}
 
     /* --- 3. REST OF STYLING (UNCHANGED) --- */
@@ -79,11 +92,11 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
 
-    /* Metrics (Big Numbers) */
+    /* Metrics */
     [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
     [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
-    /* FORM / ADD MATCH BANNER */
+    /* FORM */
     [data-testid="stForm"] {{
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         backdrop-filter: blur(10px);
@@ -91,30 +104,21 @@ st.markdown(f"""
         border-radius: 16px;
         padding: 25px;
     }}
-    /* Labels inside the form */
-    [data-testid="stForm"] label p {{
-        color: #ffffff !important;
-        font-weight: 600;
-    }}
+    [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 600; }}
 
     /* INPUT FIELDS */
-    input {{
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        font-weight: bold;
-        border-radius: 5px;
-    }}
+    input {{ background-color: #ffffff !important; color: #000000 !important; font-weight: bold; border-radius: 5px; }}
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: #000000 !important; }}
     div[data-baseweb="select"] span {{ color: #000000 !important; }}
 
     /* SIDEBAR */
-    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.9); }}
+    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("{SIDEBAR_BG}"); background-size: cover;
         filter: blur(5px); z-index: -1;
     }}
-    /* Sidebar Text Black */
+    /* FORCE BLACK TEXT IN SIDEBAR */
     [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
         color: #000000 !important;
         text-shadow: none !important;
@@ -149,8 +153,8 @@ st.markdown(f"""
         padding: 20px;
         text-align: center;
     }}
+    .m-lbl {{ font-size: 0.8rem; font-weight: bold; color: #ddd !important; text-transform: uppercase; }}
     .m-val {{ font-size: 1.8rem; font-weight: 900; color: white !important; }}
-    .m-lbl {{ font-size: 0.8rem; font-weight: bold; color: #ccc !important; text-transform: uppercase; }}
 
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE}");
@@ -249,17 +253,12 @@ if view == "🏆 Overview":
         col1, col2, col3 = st.columns(3)
         
         pc = "#00ff88"
-        if total_profit < 0:
-            pc = "#ff4b4b"
+        if total_profit < 0: pc = "#ff4b4b"
         
         col1.markdown(f'<div class="metric-box"><div class="m-lbl">Total Profit</div><div class="m-val" style="color:{pc}!important">₪{total_profit:,.0f}</div></div>', unsafe_allow_html=True)
         col2.markdown(f'<div class="metric-box"><div class="m-lbl">Total Volume</div><div class="m-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
-        
-        rate_val = 0.0
-        if summary['Match'].sum() > 0:
-            rate_val = (summary['Status'].sum()/summary['Match'].sum()*100)
-            
-        col3.markdown(f'<div class="metric-box"><div class="m-lbl">Win Rate</div><div class="m-val">{rate_val:.1f}%</div></div>', unsafe_allow_html=True)
+        rate = (summary['Status'].sum()/summary['Match'].sum()*100) if summary['Match'].sum() > 0 else 0
+        col3.markdown(f'<div class="metric-box"><div class="m-lbl">Win Rate</div><div class="m-val">{rate:.1f}%</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br><h3>Performance Breakdown</h3>", unsafe_allow_html=True)
         
@@ -276,8 +275,7 @@ if view == "🏆 Overview":
                 border_style = "status-loss"
             
             wr_val = 0.0
-            if row['Match'] > 0:
-                wr_val = (row['Status'] / row['Match'] * 100)
+            if row['Match'] > 0: wr_val = (row['Status'] / row['Match'] * 100)
             
             st.markdown(f"""
                 <div class="banner-card {border_style}">
@@ -319,9 +317,8 @@ else:
     mc2.markdown(f'<div class="metric-box"><div class="m-lbl">Gross Rev</div><div class="m-val">₪{f_df["Gross"].sum():,.0f}</div></div>', unsafe_allow_html=True)
     
     nc = "#00ff88"
-    if t_net < 0:
-        nc = "#ff4b4b"
-        
+    if t_net < 0: nc = "#ff4b4b"
+    
     mc3.markdown(f'<div class="metric-box"><div class="m-lbl">Net Profit</div><div class="m-val" style="color:{nc} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br><h2>Performance Strategy</h2>", unsafe_allow_html=True)
@@ -361,7 +358,6 @@ else:
                 cycle_col = "#d32f2f"
                 lbl = "LOSS"
             
-            # Formatted Stake
             stake_display = f"Stake: ₪{row['Stake']:,.0f}"
             
             st.markdown(f"""
