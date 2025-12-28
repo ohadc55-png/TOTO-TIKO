@@ -23,8 +23,13 @@ st.markdown(f"""
     /* --- HIDE DEFAULT ELEMENTS --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
     [data-testid="stSidebarNav"] {{display: none;}}
+    
+    /* --- KEEP SIDEBAR TOGGLE BUTTON VISIBLE --- */
+    [data-testid="collapsedControl"] {{
+        display: block !important;
+        visibility: visible !important;
+    }}
 
     /* --- BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
