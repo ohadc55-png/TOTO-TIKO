@@ -12,8 +12,8 @@ from typing import Tuple, List, Dict, Optional
 APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
-ARROW_OPEN_URL = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
-ARROW_CLOSE_URL = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
+ARROW_OPEN_URL = "https://i.postimg.cc/PNF9g5xV/arrow-open.png"
+ARROW_CLOSE_URL = "https://i.postimg.cc/CnL0mPcS/arrow-close.png"
 
 # Google Sheets Constants
 BANKROLL_ROW = 1
