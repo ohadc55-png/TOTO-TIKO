@@ -382,6 +382,22 @@ with st.sidebar:
 
 # ==================== OVERVIEW PAGE ====================
 if track == "📊 Overview":
+    # PAGE TITLE
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="
+                font-size: 3rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                color: #ffffff !important;
+                text-shadow: 0 0 30px rgba(255,255,255,0.5);
+                font-family: 'Montserrat', sans-serif;
+                letter-spacing: 4px;
+                margin: 0;
+            ">OVERVIEW</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
     # LIVE BANKROLL
     st.markdown(f"""
         <div style="text-align: center; margin-bottom: 35px;">
@@ -399,29 +415,92 @@ if track == "📊 Overview":
     
     comp_stats = get_competition_stats(df, saved_br)
     
+    # Competition logos and colors
+    comp_config = {
+        "Brighton": {
+            "logo": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png",
+            "bg": "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)",
+            "text_color": "#004085"
+        },
+        "Africa Cup of Nations": {
+            "logo": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png",
+            "bg": "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)",
+            "text_color": "#FFFFFF"
+        }
+    }
+    
     if comp_stats:
         for stat in comp_stats:
+            comp_name = stat['Competition']
+            config = comp_config.get(comp_name, {
+                "logo": APP_LOGO_URL,
+                "bg": "linear-gradient(90deg, #1b4332 0%, #40916c 100%)",
+                "text_color": "#FFFFFF"
+            })
+            
             profit_class = "profit-positive" if stat['Net Profit'] >= 0 else "profit-negative"
+            profit_color = "#2d6a4f" if stat['Net Profit'] >= 0 else "#d32f2f"
             
             st.markdown(f"""
-                <div class="comp-card">
-                    <div class="comp-card-header">{stat['Competition']}</div>
-                    <div>
-                        <div class="comp-stat">
-                            <div class="comp-stat-label">Matches</div>
-                            <div class="comp-stat-value" style="color: #1b4332 !important;">{stat['Matches']}</div>
-                        </div>
-                        <div class="comp-stat">
-                            <div class="comp-stat-label">Wins</div>
-                            <div class="comp-stat-value" style="color: #1b4332 !important;">{stat['Wins']}</div>
-                        </div>
-                        <div class="comp-stat">
-                            <div class="comp-stat-label">Net Profit</div>
-                            <div class="comp-stat-value {profit_class}">₪{stat['Net Profit']:,.0f}</div>
-                        </div>
-                        <div class="comp-stat">
-                            <div class="comp-stat-label">Profit %</div>
-                            <div class="comp-stat-value {profit_class}">{stat['Profit %']:.1f}%</div>
+                <div style="
+                    background: {config['bg']};
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    border: 2px solid rgba(255,255,255,0.4);
+                ">
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <img src="{config['logo']}" style="height: 60px; margin-right: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+                        <h2 style="
+                            margin: 0;
+                            font-size: 1.8rem;
+                            font-weight: 900;
+                            text-transform: uppercase;
+                            color: {config['text_color']} !important;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                            font-family: 'Montserrat', sans-serif;
+                            letter-spacing: 2px;
+                        ">{comp_name}</h2>
+                    </div>
+                    <div style="
+                        background-color: rgba(255, 255, 255, 0.95);
+                        border-radius: 10px;
+                        padding: 20px;
+                    ">
+                        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+                            <div style="flex: 1; min-width: 120px;">
+                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                                    Matches
+                                </div>
+                                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">
+                                    {stat['Matches']}
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                                    Wins
+                                </div>
+                                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">
+                                    {stat['Wins']}
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                                    Net Profit
+                                </div>
+                                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">
+                                    ₪{stat['Net Profit']:,.0f}
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                                    Profit %
+                                </div>
+                                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">
+                                    {stat['Profit %']:.1f}%
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
