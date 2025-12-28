@@ -9,9 +9,12 @@ APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
-# ICONS FOR ARROWS (You can change these links to any GIF/PNG you want)
-ICON_ARROW_WHITE = "https://img.icons8.com/ios-filled/50/ffffff/chevron-right.png"
-ICON_ARROW_BLACK = "https://img.icons8.com/ios-filled/50/000000/chevron-left.png"
+# --- CUSTOM ARROW IMAGES (YOUR UPLOADS) ---
+# Arrow for Main Screen (Dark Background -> Needs Light Arrow)
+ARROW_OPEN_URL = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
+
+# Arrow for Sidebar (White Background -> Needs Dark Arrow)
+ARROW_CLOSE_URL = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
 
 st.set_page_config(
     page_title="GoalMetric Elite Dashboard",
@@ -20,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (IMAGE REPLACEMENT STRATEGY) ---
+# --- 2. CSS STYLING (CUSTOM IMAGES IMPLEMENTED) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
@@ -30,56 +33,49 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* --- 2. ARROW REPLACEMENT (THE IMAGE FIX) --- */
+    /* 2. ARROW CONTROLS - CUSTOM IMAGES */
     
-    /* A. OPEN BUTTON (Floating on Stadium) - Needs WHITE Arrow */
-    [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(0, 0, 0, 0.7) !important;
+    /* A. OPEN BUTTON (Floating on Stadium) */
+    button[aria-label="Open sidebar"] {{
+        background-color: rgba(0, 0, 0, 0.6) !important; /* Semi-transparent bubble */
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 12px !important;
-        width: 45px !important; height: 45px !important;
+        width: 50px !important; height: 50px !important; /* Slightly larger for your image */
         margin-top: 20px !important;
         
-        /* IMAGE MAGIC HERE */
-        background-image: url('{ICON_ARROW_WHITE}') !important;
-        background-size: 24px 24px !important;
+        /* IMAGE MAGIC */
+        background-image: url('{ARROW_OPEN_URL}') !important;
+        background-size: 30px 30px !important; /* Adjust icon size */
         background-repeat: no-repeat !important;
         background-position: center !important;
         
-        /* Hide original text/content */
+        /* Hide original text/icon */
         color: transparent !important;
         font-size: 0px !important;
     }}
+    button[aria-label="Open sidebar"] svg {{ display: none !important; }}
     
-    /* Hide the original SVG icon completely */
-    [data-testid="stSidebarCollapsedControl"] svg {{ display: none !important; }}
-
-    /* B. CLOSE BUTTON (Inside White Sidebar) - Needs BLACK Arrow */
-    [data-testid="stSidebar"] button[kind="header"] {{
-        width: 45px !important; height: 45px !important;
+    /* B. CLOSE BUTTON (Inside White Sidebar) */
+    button[aria-label="Collapse sidebar"] {{
         background-color: transparent !important;
         border: none !important;
+        width: 50px !important; height: 50px !important;
         
-        /* IMAGE MAGIC HERE */
-        background-image: url('{ICON_ARROW_BLACK}') !important;
-        background-size: 24px 24px !important;
+        /* IMAGE MAGIC */
+        background-image: url('{ARROW_CLOSE_URL}') !important;
+        background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         
-        /* Hide original text */
+        /* Hide original text/icon */
         color: transparent !important;
         font-size: 0px !important;
     }}
+    button[aria-label="Collapse sidebar"] svg {{ display: none !important; }}
     
-    /* Hide the original SVG icon completely */
-    [data-testid="stSidebar"] button[kind="header"] svg {{ display: none !important; }}
-    
-    /* Hide tooltips */
     .stTooltipIcon {{ display: none !important; }}
 
-    /* --- 3. REST OF STYLING (UNCHANGED) --- */
-
-    /* MAIN AREA TEXT (WHITE ON DARK) */
+    /* 3. MAIN AREA TEXT (WHITE ON DARK) */
     [data-testid="stAppViewContainer"] h1, 
     [data-testid="stAppViewContainer"] h2, 
     [data-testid="stAppViewContainer"] h3, 
@@ -96,7 +92,7 @@ st.markdown(f"""
     [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
     [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
-    /* FORM */
+    /* 4. FORM */
     [data-testid="stForm"] {{
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         backdrop-filter: blur(10px);
@@ -106,25 +102,25 @@ st.markdown(f"""
     }}
     [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 600; }}
 
-    /* INPUT FIELDS */
+    /* 5. INPUT FIELDS */
     input {{ background-color: #ffffff !important; color: #000000 !important; font-weight: bold; border-radius: 5px; }}
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: #000000 !important; }}
     div[data-baseweb="select"] span {{ color: #000000 !important; }}
 
-    /* SIDEBAR */
+    /* 6. SIDEBAR (BLACK TEXT) */
     [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("{SIDEBAR_BG}"); background-size: cover;
         filter: blur(5px); z-index: -1;
     }}
-    /* FORCE BLACK TEXT IN SIDEBAR */
+    /* Force BLACK text in sidebar */
     [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
 
-    /* BANNERS */
+    /* 7. BANNERS */
     .banner-card {{
         background: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -144,7 +140,7 @@ st.markdown(f"""
     .status-win {{ border-left-color: #2d6a4f; background: linear-gradient(90deg, #e6fffa, #ffffff); }}
     .status-loss {{ border-left-color: #d32f2f; background: linear-gradient(90deg, #fff5f5, #ffffff); }}
 
-    /* METRIC BOXES */
+    /* 8. METRIC BOXES */
     .metric-box {{
         background-color: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
