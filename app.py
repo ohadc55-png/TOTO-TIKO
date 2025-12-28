@@ -80,22 +80,8 @@ st.markdown(f"""
     [data-testid="stForm"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
     /* Tabs Styling */
-    [data-testid="stTabs"] {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 12px;
-        padding: 10px;
-        margin-bottom: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }}
-    [data-testid="stTabs"] button {{
+    .stSelectbox {{
         color: #000000 !important;
-        font-weight: 700;
-        font-size: 1.1rem;
-        text-shadow: none !important;
-    }}
-    [data-testid="stTabs"] button[aria-selected="true"] {{
-        color: #1b4332 !important;
-        border-bottom: 3px solid #1b4332 !important;
     }}
 
     /* Metric Cards */
@@ -388,15 +374,14 @@ with st.sidebar:
                 st.rerun()
     
     st.divider()
+    st.write("Current Track:")
+    track = st.selectbox("Track", ["📊 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
     if st.button("🔄 Sync Cloud", use_container_width=True):
         get_data_from_sheets.clear()
         st.rerun()
 
-# --- MAIN TABS (OUTSIDE SIDEBAR) ---
-tab1, tab2 = st.tabs(["📊 Overview", "🏆 Competitions"])
-
-# ==================== OVERVIEW TAB ====================
-with tab1:
+# ==================== OVERVIEW PAGE ====================
+if track == "📊 Overview":
     # LIVE BANKROLL
     st.markdown(f"""
         <div style="text-align: center; margin-bottom: 35px;">
@@ -444,11 +429,8 @@ with tab1:
     else:
         st.info("No competitions yet. Start betting in the Competitions tab!")
 
-# ==================== COMPETITIONS TAB ====================
-with tab2:
-    st.write("Current Track:")
-    track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
-    
+# ==================== COMPETITIONS PAGES ====================
+else:
     # BANNER
     brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
     afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
