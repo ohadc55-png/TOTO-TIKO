@@ -16,59 +16,52 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (HIGH CONTRAST & VISIBILITY) ---
+# --- 2. CSS STYLING (MUTED BANNERS & HIGH CONTRAST) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
     
-    /* 1. GLOBAL RESET */
+    /* 1. RESET */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* 2. ARROW CONTROLS (Icon Only) */
+    /* 2. ARROW CONTROLS */
     button[aria-label="Open sidebar"] {{
         background-color: rgba(0, 0, 0, 0.8) !important;
         border: 1px solid rgba(255,255,255,0.3);
         border-radius: 12px;
         width: 45px; height: 45px;
         margin-top: 20px;
-        color: transparent !important; /* Hide text */
+        color: transparent !important;
         font-size: 0px !important;
     }}
     button[aria-label="Open sidebar"] svg {{ fill: white !important; width: 24px; height: 24px; }}
-    
     button[aria-label="Collapse sidebar"] {{ font-size: 0px !important; color: transparent !important; }}
     button[aria-label="Collapse sidebar"] svg {{ fill: black !important; width: 24px; height: 24px; }}
     .stTooltipIcon {{ display: none !important; }}
 
-    /* 3. MAIN AREA TEXT (WHITE WITH SHADOW) */
+    /* 3. MAIN AREA TEXT (WHITE) */
     .main h1, .main h2, .main h3, .main p, .main span, .main label, 
     .main div[data-testid="stMarkdownContainer"] p {{
         color: #ffffff !important;
         text-shadow: 0px 2px 4px rgba(0,0,0,0.9);
         font-family: 'Montserrat', sans-serif;
     }}
-    /* Metrics */
     [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
     [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
-    /* 4. FORM / ADD MATCH BANNER */
+    /* 4. FORM / ADD MATCH */
     [data-testid="stForm"] {{
         background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(15px);
         border: 1px solid rgba(255,255,255,0.3);
         border-radius: 16px;
         padding: 25px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     }}
-    /* Form Labels */
-    [data-testid="stForm"] label p {{
-        color: #ffffff !important;
-        font-weight: 700 !important;
-    }}
+    [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 700 !important; }}
 
-    /* 5. INPUT FIELDS (WHITE BG, BLACK TEXT) */
+    /* 5. INPUT FIELDS */
     .stTextInput input, .stNumberInput input {{
         background-color: #ffffff !important;
         color: #000000 !important;
@@ -76,11 +69,10 @@ st.markdown(f"""
         font-weight: bold;
         border-radius: 8px;
     }}
-    /* Dropdown/Radio */
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: black !important; }}
     div[data-baseweb="radio"] label p {{ color: white !important; font-weight: bold; }}
 
-    /* 6. SIDEBAR (LIGHT THEME) */
+    /* 6. SIDEBAR */
     [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -88,28 +80,55 @@ st.markdown(f"""
         filter: blur(5px); z-index: -1;
     }}
     [data-testid="stSidebar"] * {{ color: #000000 !important; text-shadow: none !important; }}
-    [data-testid="stSidebar"] input {{ border: 1px solid #999 !important; }}
 
-    /* 7. CUSTOM BANNERS */
+    /* 7. NEW BANNER DESIGN (MUTED/DIMMED) */
     .banner-container {{
-        background: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
         padding: 15px 20px;
         margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        border-left: 12px solid #333;
-    }}
-    /* Force text inside banners to be black */
-    .banner-container span, .banner-container div {{
-        color: #000000 !important;
-        text-shadow: none !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        backdrop-filter: blur(5px);
     }}
     
-    .status-win {{ border-left-color: #2d6a4f; background: linear-gradient(90deg, #e6fffa, #ffffff); }}
-    .status-loss {{ border-left-color: #d32f2f; background: linear-gradient(90deg, #fff5f5, #ffffff); }}
+    /* Muted Green for Win */
+    .status-win {{ 
+        background: rgba(46, 204, 113, 0.2) !important; /* Dimmed Green */
+        border-left: 10px solid #27ae60; /* Strong Green Border */
+        border: 1px solid rgba(46, 204, 113, 0.3);
+    }}
+    
+    /* Muted Red for Loss */
+    .status-loss {{ 
+        background: rgba(231, 76, 60, 0.2) !important; /* Dimmed Red */
+        border-left: 10px solid #c0392b; /* Strong Red Border */
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }}
+
+    /* Text inside banners */
+    .banner-container span, .banner-container div {{
+        color: #ffffff !important; /* White text for contrast on dark bg */
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+    }}
+    
+    /* Special Override for Overview Light Banners */
+    .track-overview-banner {{
+        background: linear-gradient(90deg, #ffffff, #f0f0f0);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 10px solid #333;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }}
+    .track-overview-banner span, .track-overview-banner div {{
+        color: #000000 !important; /* Black text for white banners */
+        text-shadow: none !important;
+    }}
 
     /* 8. METRIC BOXES */
     .metric-box {{
@@ -123,12 +142,10 @@ st.markdown(f"""
     .m-lbl {{ font-size: 0.8rem; font-weight: bold; color: #ddd !important; text-transform: uppercase; }}
     .m-val {{ font-size: 1.8rem; font-weight: 900; color: white !important; }}
 
-    /* BACKGROUND */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("{BG_IMAGE}");
         background-attachment: fixed; background-size: cover; background-position: center;
     }}
-    /* Hide Default Table */
     [data-testid="stDataFrame"] {{ display: none; }} 
     </style>
 """, unsafe_allow_html=True)
@@ -165,15 +182,14 @@ def process_logic(raw):
             
             gross_win = stake * odds if win else 0.0
             
-            # --- LOGIC: Accumulate stake to current cycle ---
+            # --- CYCLE LOGIC ---
             cycle_tracker[comp] += stake 
             
             if win:
-                # Net Profit for Cycle = Gross Win - Total Invested in this cycle
+                # Cycle Profit = Gross Win - Total Invested in this cycle sequence
                 net_cycle_profit = gross_win - cycle_tracker[comp]
                 cycle_tracker[comp] = 0.0 # Reset cycle
             else:
-                # Visual profit for this specific bet is just the lost stake
                 net_cycle_profit = -stake 
             
             rows.append({
@@ -187,7 +203,6 @@ def process_logic(raw):
 
 raw_data, worksheet, base_br = connect_db()
 df = process_logic(raw_data)
-# Live Bankroll = Initial + (Total Income - Total Expenses)
 live_br_val = base_br + (df['Gross'].sum() - df['Stake'].sum()) if not df.empty else base_br
 
 # --- 4. SIDEBAR ---
@@ -212,23 +227,18 @@ def display_live_br(val):
         </div>
     """, unsafe_allow_html=True)
 
-# --- 6. MAIN VIEW LOGIC ---
+# --- 6. MAIN VIEW ---
 
 if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center; letter-spacing: 5px;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
     display_live_br(live_br_val)
 
     if not df.empty:
-        # Aggregate logic
         summary = df.groupby('Comp').agg({
-            'Match': 'count', 
-            'Stake': 'sum', 
-            'Gross': 'sum', 
-            'Status': lambda x: (x == '✅ Won').sum()
+            'Match': 'count', 'Stake': 'sum', 'Gross': 'sum', 'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
         summary['Profit'] = summary['Gross'] - summary['Stake']
         
-        # Metrics
         total_profit = summary['Profit'].sum()
         col1, col2, col3 = st.columns(3)
         pc = "#00ff88" if total_profit >= 0 else "#ff4b4b"
@@ -240,17 +250,15 @@ if view == "🏆 Overview":
 
         st.markdown("<br><h3>Performance Breakdown</h3>", unsafe_allow_html=True)
         
-        # --- TRACK BANNERS (OVERVIEW) ---
+        # --- OVERVIEW BANNERS (LIGHT) ---
         for _, row in summary.iterrows():
             prof = row['Profit']
-            # Prepare strings separately to avoid f-string syntax errors
             p_text = f"+₪{prof:,.0f}" if prof >= 0 else f"-₪{abs(prof):,.0f}"
             p_style = "#2d6a4f" if prof >= 0 else "#d32f2f"
-            border_style = "status-win" if prof >= 0 else "status-loss"
             wr = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
             
             st.markdown(f"""
-                <div class="banner-container {border_style}">
+                <div class="track-overview-banner">
                     <div style="flex: 1.5;">
                         <span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span>
                     </div>
@@ -294,7 +302,6 @@ else:
     st.markdown("<br><h2>Performance Strategy</h2>", unsafe_allow_html=True)
     cf, cg = st.columns([1, 1.2])
     
-    # --- ADD MATCH BANNER FORM ---
     with cf:
         with st.form("add_match"):
             st.markdown("### ⚽ New Entry")
@@ -306,36 +313,8 @@ else:
             if st.form_submit_button("SUBMIT ENTRY"):
                 worksheet.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0]); st.rerun()
     
-    # Chart
     with cg:
         if not f_df.empty:
             f_df['Equity'] = base_br + (f_df['Gross'].cumsum() - f_df['Stake'].cumsum())
             fig_l = px.line(f_df, y='Equity', x=f_df.index)
-            fig_l.update_traces(line_color='#00ff88', line_width=4)
-            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=400)
-            st.plotly_chart(fig_l, use_container_width=True)
-
-    # --- ACTIVITY LOG BANNERS ---
-    st.markdown("### 📜 Activity Log")
-    if not f_df.empty:
-        for _, row in f_df.sort_index(ascending=False).iterrows():
-            is_win = "Won" in row['Status']
-            b_class = "status-win" if is_win else "status-loss"
-            
-            # Prepare values outside f-string to ensure syntax safety
-            cycle_val = f"+₪{row['Cycle_Net']:,.0f}" if is_win else f"-₪{abs(row['Cycle_Net']):,.0f}"
-            cycle_col = "#2d6a4f" if is_win else "#d32f2f"
-            lbl = "CYCLE PROFIT" if is_win else "LOSS"
-            
-            st.markdown(f"""
-                <div class="banner-container {b_class}">
-                    <div style="flex: 2;">
-                        <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
-                        <span style="font-size: 0.85rem; opacity: 0.7;">{row['Date']} | Odds: {row['Odds']}</span>
-                    </div>
-                    <div style="flex: 1; text-align: right;">
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">{lbl}</span><br>
-                        <span style="font-size: 1.4rem; font-weight: 900; color: {cycle_col} !important;">{cycle_val}</span>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            fig_l.update_traces
