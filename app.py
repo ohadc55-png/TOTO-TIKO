@@ -55,71 +55,81 @@ def get_custom_css() -> str:
     
     /* ===== CUSTOM ARROWS (תיקון: חצים במקום טקסט) ===== */
     
-    /* Open Sidebar Arrow - WHITE COLOR */
+    /* Open Sidebar Arrow - WHITE COLOR with IMAGE */
     button[aria-label="Open sidebar"] {{
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        border: 2px solid rgba(255, 255, 255, 0.9) !important;
         border-radius: 12px !important;
-        width: 50px !important; 
-        height: 50px !important;
+        width: 55px !important; 
+        height: 55px !important;
         margin-top: 20px !important;
         margin-left: 10px !important;
         position: relative !important;
         transition: all 0.3s ease !important;
-    }}
-    
-    button[aria-label="Open sidebar"]::before {{
-        content: "→" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        font-size: 28px !important;
-        font-weight: bold !important;
-        color: #ffffff !important;
-        text-shadow: 0px 2px 4px rgba(0,0,0,0.5) !important;
+        background-image: url('{ARROW_OPEN_URL}') !important;
+        background-size: 32px 32px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
     }}
     
     button[aria-label="Open sidebar"]:hover {{
-        background-color: rgba(255, 255, 255, 0.25) !important;
+        background-color: rgba(0, 0, 0, 0.85) !important;
         border-color: rgba(255, 255, 255, 1) !important;
-        transform: scale(1.05) !important;
+        transform: scale(1.08) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.8) !important;
+    }}
+    
+    /* הסתרת כל התוכן הפנימי של הכפתור */
+    button[aria-label="Open sidebar"] * {{
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }}
     
     button[aria-label="Open sidebar"] svg {{
         display: none !important;
     }}
     
-    /* Close Sidebar Arrow - BLACK COLOR */
-    button[aria-label="Collapse sidebar"] {{
-        background-color: rgba(0, 0, 0, 0.08) !important;
-        border: 2px solid rgba(0, 0, 0, 0.3) !important;
-        border-radius: 12px !important;
-        width: 50px !important;
-        height: 50px !important;
-        position: relative !important;
-        transition: all 0.3s ease !important;
+    button[aria-label="Open sidebar"] span {{
+        display: none !important;
     }}
     
-    button[aria-label="Collapse sidebar"]::before {{
-        content: "←" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        font-size: 28px !important;
-        font-weight: bold !important;
-        color: #000000 !important;
-        text-shadow: none !important;
+    /* Close Sidebar Arrow - BLACK COLOR with IMAGE */
+    button[aria-label="Collapse sidebar"] {{
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 2px solid rgba(0, 0, 0, 0.4) !important;
+        border-radius: 12px !important;
+        width: 55px !important;
+        height: 55px !important;
+        position: relative !important;
+        transition: all 0.3s ease !important;
+        background-image: url('{ARROW_CLOSE_URL}') !important;
+        background-size: 32px 32px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
     }}
     
     button[aria-label="Collapse sidebar"]:hover {{
-        background-color: rgba(0, 0, 0, 0.15) !important;
-        border-color: rgba(0, 0, 0, 0.5) !important;
-        transform: scale(1.05) !important;
+        background-color: rgba(255, 255, 255, 1) !important;
+        border-color: rgba(0, 0, 0, 0.6) !important;
+        transform: scale(1.08) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }}
+    
+    /* הסתרת כל התוכן הפנימי של הכפתור */
+    button[aria-label="Collapse sidebar"] * {{
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }}
     
     button[aria-label="Collapse sidebar"] svg {{
+        display: none !important;
+    }}
+    
+    button[aria-label="Collapse sidebar"] span {{
         display: none !important;
     }}
     
