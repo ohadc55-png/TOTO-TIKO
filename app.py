@@ -384,23 +384,24 @@ with st.sidebar:
 if track == "📊 Overview":
     # PAGE TITLE
     st.markdown("""
-        <div style="text-align: center; margin-bottom: 40px;">
+        <div style="text-align: center; margin-bottom: 40px; margin-top: 20px;">
             <h1 style="
-                font-size: 3rem;
-                font-weight: 900;
-                text-transform: uppercase;
+                font-size: 3rem !important;
+                font-weight: 900 !important;
+                text-transform: uppercase !important;
                 color: #ffffff !important;
-                text-shadow: 0 0 30px rgba(255,255,255,0.5);
-                font-family: 'Montserrat', sans-serif;
-                letter-spacing: 4px;
-                margin: 0;
+                text-shadow: 0 0 30px rgba(255,255,255,0.5) !important;
+                font-family: 'Montserrat', sans-serif !important;
+                letter-spacing: 4px !important;
+                margin: 0 !important;
+                padding: 0 !important;
             ">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
     # LIVE BANKROLL
     st.markdown(f"""
-        <div style="text-align: center; margin-bottom: 35px;">
+        <div style="text-align: center; margin-bottom: 50px;">
             <div style="font-size: 2.3rem; font-weight: 300; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.3); line-height: 1; margin-bottom: 8px;">
                 ₪{current_bal:,.2f}
             </div>
@@ -410,12 +411,10 @@ if track == "📊 Overview":
         </div>
     """, unsafe_allow_html=True)
     
-    # COMPETITIONS OVERVIEW
-    st.markdown("### All Competitions")
-    
+    # Get competition stats
     comp_stats = get_competition_stats(df, saved_br)
     
-    # Competition logos and colors - check exact names from data
+    # Competition logos
     brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
     afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
     
@@ -423,17 +422,17 @@ if track == "📊 Overview":
         for stat in comp_stats:
             comp_name = stat['Competition']
             
-            # Determine config based on competition name
+            # Determine styling based on competition name
             if "Brighton" in comp_name or "brighton" in comp_name.lower():
                 logo_src = brighton_logo
                 banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
                 text_color = "#004085"
-                shadow_style = "2px 2px 4px rgba(0,0,0,0.2)"
+                shadow_style = "none"
             elif "Africa" in comp_name or "africa" in comp_name.lower():
                 logo_src = afcon_logo
                 banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
                 text_color = "#FFFFFF"
-                shadow_style = "2px 2px 4px rgba(0,0,0,0.5)"
+                shadow_style = "2px 2px 4px #000000"
             else:
                 logo_src = APP_LOGO_URL
                 banner_bg = "linear-gradient(90deg, #1b4332 0%, #40916c 100%)"
@@ -442,63 +441,74 @@ if track == "📊 Overview":
             
             profit_color = "#2d6a4f" if stat['Net Profit'] >= 0 else "#d32f2f"
             
+            # BANNER WITH LOGO AND COLORS
             st.markdown(f"""
                 <div style="
-                    background: {banner_bg};
-                    border-radius: 15px;
-                    padding: 25px;
-                    margin-bottom: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                    border: 2px solid rgba(255,255,255,0.4);
+                    background: {banner_bg} !important;
+                    border-radius: 15px !important;
+                    padding: 25px !important;
+                    margin-bottom: 20px !important;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+                    border: 2px solid rgba(255,255,255,0.4) !important;
                 ">
-                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                        <img src="{logo_src}" style="height: 60px; margin-right: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+                    <!-- Competition Header with Logo -->
+                    <div style="display: flex !important; align-items: center !important; margin-bottom: 20px !important;">
+                        <img src="{logo_src}" style="height: 60px !important; margin-right: 20px !important; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)) !important;">
                         <h2 style="
-                            margin: 0;
-                            font-size: 1.8rem;
-                            font-weight: 900;
-                            text-transform: uppercase;
+                            margin: 0 !important;
+                            font-size: 1.8rem !important;
+                            font-weight: 900 !important;
+                            text-transform: uppercase !important;
                             color: {text_color} !important;
-                            text-shadow: {shadow_style};
-                            font-family: 'Montserrat', sans-serif;
-                            letter-spacing: 2px;
+                            text-shadow: {shadow_style} !important;
+                            font-family: 'Montserrat', sans-serif !important;
+                            letter-spacing: 2px !important;
                         ">{comp_name}</h2>
                     </div>
+                    
+                    <!-- Stats Box -->
                     <div style="
-                        background-color: rgba(255, 255, 255, 0.95);
-                        border-radius: 10px;
-                        padding: 20px;
+                        background-color: rgba(255, 255, 255, 0.95) !important;
+                        border-radius: 10px !important;
+                        padding: 20px !important;
                     ">
-                        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
-                            <div style="flex: 1; min-width: 120px;">
-                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                        <div style="display: flex !important; flex-wrap: wrap !important; gap: 30px !important;">
+                            <!-- Matches -->
+                            <div style="flex: 1 !important; min-width: 120px !important;">
+                                <div style="font-size: 0.75rem !important; color: #666 !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; margin-bottom: 5px !important; text-shadow: none !important;">
                                     Matches
                                 </div>
-                                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">
+                                <div style="font-size: 1.6rem !important; font-weight: 900 !important; color: #1b4332 !important; text-shadow: none !important;">
                                     {stat['Matches']}
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                            
+                            <!-- Wins -->
+                            <div style="flex: 1 !important; min-width: 120px !important;">
+                                <div style="font-size: 0.75rem !important; color: #666 !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; margin-bottom: 5px !important; text-shadow: none !important;">
                                     Wins
                                 </div>
-                                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">
+                                <div style="font-size: 1.6rem !important; font-weight: 900 !important; color: #1b4332 !important; text-shadow: none !important;">
                                     {stat['Wins']}
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                            
+                            <!-- Net Profit -->
+                            <div style="flex: 1 !important; min-width: 120px !important;">
+                                <div style="font-size: 0.75rem !important; color: #666 !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; margin-bottom: 5px !important; text-shadow: none !important;">
                                     Net Profit
                                 </div>
-                                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">
+                                <div style="font-size: 1.6rem !important; font-weight: 900 !important; color: {profit_color} !important; text-shadow: none !important;">
                                     ₪{stat['Net Profit']:,.0f}
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 120px;">
-                                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">
+                            
+                            <!-- Profit % -->
+                            <div style="flex: 1 !important; min-width: 120px !important;">
+                                <div style="font-size: 0.75rem !important; color: #666 !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 1px !important; margin-bottom: 5px !important; text-shadow: none !important;">
                                     Profit %
                                 </div>
-                                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">
+                                <div style="font-size: 1.6rem !important; font-weight: 900 !important; color: {profit_color} !important; text-shadow: none !important;">
                                     {stat['Profit %']:.1f}%
                                 </div>
                             </div>
