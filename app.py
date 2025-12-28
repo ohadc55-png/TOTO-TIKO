@@ -108,44 +108,86 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. BACKEND LOGIC ---
+# --- 3. BACKEND LOGIC (IMPROVED) ---
+
+@st.cache_data(ttl=30)
 def get_data_from_sheets():
+    """
+    Fetch data from Google Sheets with caching to reduce API calls.
+    TTL=30 seconds means data refreshes every 30 seconds automatically.
+    """
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
         worksheet = sh.get_worksheet(0)
         data = worksheet.get_all_records()
+        
+        # Safely extract initial bankroll
         try:
             val = worksheet.cell(1, 10).value
             initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
-        except: initial_bankroll = 5000.0
+        except (ValueError, AttributeError, TypeError):
+            initial_bankroll = 5000.0
+            
         return data, worksheet, initial_bankroll
+        
+    except gspread.exceptions.APIError as e:
+        st.error(f"Google Sheets API Error: {e}")
+        return [], None, 5000.0
     except Exception as e:
         st.error(f"Connection Error: {e}")
         return [], None, 5000.0
 
 def update_bankroll(worksheet, val):
+    """Update bankroll value in sheet with proper error handling."""
+    if worksheet is None:
+        return False
     try:
         worksheet.update_cell(1, 10, val)
+        # Clear cache to reflect new data
+        get_data_from_sheets.clear()
         return True
-    except: return False
+    except gspread.exceptions.APIError as e:
+        st.error(f"Failed to update bankroll: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Update error: {e}")
+        return False
+
+def safe_float_conversion(value, default=0.0):
+    """Safely convert any value to float."""
+    try:
+        return float(str(value).replace(',', '.'))
+    except (ValueError, AttributeError, TypeError):
+        return default
 
 def calculate_logic(raw_data, br_base, af_base):
+    """
+    Calculate betting logic with improved error handling.
+    No changes to logic, just safer execution.
+    """
     processed = []
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
     for row in raw_data:
         try:
+            # Extract competition
             comp = str(row.get('Competition', 'Brighton')).strip()
-            if not comp: comp = 'Brighton'
-            try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
-            except: odds = 1.0
-            try:
-                stake_val = row.get('Stake')
-                if stake_val in [None, '', ' ']: exp = next_bets[comp]
-                else: exp = float(str(stake_val).replace(',', ''))
-            except: exp = next_bets[comp]
+            if not comp:
+                comp = 'Brighton'
+            
+            # Extract odds
+            odds = safe_float_conversion(row.get('Odds', 1), 1.0)
+            
+            # Extract stake
+            stake_val = row.get('Stake')
+            if stake_val in [None, '', ' ']:
+                exp = next_bets[comp]
+            else:
+                exp = safe_float_conversion(stake_val, next_bets[comp])
+            
+            # Extract result
             res = str(row.get('Result', '')).strip()
             cycle_invest[comp] += exp
             is_win = "Draw (X)" in res
@@ -153,8 +195,10 @@ def calculate_logic(raw_data, br_base, af_base):
             if is_win:
                 inc = exp * odds
                 net = inc - cycle_invest[comp]
-                try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
-                except: roi = "0.0%"
+                try:
+                    roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                except ZeroDivisionError:
+                    roi = "0.0%"
                 next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_invest[comp] = 0.0
                 status = "✅ Won"
@@ -164,16 +208,63 @@ def calculate_logic(raw_data, br_base, af_base):
                 roi = "N/A"
                 next_bets[comp] = exp * 2.0
                 status = "❌ Lost"
+            
             processed.append({
-                "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
-                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net, "Status": status, "ROI": roi
+                "Date": row.get('Date', ''),
+                "Comp": comp,
+                "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
+                "Odds": odds,
+                "Expense": exp,
+                "Income": inc,
+                "Net Profit": net,
+                "Status": status,
+                "ROI": roi
             })
-        except: continue
+        except Exception as e:
+            # Skip problematic rows silently to maintain UX
+            continue
+            
     return processed, next_bets
+
+def add_match_to_sheet(worksheet, date, comp, home, away, odds, result, stake):
+    """Add new match with proper error handling."""
+    if worksheet is None:
+        st.error("No connection to Google Sheets")
+        return False
+    
+    try:
+        worksheet.append_row([date, comp, home, away, odds, result, stake, 0.0])
+        # Clear cache to reflect new data
+        get_data_from_sheets.clear()
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"Failed to add match: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Error adding match: {e}")
+        return False
+
+def delete_last_row(worksheet, row_count):
+    """Delete last row with proper error handling."""
+    if worksheet is None or row_count == 0:
+        return False
+    
+    try:
+        worksheet.delete_rows(row_count + 1)
+        # Clear cache to reflect new data
+        get_data_from_sheets.clear()
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"Failed to delete row: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Error deleting row: {e}")
+        return False
 
 # --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
+
 if processed:
     df = pd.DataFrame(processed)
     current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
@@ -185,23 +276,32 @@ else:
 
 # SIDEBAR
 with st.sidebar:
-    try: st.image(APP_LOGO_URL, use_container_width=True)
-    except: pass
+    try:
+        st.image(APP_LOGO_URL, use_container_width=True)
+    except:
+        pass
+    
     st.markdown("## WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
     st.write("Transaction Amount:")
     amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    
     c1, c2 = st.columns(2)
     with c1:
         if st.button("Deposit", use_container_width=True):
-            if update_bankroll(worksheet, saved_br + amt): st.rerun()
+            if update_bankroll(worksheet, saved_br + amt):
+                st.rerun()
     with c2:
         if st.button("Withdraw", use_container_width=True):
-            if update_bankroll(worksheet, saved_br - amt): st.rerun()
+            if update_bankroll(worksheet, saved_br - amt):
+                st.rerun()
+    
     st.divider()
     st.write("Current Track:")
     track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
-    if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
+    if st.button("🔄 Sync Cloud", use_container_width=True):
+        get_data_from_sheets.clear()
+        st.rerun()
 
 # BANNER (With Mobile Logic Classes)
 brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
@@ -218,7 +318,6 @@ else:
     logo_src = afcon_logo
     shadow_style = "2px 2px 4px #000000"
 
-# Note the specific classes: 'banner-container', 'banner-img', 'banner-text'
 st.markdown(f"""
     <div class="banner-container" style="
         background: {banner_bg};
@@ -263,13 +362,21 @@ if not df.empty:
     f_df = df[df['Comp'] == track].copy()
 else:
     f_df = pd.DataFrame()
+
 if not f_df.empty:
-    m_exp = f_df['Expense'].sum(); m_inc = f_df['Income'].sum(); m_net = m_inc - m_exp
-else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
+    m_exp = f_df['Expense'].sum()
+    m_inc = f_df['Income'].sum()
+    m_net = m_inc - m_exp
+else:
+    m_exp = 0.0
+    m_inc = 0.0
+    m_net = 0.0
 
 c1, c2, c3 = st.columns(3)
-with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
-with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
+with c1:
+    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
+with c2:
+    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
 with c3:
     color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
     st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
@@ -293,12 +400,14 @@ with col_form:
         odds_val = st.number_input("Odds", value=3.2, step=0.1)
         stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
         result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+        
         if st.form_submit_button("Submit Game", use_container_width=True):
             if h_team and a_team:
-                worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
-                st.toast("Match Added!", icon="✅")
-                st.rerun()
-            else: st.warning("Please enter team names")
+                if add_match_to_sheet(worksheet, str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val):
+                    st.toast("Match Added!", icon="✅")
+                    st.rerun()
+            else:
+                st.warning("Please enter team names")
 
 with col_chart:
     st.subheader("Performance")
@@ -311,7 +420,8 @@ with col_chart:
             font=dict(color='white'), margin=dict(l=20, r=20, t=20, b=20), height=300
         )
         st.plotly_chart(fig, use_container_width=True)
-        wins = len(f_df[f_df['Status'] == "✅ Won"]); losses = len(f_df[f_df['Status'] == "❌ Lost"])
+        wins = len(f_df[f_df['Status'] == "✅ Won"])
+        losses = len(f_df[f_df['Status'] == "❌ Lost"])
         rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
         st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
@@ -321,6 +431,7 @@ if not f_df.empty:
     def highlight_results(row):
         bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
         return [f'background-color: {bg}'] * len(row)
+    
     display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
     display_df = display_df.sort_index(ascending=False)
     st.dataframe(
@@ -329,11 +440,14 @@ if not f_df.empty:
         }),
         use_container_width=True, hide_index=True
     )
-else: st.info("No matches found.")
+else:
+    st.info("No matches found.")
 
 with st.expander("🛠️ Admin Actions"):
     if st.button("Undo Last Entry"):
         if len(raw_data) > 0:
-            try: worksheet.delete_rows(len(raw_data) + 1); st.rerun()
-            except: st.error("Error")
-        else: st.warning("Empty")
+            if delete_last_row(worksheet, len(raw_data)):
+                st.toast("Last entry deleted", icon="✅")
+                st.rerun()
+        else:
+            st.warning("Empty")
