@@ -79,6 +79,25 @@ st.markdown(f"""
     [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; }}
     [data-testid="stForm"] * {{ color: #000000 !important; text-shadow: none !important; }}
 
+    /* Tabs Styling */
+    [data-testid="stTabs"] {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }}
+    [data-testid="stTabs"] button {{
+        color: #000000 !important;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-shadow: none !important;
+    }}
+    [data-testid="stTabs"] button[aria-selected="true"] {{
+        color: #1b4332 !important;
+        border-bottom: 3px solid #1b4332 !important;
+    }}
+
     /* Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
