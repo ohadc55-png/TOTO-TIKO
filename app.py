@@ -1,4 +1,4 @@
-iimport streamlit as st
+import streamlit as st
 import pandas as pd
 import plotly.express as px
 import gspread
@@ -16,130 +16,135 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (VISIBILITY & CONTRAST ENGINE) ---
+# --- 2. CSS STYLING (FIXED VISIBILITY & CONTRAST) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
     
-    /* 1. RESET */
+    /* --- RESET --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display: none;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* 2. ARROWS (CLEAN & VISIBLE) */
+    /* --- ARROW CONTROLS (CLEAN) --- */
     button[aria-label="Open sidebar"] {{
         background-color: rgba(0, 0, 0, 0.8) !important;
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 12px !important;
-        width: 45px !important; height: 45px !important;
-        margin: 15px !important;
-        color: transparent !important; /* Hide any text */
-        font-size: 0px !important;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 12px;
+        width: 45px; height: 45px;
+        margin-top: 20px;
+        font-size: 0px !important; /* Hide text */
+        color: transparent !important;
     }}
-    button[aria-label="Open sidebar"] svg {{ fill: white !important; width: 24px !important; height: 24px !important; }}
+    button[aria-label="Open sidebar"] svg {{ fill: white !important; width: 24px; height: 24px; }}
     
-    button[aria-label="Collapse sidebar"] {{ color: transparent !important; font-size: 0px !important; }}
-    button[aria-label="Collapse sidebar"] svg {{ fill: black !important; width: 24px !important; height: 24px !important; }}
-    .stTooltipIcon, [data-testid="stTooltipContent"] {{ display: none !important; }}
+    button[aria-label="Collapse sidebar"] {{ font-size: 0px !important; color: transparent !important; }}
+    button[aria-label="Collapse sidebar"] svg {{ fill: black !important; width: 24px; height: 24px; }}
+    .stTooltipIcon {{ display: none !important; }}
 
-    /* 3. MAIN AREA TYPOGRAPHY (FORCE WHITE) */
-    /* This targets headers, paragraphs, and INPUT LABELS in the main area */
-    .main h1, .main h2, .main h3, .main p, .main span, .main label, 
-    .main [data-testid="stWidgetLabel"] p,
-    .main [data-testid="stMarkdownContainer"] p {{
+    /* --- MAIN AREA TYPOGRAPHY (WHITE ON DARK) --- */
+    [data-testid="stAppViewContainer"] h1, 
+    [data-testid="stAppViewContainer"] h2, 
+    [data-testid="stAppViewContainer"] h3, 
+    [data-testid="stAppViewContainer"] p, 
+    [data-testid="stAppViewContainer"] span, 
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] div[data-testid="stMarkdownContainer"] p {{
         color: #ffffff !important;
-        text-shadow: 0px 2px 4px rgba(0,0,0,0.9) !important;
-        font-family: 'Montserrat', sans-serif !important;
-    }}
-    
-    /* Plotly Charts Text */
-    .js-plotly-plot .plotly .gtitle, .js-plotly-plot .plotly .xtitle, .js-plotly-plot .plotly .ytitle {{
-        fill: white !important;
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
+        font-family: 'Montserrat', sans-serif;
     }}
 
-    /* 4. INPUT FIELDS (MAIN AREA) */
-    /* The input box itself */
-    .main .stTextInput input, .main .stNumberInput input {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        color: #000000 !important; /* Black text inside input */
-        border: none !important;
-        font-weight: bold !important;
+    /* Metrics (Big Numbers) */
+    [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
+    [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
+
+    /* --- ADD MATCH BANNER (FORM STYLE) --- */
+    [data-testid="stForm"] {{
+        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }}
-    /* The container for inputs */
-    .main [data-testid="stForm"] {{
-        background-color: rgba(0, 0, 0, 0.5) !important; /* Dark semi-transparent background for form */
-        border-radius: 15px;
-        padding: 20px;
-        border: 1px solid rgba(255,255,255,0.1);
+    /* Labels inside the form */
+    [data-testid="stForm"] label p {{
+        color: #ffffff !important;
+        font-weight: 600;
+        font-size: 0.9rem;
     }}
 
-    /* 5. SIDEBAR STYLING (FORCE BLACK TEXT) */
-    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.9) !important; }}
+    /* --- INPUT FIELDS (High Contrast) --- */
+    input {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }}
+    div[data-baseweb="select"] > div {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }}
+    div[data-baseweb="select"] span {{
+        color: #000000 !important;
+    }}
+
+    /* --- SIDEBAR (LIGHT THEME) --- */
+    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.9); }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("{SIDEBAR_BG}"); background-size: cover;
         filter: blur(5px); z-index: -1;
     }}
-    /* Force all text in sidebar to be black */
-    [data-testid="stSidebar"] *, 
-    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
-    [data-testid="stSidebar"] .stMarkdown p {{
+    /* Sidebar Text Black */
+    [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
-    /* Input fields in sidebar */
-    [data-testid="stSidebar"] input {{
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
-    }}
 
-    /* 6. METRIC CARDS */
-    .metric-box {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 15px; padding: 20px; text-align: center;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }}
-    .m-label {{ color: #444 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
-    .m-value {{ color: #1b4332 !important; font-weight: 900; font-size: 28px; text-shadow: none !important; }}
-
-    /* 7. ACTIVITY LOG BANNERS */
-    .activity-banner {{
-        padding: 15px 25px; border-radius: 12px; margin-bottom: 12px;
-        display: flex; justify-content: space-between; align-items: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5); border-left: 10px solid;
-    }}
-    .banner-win {{ background: linear-gradient(90deg, rgba(20, 60, 40, 0.95), rgba(40, 100, 70, 0.95)); border-color: #00ff88; }}
-    .banner-loss {{ background: linear-gradient(90deg, rgba(80, 10, 10, 0.95), rgba(130, 20, 20, 0.95)); border-color: #ff4b4b; }}
-
-    /* 8. OVERVIEW TRACK BANNERS (NEW!) */
-    .track-banner-container {{
-        background: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        border-left: 12px solid #333;
+    /* --- CUSTOM BANNERS (Overview & Activity) --- */
+    .banner-card {{
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        border-left: 10px solid #333;
     }}
-    .tb-name {{ font-size: 1.4rem; font-weight: 900; color: #333 !important; text-shadow: none !important; }}
-    .tb-stat-label {{ font-size: 0.8rem; font-weight: 700; color: #777 !important; text-transform: uppercase; text-shadow: none !important; }}
-    .tb-stat-val {{ font-size: 1.1rem; font-weight: 800; color: #000 !important; text-shadow: none !important; }}
-    .tb-profit {{ font-size: 1.8rem; font-weight: 900; text-shadow: none !important; }}
+    /* Text inside banners must be black */
+    .banner-card span, .banner-card div {{
+        color: #000000 !important;
+        text-shadow: none !important;
+    }}
+    
+    .status-win {{ border-left-color: #2d6a4f; background: linear-gradient(90deg, #e6fffa, #ffffff); }}
+    .status-loss {{ border-left-color: #d32f2f; background: linear-gradient(90deg, #fff5f5, #ffffff); }}
 
+    /* --- METRIC BOXES --- */
+    .metric-box {{
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+    }}
+    .m-val {{ font-size: 1.8rem; font-weight: 900; color: white !important; }}
+    .m-lbl {{ font-size: 0.8rem; font-weight: bold; color: #ccc !important; text-transform: uppercase; }}
+
+    /* Background Image */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url("{BG_IMAGE}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE}");
         background-attachment: fixed; background-size: cover; background-position: center;
     }}
-    /* Hide default table */
-    [data-testid="stDataFrame"] {{ display: none; }}
+    
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LOGIC ---
+# --- 3. LOGIC ENGINE (NO CHANGES TO LOGIC) ---
 def connect_db():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
@@ -222,37 +227,39 @@ if view == "🏆 Overview":
         # Metrics
         total_profit = summary['Profit'].sum()
         col1, col2, col3 = st.columns(3)
-        pc = "#00ff88" if total_profit >= 0 else "#ff4b4b"
-        col1.markdown(f'<div class="metric-box"><div class="m-label">Total Profit</div><div class="m-value" style="color:{pc}!important">₪{total_profit:,.0f}</div></div>', unsafe_allow_html=True)
-        col2.markdown(f'<div class="metric-box"><div class="m-label">Total Volume</div><div class="m-value">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
+        p_color = "#00ff88" if total_profit >= 0 else "#ff4b4b"
+        
+        col1.markdown(f'<div class="metric-box"><div class="m-lbl">Total Profit</div><div class="m-val" style="color:{p_color}!important">₪{total_profit:,.0f}</div></div>', unsafe_allow_html=True)
+        col2.markdown(f'<div class="metric-box"><div class="m-lbl">Total Volume</div><div class="m-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
         rate = (summary['Status'].sum()/summary['Match'].sum()*100) if summary['Match'].sum() > 0 else 0
-        col3.markdown(f'<div class="metric-box"><div class="m-label">Win Rate</div><div class="m-value">{rate:.1f}%</div></div>', unsafe_allow_html=True)
+        col3.markdown(f'<div class="metric-box"><div class="m-lbl">Win Rate</div><div class="m-val">{rate:.1f}%</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br><h3>Performance Breakdown</h3>", unsafe_allow_html=True)
         
-        # --- NEW: TRACK BANNERS (Instead of Table) ---
+        # --- RESTORED OVERVIEW TABLE AS BANNERS ---
         for _, row in summary.iterrows():
             prof = row['Profit']
-            p_color = "#2d6a4f" if prof >= 0 else "#d32f2f"
-            border_c = "#2d6a4f" if prof >= 0 else "#d32f2f"
-            win_r = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
+            p_text = f"+₪{prof:,.0f}" if prof >= 0 else f"-₪{abs(prof):,.0f}"
+            p_style = "#2d6a4f" if prof >= 0 else "#d32f2f"
+            border_style = "status-win" if prof >= 0 else "status-loss"
+            wr = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
             
             st.markdown(f"""
-                <div class="track-banner-container" style="border-left: 12px solid {border_c};">
+                <div class="banner-card {border_style}">
                     <div style="flex: 1.5;">
-                        <div class="tb-name">{row['Comp']}</div>
+                        <span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <div class="tb-stat-label">Games</div>
-                        <div class="tb-stat-val">{row['Match']}</div>
+                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">GAMES</span><br>
+                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Match']}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <div class="tb-stat-label">Wins</div>
-                        <div class="tb-stat-val">{row['Status']} ({win_r:.1f}%)</div>
+                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">WINS</span><br>
+                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({wr:.1f}%)</span>
                     </div>
                     <div style="flex: 1.2; text-align: right;">
-                        <div class="tb-stat-label">Net Profit</div>
-                        <div class="tb-profit" style="color: {p_color} !important;">₪{prof:,.0f}</div>
+                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">NET PROFIT</span><br>
+                        <span style="font-size: 1.5rem; font-weight: 900; color: {p_style} !important;">{p_text}</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
@@ -275,16 +282,16 @@ else:
     t_net = f_df['Gross'].sum() - f_df['Stake'].sum() if not f_df.empty else 0.0
 
     mc1, mc2, mc3 = st.columns(3)
-    mc1.markdown(f'<div class="metric-box"><div class="m-label">Invested</div><div class="m-value">₪{f_df["Stake"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    mc2.markdown(f'<div class="metric-box"><div class="m-label">Gross Rev</div><div class="m-value">₪{f_df["Gross"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    nc = "#2d6a4f" if t_net >= 0 else "#d32f2f"
-    mc3.markdown(f'<div class="metric-box"><div class="m-label">Net Profit</div><div class="m-value" style="color:{nc} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
+    mc1.markdown(f'<div class="metric-box"><div class="m-lbl">Invested</div><div class="m-val">₪{f_df["Stake"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    mc2.markdown(f'<div class="metric-box"><div class="m-lbl">Gross Rev</div><div class="m-val">₪{f_df["Gross"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    nc = "#00ff88" if t_net >= 0 else "#ff4b4b"
+    mc3.markdown(f'<div class="metric-box"><div class="m-lbl">Net Profit</div><div class="m-val" style="color:{nc} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br><h2>Performance Strategy</h2>", unsafe_allow_html=True)
     cf, cg = st.columns([1, 1.2])
     with cf:
         with st.form("add_match"):
-            st.markdown("#### New Entry")
+            st.markdown("### ⚽ New Entry")
             h = st.text_input("Home Team", value="Brighton" if view == "Brighton" else "")
             a = st.text_input("Away Team")
             o = st.number_input("Odds", 3.2)
@@ -304,17 +311,6 @@ else:
     if not f_df.empty:
         for _, row in f_df.sort_index(ascending=False).iterrows():
             is_win = "Won" in row['Status']
-            b_class = "banner-win" if is_win else "banner-loss"
-            st.markdown(f"""
-                <div class="activity-banner {b_class}">
-                    <div>
-                        <span style="font-size: 1.3rem; font-weight: 900; color: white;">{row['Match']}</span><br>
-                        <span style="font-size: 0.9rem; opacity: 0.9; color: white;">{row['Date']} | Odds: {row['Odds']}</span>
-                    </div>
-                    <div style="text-align: right; line-height: 1.1;">
-                        <span style="font-size: 0.85rem; opacity: 0.8; color: white;">{'Cycle Profit:' if is_win else 'Loss:'}</span><br>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: white;">₪{row['Cycle_Net']:,.0f}</span><br>
-                        <span style="font-size: 0.75rem; font-weight: bold; color: white; text-transform: uppercase;">{row['Status']}</span>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            b_class = "status-win" if is_win else "status-loss"
+            # Cycle net is calculated in backend
+            profit_display = f"+
