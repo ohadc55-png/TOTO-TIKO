@@ -3,31 +3,11 @@ import pandas as pd
 import plotly.express as px
 import gspread
 import datetime
-from typing import Tuple, List, Dict, Optional
 
-# ============================================================================
-# 1. CONFIGURATION & CONSTANTS
-# ============================================================================
-
+# --- 1. CONFIGURATION ---
 APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
-
-# Google Sheets Constants
-BANKROLL_ROW = 1
-BANKROLL_COL = 10
-DEFAULT_BANKROLL = 5000.0
-
-# Competition Logos
-COMPETITION_LOGOS = {
-    "Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png",
-    "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
-}
-
-COMPETITION_GRADIENTS = {
-    "Brighton": "linear-gradient(90deg, #4CABFF, #E6F7FF)",
-    "Africa Cup of Nations": "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
-}
 
 st.set_page_config(
     page_title="GoalMetric Elite Dashboard",
@@ -36,665 +16,244 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ============================================================================
-# 2. STYLING WITH WORKING ARROWS
-# ============================================================================
-
-# VERSION CONTROL - Change this number to force CSS reload
-# IMPORTANT: After making CSS changes:
-# 1. Increase this version number (e.g., v2.5 -> v2.6)
-# 2. Commit and push to GitHub
-# 3. Go to Streamlit Cloud → Manage app → Reboot
-# 4. Clear browser cache (Ctrl+Shift+Delete)
-CSS_VERSION = "v2.6"  # <-- CHANGED TO v2.6 TO FORCE UPDATE
-
-def get_custom_css() -> str:
-    """Returns custom CSS styling with Unicode arrow solution"""
-    return f"""
-    <style data-version="{CSS_VERSION}">
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
+# --- 2. ADVANCED CSS (FIXES ARROWS, HEADERS & ARTIFACTS) ---
+st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
     
-    /* ===== RESET ===== */
+    /* 1. Global Reset */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
+    [data-testid="stDecoration"] {{display: none;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* ===== HIDE ARROW BUTTON TEXT COMPLETELY ===== */
+    /* 2. Arrow & Tooltip Fix (Prevents 'keyb' text) */
+    [data-testid="stSidebarCollapsedControl"] {{
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        border-radius: 50% !important;
+        width: 45px !important; height: 45px !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        margin: 10px !important;
+    }}
+    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; }}
+    /* Hide the tooltip text globally to prevent 'keyb' artifacts */
+    [data-testid="stTooltipContent"], .stTooltipIcon {{ display: none !important; }}
     
-    /* Open Sidebar Button - REMOVE ALL TEXT */
-    button[aria-label="Open sidebar"] {
-        font-size: 0 !important;
-        color: transparent !important;
-        background-color: rgba(0, 0, 0, 0.7) !important;
-        border: 2px solid rgba(255, 255, 255, 0.8) !important;
-        border-radius: 12px !important;
-        width: 50px !important;
-        height: 50px !important;
-        min-width: 50px !important;
-        padding: 0 !important;
-        margin: 15px 0 0 10px !important;
-    }
-    
-    /* Hide everything inside */
-    button[aria-label="Open sidebar"] * {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        font-size: 0 !important;
-        color: transparent !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    
-    button[aria-label="Open sidebar"] svg,
-    button[aria-label="Open sidebar"] span,
-    button[aria-label="Open sidebar"] div,
-    button[aria-label="Open sidebar"]::before,
-    button[aria-label="Open sidebar"]::after {
-        display: none !important;
-        content: "" !important;
-        visibility: hidden !important;
-    }
-    
-    /* Close Sidebar Button - REMOVE ALL TEXT */
-    button[aria-label="Collapse sidebar"] {
-        font-size: 0 !important;
-        color: transparent !important;
-        background-color: rgba(255, 255, 255, 0.9) !important;
-        border: 2px solid rgba(0, 0, 0, 0.3) !important;
-        border-radius: 12px !important;
-        width: 50px !important;
-        height: 50px !important;
-        min-width: 50px !important;
-        padding: 0 !important;
-    }
-    
-    /* Hide everything inside */
-    button[aria-label="Collapse sidebar"] * {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        font-size: 0 !important;
-        color: transparent !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    
-    button[aria-label="Collapse sidebar"] svg,
-    button[aria-label="Collapse sidebar"] span,
-    button[aria-label="Collapse sidebar"] div,
-    button[aria-label="Collapse sidebar"]::before,
-    button[aria-label="Collapse sidebar"]::after {
-        display: none !important;
-        content: "" !important;
-        visibility: hidden !important;
-    }
-    
-    /* ===== MOBILE RESPONSIVE TEXT ===== */
-    
-    /* Main titles */
-    h1 {
-        font-size: clamp(1.5rem, 5vw, 3rem) !important;
-    }
-    
-    h2 {
-        font-size: clamp(1.2rem, 4vw, 2rem) !important;
-    }
-    
-    h3 {
-        font-size: clamp(1rem, 3vw, 1.5rem) !important;
-    }
-    
-    /* Live Bankroll - responsive */
-    [data-testid="stAppViewContainer"] div[style*="font-size: 3.5rem"] {
-        font-size: clamp(2rem, 8vw, 3.5rem) !important;
-    }
-    
-    /* Metric boxes */
-    .m-lbl {
-        font-size: clamp(0.65rem, 2vw, 0.8rem) !important;
-    }
-    
-    .m-val {
-        font-size: clamp(1.2rem, 4vw, 1.8rem) !important;
-    }
-    
-    /* Banners */
-    .banner-container span {
-        font-size: clamp(0.8rem, 2.5vw, 1.2rem) !important;
-    }
-    
-    .track-overview-banner span {
-        font-size: clamp(0.75rem, 2.5vw, 1.4rem) !important;
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 768px) {
-        .banner-container {
-            flex-direction: column !important;
-            gap: 10px !important;
-            text-align: center !important;
-        }
-        
-        .track-overview-banner {
-            flex-direction: column !important;
-            gap: 10px !important;
-            text-align: center !important;
-        }
-        
-        [data-testid="stForm"] {
-            padding: 15px !important;
-        }
-    }
+    /* Inside Sidebar Close Button */
+    [data-testid="stSidebar"] button[kind="header"] svg {{ fill: #000000 !important; }}
 
-    /* ===== MAIN AREA TEXT (WHITE) ===== */
-    [data-testid="stAppViewContainer"] h1, 
-    [data-testid="stAppViewContainer"] h2, 
-    [data-testid="stAppViewContainer"] h3, 
-    [data-testid="stAppViewContainer"] p, 
-    [data-testid="stAppViewContainer"] span, 
-    [data-testid="stAppViewContainer"] label,
-    [data-testid="stAppViewContainer"] div[data-testid="stMarkdownContainer"] p {{
-        color: #ffffff !important;
-        text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
-        font-family: 'Montserrat', sans-serif;
-    }}
-    [data-testid="stMetricValue"] {{ 
-        color: #ffffff !important; 
-        text-shadow: 0px 2px 5px rgba(0,0,0,1); 
-    }}
-    [data-testid="stMetricLabel"] {{ 
-        color: #dddddd !important; 
-    }}
-
-    /* ===== FORM ===== */
-    [data-testid="stForm"] {{
-        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 16px;
-        padding: 25px;
-    }}
-    [data-testid="stForm"] label p {{ 
-        color: #ffffff !important; 
-        font-weight: 600; 
-    }}
-
-    /* ===== INPUT FIELDS ===== */
-    input {{ 
-        background-color: #ffffff !important; 
-        color: #000000 !important; 
-        font-weight: bold; 
-        border-radius: 5px; 
-    }}
-    div[data-baseweb="select"] > div {{ 
-        background-color: #ffffff !important; 
-        color: #000000 !important; 
-    }}
-    div[data-baseweb="select"] span {{ 
-        color: #000000 !important; 
-    }}
-
-    /* ===== SIDEBAR (BLACK TEXT) ===== */
-    [data-testid="stSidebar"] {{ 
-        background-color: rgba(255, 255, 255, 0.98) !important;
-    }}
-    
-    [data-testid="stSidebar"]::before {{
-        content: ""; 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%;
-        background-image: url("{SIDEBAR_BG}"); 
-        background-size: cover;
-        filter: blur(5px); 
-        opacity: 0.3;
-        z-index: -1;
-    }}
-    
-    /* All sidebar text in BLACK */
-    [data-testid="stSidebar"] *,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div,
-    [data-testid="stSidebar"] .stMarkdown,
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
-    [data-testid="stSidebar"] [data-testid="stMetricLabel"],
-    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-        color: #000000 !important;
-        text-shadow: none !important;
-        font-weight: 600 !important;
-    }}
-    
-    [data-testid="stSidebar"] input {{
-        border: 1px solid #ccc !important;
-        color: #000000 !important;
-    }}
-    
-    [data-testid="stSidebar"] button {{
-        color: #000000 !important;
-        font-weight: 700 !important;
-    }}
-
-    /* ===== BANNERS (50% OPACITY) ===== */
-    .banner-container {{
-        border-radius: 12px;
-        padding: 15px 20px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        backdrop-filter: blur(5px);
-    }}
-    
-    .status-win {{ 
-        background: rgba(46, 204, 113, 0.5) !important;
-        border-left: 10px solid #27ae60; 
-        border: 1px solid rgba(46, 204, 113, 0.6);
-    }}
-    
-    .status-loss {{ 
-        background: rgba(231, 76, 60, 0.5) !important;
-        border-left: 10px solid #c0392b; 
-        border: 1px solid rgba(231, 76, 60, 0.6);
-    }}
-
-    .banner-container span, .banner-container div {{
-        color: #ffffff !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
-    }}
-    
-    .track-overview-banner {{
-        background: linear-gradient(90deg, #ffffff, #f0f0f0);
-        border-radius: 12px;
-        padding: 15px 20px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-left: 10px solid #333;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }}
-    .track-overview-banner span, .track-overview-banner div {{
-        color: #000000 !important;
-        text-shadow: none !important;
-    }}
-
-    /* ===== METRIC BOXES ===== */
-    .metric-box {{
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-    }}
-    .m-lbl {{ 
-        font-size: 0.8rem; 
-        font-weight: bold; 
-        color: #ddd !important; 
-        text-transform: uppercase; 
-    }}
-    .m-val {{ 
-        font-size: 1.8rem; 
-        font-weight: 900; 
-        color: white !important; 
-    }}
-
-    /* ===== BACKGROUND ===== */
+    /* 3. Backgrounds */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE}");
-        background-attachment: fixed; 
-        background-size: cover; 
-        background-position: center;
+        background-attachment: fixed; background-size: cover; background-position: center;
     }}
+    [data-testid="stSidebar"] {{
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }}
+    [data-testid="stSidebar"]::before {{
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("{SIDEBAR_BG}"); background-size: cover;
+        filter: blur(4px); z-index: -1;
+    }}
+
+    /* 4. Typography & Visibility */
+    .main h1, .main h2, .main h3, .main p, .main span, .main label {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        font-family: 'Montserrat', sans-serif;
+    }}
+    [data-testid="stSidebar"] * {{ color: #000000 !important; text-shadow: none !important; }}
     
-    [data-testid="stDataFrame"] {{ 
-        display: none; 
+    /* Captions (Win Rate Text) */
+    [data-testid="stCaptionContainer"] {{ color: #ffffff !important; font-weight: 700 !important; font-size: 1.1rem !important; }}
+
+    /* 5. Component Styling */
+    .custom-metric-card {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px; padding: 20px; text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }}
+    .c-label {{ color: #555 !important; font-weight: 700; font-size: 12px; text-transform: uppercase; }}
+    .c-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; }}
+
+    [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; overflow: hidden; }}
+    [data-testid="stDataFrame"] * {{ color: #000000 !important; }}
+    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 20px; }}
+    [data-testid="stForm"] * {{ color: black !important; }}
+
+    @media only screen and (max-width: 768px) {{
+        .banner-text {{ display: none !important; }}
+        .banner-container {{ justify-content: center !important; }}
     }}
     </style>
-    """
+""", unsafe_allow_html=True)
 
-# Apply CSS - MUST be called BEFORE any other content
-st.markdown(get_custom_css(), unsafe_allow_html=True)
+# --- 3. DATA & LOGIC ENGINE (BACKEND) ---
 
-# Add cache buster meta tag
-st.markdown(f'<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">', unsafe_allow_html=True)
-st.markdown(f'<meta http-equiv="Pragma" content="no-cache">', unsafe_allow_html=True)
-st.markdown(f'<meta http-equiv="Expires" content="0">', unsafe_allow_html=True)
-
-# ============================================================================
-# 3. BACKEND LOGIC
-# ============================================================================
-
-@st.cache_data(ttl=300)
-def connect_db() -> Tuple[List[Dict], Optional[object], float]:
+def get_connection():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
         ws = sh.get_worksheet(0)
+        # Fetch data and base bankroll
         data = ws.get_all_records()
-        
         try:
-            bankroll_value = ws.cell(BANKROLL_ROW, BANKROLL_COL).value
-            base_br = float(str(bankroll_value).replace(',', '')) if bankroll_value else DEFAULT_BANKROLL
-        except:
-            base_br = DEFAULT_BANKROLL
-        
+            br_cell = ws.cell(1, 10).value
+            base_br = float(str(br_cell).replace(',', '')) if br_cell else 5000.0
+        except: base_br = 5000.0
         return data, ws, base_br
     except Exception as e:
-        st.error(f"שגיאה בחיבור: {e}")
-        return [], None, DEFAULT_BANKROLL
+        st.error(f"Sync Error: {e}")
+        return [], None, 5000.0
 
-
-def process_logic(raw: List[Dict]) -> pd.DataFrame:
-    if not raw:
-        return pd.DataFrame()
-    
-    rows = []
-    cycle_tracker = {}
-    
-    for r in raw:
+def process_data(raw_data):
+    """Processes raw sheets data into a clean, calculated DataFrame."""
+    if not raw_data: return pd.DataFrame()
+    processed = []
+    for row in raw_data:
         try:
-            comp = str(r.get('Competition', 'Brighton')).strip() or 'Brighton'
-            if comp not in cycle_tracker:
-                cycle_tracker[comp] = 0.0
+            comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
+            odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+            stake = float(str(row.get('Stake', 0)).replace(',', '')) if row.get('Stake') else 0.0
+            res = str(row.get('Result', '')).strip()
             
-            odds = float(str(r.get('Odds', 1)).replace(',', '.'))
-            stake = float(str(r.get('Stake', 0)).replace(',', '')) if r.get('Stake') else 0.0
-            result = str(r.get('Result', '')).strip()
-            is_win = "Draw (X)" in result
+            is_win = "Draw (X)" in res
+            income = stake * odds if is_win else 0.0
             
-            gross_win = stake * odds if is_win else 0.0
-            cycle_tracker[comp] += stake
-            
-            if is_win:
-                net_cycle_profit = gross_win - cycle_tracker[comp]
-                cycle_tracker[comp] = 0.0
-            else:
-                net_cycle_profit = -stake
-            
-            rows.append({
-                "Date": r.get('Date', ''),
+            processed.append({
+                "Date": row.get('Date', ''),
                 "Comp": comp,
-                "Match": f"{r.get('Home Team', '')} vs {r.get('Away Team', '')}",
+                "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
                 "Odds": odds,
-                "Stake": stake,
-                "Gross": gross_win,
-                "Cycle_Net": net_cycle_profit,
+                "Expense": stake,
+                "Income": income,
                 "Status": "✅ Won" if is_win else "❌ Lost"
             })
-        except:
-            continue
-    
-    return pd.DataFrame(rows)
+        except: continue
+    return pd.DataFrame(processed)
 
+# --- 4. EXECUTION FLOW ---
+raw_rows, sheet_ws, initial_bankroll = get_connection()
+df = process_data(raw_rows)
 
-def validate_match_input(home: str, away: str, odds: float, stake: float) -> None:
-    if not home or not away:
-        raise ValueError("חובה למלא שם שתי הקבוצות")
-    if odds < 1.01:
-        raise ValueError("Odds חייב להיות לפחות 1.01")
-    if stake <= 0:
-        raise ValueError("Stake חייב להיות מספר חיובי")
+# Calculate live bankroll based on total ins/outs
+if not df.empty:
+    net_change = df['Income'].sum() - df['Expense'].sum()
+    live_bankroll = initial_bankroll + net_change
+else:
+    live_bankroll = initial_bankroll
 
-
-def update_bankroll(worksheet: object, current_br: float, amount: float, operation: str) -> bool:
-    try:
-        new_bankroll = current_br + amount if operation == "deposit" else current_br - amount
-        
-        if new_bankroll < 0:
-            st.error("לא ניתן למשוך סכום גדול מהבנקרול הקיים")
-            return False
-        
-        worksheet.update_cell(BANKROLL_ROW, BANKROLL_COL, new_bankroll)
-        st.success(f"✅ {'הפקדה' if operation == 'deposit' else 'משיכה'} של ₪{amount:,.0f} בוצעה בהצלחה!")
-        return True
-    except Exception as e:
-        st.error(f"שגיאה: {e}")
-        return False
-
-
-# ============================================================================
-# 4. UI COMPONENTS
-# ============================================================================
-
-def render_metric_box(label: str, value: str, color: Optional[str] = None) -> str:
-    color_style = f"color:{color} !important" if color else ""
-    return f'<div class="metric-box"><div class="m-lbl">{label}</div><div class="m-val" style="{color_style}">{value}</div></div>'
-
-
-def display_live_bankroll(value: float) -> None:
-    st.markdown(f"""
-        <div style="text-align: center; margin-bottom: 40px;">
-            <div style="font-size: 3.5rem; font-weight: 300; color: #fff; text-shadow: 0 0 25px rgba(255,255,255,0.5);">₪{value:,.2f}</div>
-            <div style="font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: 3px; text-transform: uppercase;">LIVE BANKROLL</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-
-def render_competition_header(competition: str) -> None:
-    logo = COMPETITION_LOGOS.get(competition, "")
-    gradient = COMPETITION_GRADIENTS.get(competition, "linear-gradient(90deg, #4CABFF, #E6F7FF)")
-    text_color = "#004085" if competition == "Brighton" else "white"
-    
-    st.markdown(f'''
-        <div style="background:{gradient}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:20px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-            <img src="{logo}" style="height:80px; margin-right:30px;">
-            <h1 style="color:{text_color} !important; margin:0; text-shadow:none !important;">{competition.upper()}</h1>
-        </div>
-    ''', unsafe_allow_html=True)
-
-
-def render_activity_log(df: pd.DataFrame) -> None:
-    st.markdown("### 📜 Activity Log")
-    
-    if df.empty:
-        st.info("אין פעילות להצגה")
-        return
-    
-    for _, row in df.sort_index(ascending=False).iterrows():
-        is_win = "Won" in row['Status']
-        banner_class = "status-win" if is_win else "status-loss"
-        cycle_val = f"+₪{row['Cycle_Net']:,.0f}" if is_win else f"-₪{abs(row['Cycle_Net']):,.0f}"
-        cycle_col = "#2ecc71" if is_win else "#e74c3c"
-        label = "CYCLE PROFIT" if is_win else "LOSS"
-        
-        st.markdown(f"""
-            <div class="banner-container {banner_class}">
-                <div style="flex: 2;">
-                    <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
-                    <span style="font-size: 0.85rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']}</span><br>
-                    <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.9;">Stake: ₪{row['Stake']:,.0f}</span>
-                </div>
-                <div style="flex: 1; text-align: right;">
-                    <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.8;">{label}</span><br>
-                    <span style="font-size: 1.4rem; font-weight: 900; color: {cycle_col} !important;">{cycle_val}</span>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-
-# ============================================================================
-# 5. MAIN APP
-# ============================================================================
-
-if 'last_refresh' not in st.session_state:
-    st.session_state['last_refresh'] = datetime.datetime.now()
-
-with st.spinner('טוען נתונים...'):
-    raw_data, worksheet, base_br = connect_db()
-    df = process_logic(raw_data)
-
-live_br_val = base_br + (df['Gross'].sum() - df['Stake'].sum()) if not df.empty else base_br
+# --- 5. UI COMPONENTS ---
 
 # SIDEBAR
 with st.sidebar:
     st.image(APP_LOGO, width=120)
-    st.markdown("### 💰 WALLET CONTROL")
-    st.metric("Base Bankroll", f"₪{base_br:,.0f}")
-    
-    amount = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0)
-    col1, col2 = st.columns(2)
-    
-    if col1.button("💵 Deposit", use_container_width=True):
-        if worksheet and update_bankroll(worksheet, base_br, amount, "deposit"):
-            st.cache_data.clear()
-            st.rerun()
-    
-    if col2.button("💸 Withdraw", use_container_width=True):
-        if worksheet and update_bankroll(worksheet, base_br, amount, "withdraw"):
-            st.cache_data.clear()
-            st.rerun()
-    
-    st.divider()
-    view = st.selectbox("🧭 Navigation", ["🏆 Overview", "Brighton", "Africa Cup of Nations"])
-    
-    if st.button("🔄 Sync Cloud", use_container_width=True):
-        st.cache_data.clear()
+    st.markdown("### WALLET CONTROL")
+    st.metric("Base Bankroll", f"₪{initial_bankroll:,.0f}")
+    amt = st.number_input("Transaction", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    c1, c2 = st.columns(2)
+    if c1.button("Deposit", use_container_width=True):
+        sheet_ws.update_cell(1, 10, initial_bankroll + amt)
         st.rerun()
-    
+    if c2.button("Withdraw", use_container_width=True):
+        sheet_ws.update_cell(1, 10, initial_bankroll - amt)
+        st.rerun()
     st.divider()
-    st.caption(f"🕐 Last refresh: {st.session_state['last_refresh'].strftime('%H:%M:%S')}")
-    st.caption(f"🎨 CSS Version: {CSS_VERSION}")  # <-- להראות איזו גרסה רצה!
+    view = st.selectbox("Navigation", ["🏆 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
+    if st.button("🔄 Sync Systems", use_container_width=True): st.rerun()
 
-# MAIN CONTENT
+# MAIN VIEW SWITCHER
 if view == "🏆 Overview":
-    st.markdown("<h1 style='text-align: center; letter-spacing: 5px;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
-    display_live_bankroll(live_br_val)
+    st.markdown("<h1 style='text-align: center;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; opacity: 0.7;'>AGGREGATED GLOBAL POSITION</p>", unsafe_allow_html=True)
 
     if not df.empty:
+        # PURE MATH: Income - Expense per Group
         summary = df.groupby('Comp').agg({
-            'Match': 'count', 'Stake': 'sum', 'Gross': 'sum',
+            'Match': 'count',
+            'Expense': 'sum',
+            'Income': 'sum',
             'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
-        summary['Profit'] = summary['Gross'] - summary['Stake']
         
-        total_profit = summary['Profit'].sum()
-        col1, col2, col3 = st.columns(3)
-        profit_color = "#00ff88" if total_profit >= 0 else "#ff4b4b"
+        summary['Net Profit'] = summary['Income'] - summary['Expense']
+        summary['Win Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
         
-        col1.markdown(render_metric_box("Total Profit", f"₪{total_profit:,.0f}", profit_color), unsafe_allow_html=True)
-        col2.markdown(render_metric_box("Total Volume", f"{summary['Match'].sum()}", None), unsafe_allow_html=True)
-        win_rate = (summary['Status'].sum() / summary['Match'].sum() * 100) if summary['Match'].sum() > 0 else 0
-        col3.markdown(render_metric_box("Win Rate", f"{win_rate:.1f}%", None), unsafe_allow_html=True)
+        total_p = summary['Net Profit'].sum()
+        p_color = "#2d6a4f" if total_p >= 0 else "#d32f2f"
 
-        st.markdown("<br><h3>📊 Performance Breakdown</h3>", unsafe_allow_html=True)
-        
-        for _, row in summary.iterrows():
-            profit = row['Profit']
-            profit_text = f"+₪{profit:,.0f}" if profit >= 0 else f"-₪{abs(profit):,.0f}"
-            profit_style = "#2d6a4f" if profit >= 0 else "#d32f2f"
-            wr = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
-            
-            st.markdown(f"""
-                <div class="track-overview-banner">
-                    <div style="flex: 1.5;"><span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span></div>
-                    <div style="flex: 1; text-align: center;">
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">GAMES</span><br>
-                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Match']}</span>
-                    </div>
-                    <div style="flex: 1; text-align: center;">
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">WINS</span><br>
-                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({wr:.1f}%)</span>
-                    </div>
-                    <div style="flex: 1.2; text-align: right;">
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">NET PROFIT</span><br>
-                        <span style="font-size: 1.5rem; font-weight: 900; color: {profit_style} !important;">{profit_text}</span>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("<h3>📈 Distribution</h3>", unsafe_allow_html=True)
-        fig = px.bar(summary, x='Comp', y='Profit', color='Profit', 
-                     color_continuous_scale=['#ff4b4b', '#00ff88'])
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0.1)',
-            font=dict(color='white'),
-            height=300,
-            showlegend=False
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        col1, col2, col3 = st.columns(3)
+        with col1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Profit</div><div class="c-value" style="color:{p_color}!important">₪{total_p:,.0f}</div></div>', unsafe_allow_html=True)
+        with col2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Games</div><div class="c-value">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
+        with col3: 
+            avg_rate = (summary['Status'].sum() / summary['Match'].sum() * 100)
+            st.markdown(f'<div class="custom-metric-card"><div class="c-label">Global Health</div><div class="c-value">{avg_rate:.1f}%</div></div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        ch, tb = st.columns([1, 1.2])
+        with ch:
+            st.subheader("Distribution")
+            fig = px.bar(summary, x='Comp', y='Net Profit', color='Net Profit', color_continuous_scale=['#d32f2f', '#2d6a4f'])
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        with tb:
+            st.subheader("Track Performance")
+            st.dataframe(summary[['Comp', 'Match', 'Status', 'Win Rate', 'Net Profit']].rename(columns={'Comp': 'Competition', 'Status': 'Wins'}), use_container_width=True, hide_index=True)
     else:
-        st.info("אין נתונים להצגה. הוסף משחקים כדי להתחיל!")
+        st.info("No data found in cloud storage.")
 
 else:
-    # Competition View
-    render_competition_header(view)
-    display_live_bankroll(live_br_val)
+    # SPECIFIC TRACK VIEW
+    logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
+    grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
+    
+    st.markdown(f'<div class="banner-container" style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0;">{view.upper()}</h1></div>', unsafe_allow_html=True)
+    
+    st.markdown(f"<h2 style='text-align: center;'>₪{live_bankroll:,.2f}</h2><p style='text-align: center; opacity: 0.7;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
 
-    filtered_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
-    total_net = filtered_df['Gross'].sum() - filtered_df['Stake'].sum() if not filtered_df.empty else 0.0
+    f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
+    t_net = f_df['Income'].sum() - f_df['Expense'].sum() if not f_df.empty else 0.0
 
     mc1, mc2, mc3 = st.columns(3)
-    mc1.markdown(render_metric_box("Invested", f"₪{filtered_df['Stake'].sum():,.0f}"), unsafe_allow_html=True)
-    mc2.markdown(render_metric_box("Gross Rev", f"₪{filtered_df['Gross'].sum():,.0f}"), unsafe_allow_html=True)
-    
-    net_color = "#00ff88" if total_net >= 0 else "#ff4b4b"
-    mc3.markdown(render_metric_box("Net Profit", f"₪{total_net:,.0f}", net_color), unsafe_allow_html=True)
+    with mc1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Expenses</div><div class="c-value">₪{f_df["Expense"].sum() if not f_df.empty else 0:,.0f}</div></div>', unsafe_allow_html=True)
+    with mc2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Revenue</div><div class="c-value">₪{f_df["Income"].sum() if not f_df.empty else 0:,.0f}</div></div>', unsafe_allow_html=True)
+    with mc3: 
+        nc = "#2d6a4f" if t_net >= 0 else "#d32f2f"
+        st.markdown(f'<div class="custom-metric-card"><div class="c-label">Net Profit</div><div class="c-value" style="color:{nc}!important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("<br><h2>⚡ Performance Strategy</h2>", unsafe_allow_html=True)
-    form_col, chart_col = st.columns([1, 1.2])
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_f, col_g = st.columns([1, 1.2])
     
-    with form_col:
-        with st.form("add_match"):
-            st.markdown("### ⚽ New Entry")
-            home_team = st.text_input("Home Team", value="Brighton" if view == "Brighton" else "")
-            away_team = st.text_input("Away Team")
-            odds = st.number_input("Odds", value=3.2, min_value=1.01, step=0.1)
-            stake = st.number_input("Stake", value=30.0, min_value=0.0, step=10.0)
-            result = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
-            
-            if st.form_submit_button("✅ SUBMIT ENTRY", use_container_width=True):
-                try:
-                    validate_match_input(home_team, away_team, odds, stake)
-                    
-                    if worksheet:
-                        worksheet.append_row([
-                            str(datetime.date.today()),
-                            view,
-                            home_team,
-                            away_team,
-                            odds,
-                            result,
-                            stake,
-                            0.0
-                        ])
-                        st.success("✅ Entry added successfully!")
-                        st.cache_data.clear()
-                        st.rerun()
-                    else:
-                        st.error("❌ No connection to database")
-                        
-                except ValueError as e:
-                    st.error(f"❌ {str(e)}")
-                except Exception as e:
-                    st.error(f"❌ Error adding entry: {e}")
-    
-    with chart_col:
-        if not filtered_df.empty:
-            filtered_df['Equity'] = base_br + (filtered_df['Gross'].cumsum() - filtered_df['Stake'].cumsum())
-            
-            fig_line = px.line(filtered_df, y='Equity', x=filtered_df.index, 
-                              title="Equity Curve")
-            fig_line.update_traces(line_color='#00ff88', line_width=4)
-            fig_line.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0.1)',
-                font=dict(color='white'),
-                height=400,
-                showlegend=False
-            )
-            st.plotly_chart(fig_line, use_container_width=True)
-        else:
-            st.info("📊 No data to display yet")
+    with col_f:
+        with st.form("new_entry"):
+            st.subheader("Add Match")
+            h = st.text_input("Home", value="Brighton" if view == "Brighton" else "")
+            a = st.text_input("Away")
+            o = st.number_input("Odds", value=3.2, step=0.1)
+            s = st.number_input("Stake", value=30.0)
+            r = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
+            if st.form_submit_button("SUBMIT GAME", use_container_width=True):
+                sheet_ws.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0])
+                st.rerun()
 
-    render_activity_log(filtered_df)
+    with col_g:
+        st.subheader("Performance")
+        if not f_df.empty:
+            f_df['Equity'] = initial_bankroll + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
+            fig_l = px.line(f_df, y='Equity', x=f_df.index)
+            fig_l.update_traces(line_color='#00ff88', line_width=4)
+            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=280, margin=dict(l=0,r=0,t=0,b=0))
+            st.plotly_chart(fig_l, use_container_width=True)
+            wins = len(f_df[f_df['Status'] == "✅ Won"])
+            st.caption(f"Win Rate: {(wins/len(f_df)*100):.1f}% ({wins} W / {len(f_df)-wins} L)")
+
+    st.subheader("📜 Activity Log")
+    if not f_df.empty:
+        st.dataframe(f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Status']].sort_index(ascending=False), use_container_width=True, hide_index=True)
+
+with st.expander("🛠️ Admin Console"):
+    if st.button("Undo Last Entry"):
+        sheet_ws.delete_rows(len(raw_rows) + 1)
+        st.rerun()
