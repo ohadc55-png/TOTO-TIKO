@@ -748,4 +748,64 @@ else:
     mc1.markdown(render_metric_box("Invested", f"₪{filtered_df['Stake'].sum():,.0f}"), unsafe_allow_html=True)
     mc2.markdown(render_metric_box("Gross Rev", f"₪{filtered_df['Gross'].sum():,.0f}"), unsafe_allow_html=True)
     
-    net_color = "#
+    net_color = "#00ff88" if total_net >= 0 else "#ff4b4b"
+    mc3.markdown(render_metric_box("Net Profit", f"₪{total_net:,.0f}", net_color), unsafe_allow_html=True)
+
+    st.markdown("<br><h2>⚡ Performance Strategy</h2>", unsafe_allow_html=True)
+    form_col, chart_col = st.columns([1, 1.2])
+    
+    with form_col:
+        with st.form("add_match"):
+            st.markdown("### ⚽ New Entry")
+            home_team = st.text_input("Home Team", value="Brighton" if view == "Brighton" else "")
+            away_team = st.text_input("Away Team")
+            odds = st.number_input("Odds", value=3.2, min_value=1.01, step=0.1)
+            stake = st.number_input("Stake", value=30.0, min_value=0.0, step=10.0)
+            result = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
+            
+            if st.form_submit_button("✅ SUBMIT ENTRY", use_container_width=True):
+                try:
+                    validate_match_input(home_team, away_team, odds, stake)
+                    
+                    if worksheet:
+                        worksheet.append_row([
+                            str(datetime.date.today()),
+                            view,
+                            home_team,
+                            away_team,
+                            odds,
+                            result,
+                            stake,
+                            0.0
+                        ])
+                        st.success("✅ Entry added successfully!")
+                        st.cache_data.clear()
+                        st.rerun()
+                    else:
+                        st.error("❌ No connection to database")
+                        
+                except ValueError as e:
+                    st.error(f"❌ {str(e)}")
+                except Exception as e:
+                    st.error(f"❌ Error adding entry: {e}")
+    
+    with chart_col:
+        if not filtered_df.empty:
+            filtered_df['Equity'] = base_br + (filtered_df['Gross'].cumsum() - filtered_df['Stake'].cumsum())
+            
+            fig_line = px.line(filtered_df, y='Equity', x=filtered_df.index, 
+                              title="Equity Curve")
+            fig_line.update_traces(line_color='#00ff88', line_width=4)
+            fig_line.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0.1)',
+                font=dict(color='white'),
+                height=400,
+                showlegend=False
+            )
+            st.plotly_chart(fig_line, use_container_width=True)
+        else:
+            st.info("📊 No data to display yet")
+
+    # Display activity log
+    render_activity_log(filtered_df)
