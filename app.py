@@ -5,310 +5,335 @@ import gspread
 import datetime
 
 # --- 1. CONFIGURATION ---
-APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
-BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
+APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
+BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 
 st.set_page_config(
-    page_title="GoalMetric Elite Dashboard",
+    page_title="Elite Football Tracker",
     layout="wide",
-    page_icon=APP_LOGO,
+    page_icon=APP_LOGO_URL,
     initial_sidebar_state="expanded"
 )
 
-# --- 2. ADVANCED CSS (MOBILE OPTIMIZED) ---
+# --- 2. CSS STYLING (Responsive & Fixed Colors) ---
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    /* 1. Global Reset */
+    /* --- HIDE DEFAULT ELEMENTS --- */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    [data-testid="stDecoration"] {{display: none;}}
-    header[data-testid="stHeader"] {{ background: transparent !important; }}
-    
-    /* 2. Arrow & Tooltip Fix */
-    [data-testid="stSidebarCollapsedControl"] {{
-        background-color: rgba(0, 0, 0, 0.6) !important;
-        border-radius: 50% !important;
-        width: 45px !important; height: 45px !important;
-        display: flex !important; align-items: center !important; justify-content: center !important;
-        margin: 10px !important;
-    }}
-    [data-testid="stSidebarCollapsedControl"] svg {{ fill: white !important; }}
-    [data-testid="stTooltipContent"], .stTooltipIcon {{ display: none !important; }}
-    
-    [data-testid="stSidebar"] button[kind="header"] svg {{ fill: #000000 !important; }}
+    header {{visibility: hidden;}}
+    [data-testid="stSidebarNav"] {{display: none;}}
 
-    /* 3. Backgrounds */
+    /* --- BACKGROUND --- */
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE}");
-        background-attachment: fixed; background-size: cover; background-position: center;
-    }}
-    [data-testid="stSidebar"] {{
-        background-color: rgba(255, 255, 255, 0.85) !important;
-        border-right: 1px solid rgba(255,255,255,0.2);
-    }}
-    [data-testid="stSidebar"]::before {{
-        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: url("{SIDEBAR_BG}"); background-size: cover;
-        filter: blur(4px); z-index: -1;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE_URL}");
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
     }}
 
-    /* 4. Typography & Visibility */
-    .main h1, .main h2, .main h3, .main p, .main span, .main label {{
-        color: #ffffff !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    /* --- SIDEBAR (Light BG / Black Text) --- */
+    [data-testid="stSidebar"] {{
+        background-color: #f8f9fa !important;
+        border-right: 1px solid #ddd;
+    }}
+    [data-testid="stSidebar"] * {{
+        color: #000000 !important;
+        text-shadow: none !important;
         font-family: 'Montserrat', sans-serif;
     }}
-    [data-testid="stSidebar"] * {{ color: #000000 !important; text-shadow: none !important; }}
-    [data-testid="stCaptionContainer"] {{ color: #ffffff !important; font-weight: 700 !important; font-size: 1.1rem !important; }}
+    [data-testid="stSidebar"] input {{
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #ccc;
+    }}
+    [data-testid="stSidebar"] button {{
+        color: #ffffff !important; /* Button text stays white */
+    }}
 
-    /* 5. Component Styling */
-    .custom-metric-card {{
+    /* --- MAIN AREA (Dark BG / White Text) --- */
+    .main h1, .main h2, .main h3, .main h4, .main p {{
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }}
+
+    /* --- COMPONENTS --- */
+    /* Table: White BG, Black Text */
+    [data-testid="stDataFrame"] {{ background-color: white !important; border-radius: 8px; }}
+    [data-testid="stDataFrame"] * {{ color: #000000 !important; text-shadow: none !important; }}
+
+    /* Forms */
+    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; }}
+    [data-testid="stForm"] * {{ color: #000000 !important; text-shadow: none !important; }}
+
+    /* Metric Cards */
+    .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 15px; padding: 20px; text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }}
-    .c-label {{ color: #555 !important; font-weight: 700; font-size: 12px; text-transform: uppercase; }}
-    .c-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; }}
-
-    [data-testid="stForm"] {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 20px; }}
-    [data-testid="stForm"] * {{ color: black !important; }}
-
-    /* 6. Activity Log Banners (50% Opacity) */
-    .log-banner {{
-        padding: 15px 25px;
         border-radius: 12px;
-        margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        border-left: 8px solid;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    .banner-win {{
-        background-color: rgba(46, 204, 113, 0.5) !important;
-        border-color: #27ae60;
-    }}
-    .banner-loss {{
-        background-color: rgba(231, 76, 60, 0.5) !important;
-        border-color: #c0392b;
-    }}
-    .banner-text-main {{ font-size: 1.1rem; font-weight: 800; color: white !important; }}
-    .banner-text-sub {{ font-size: 0.85rem; opacity: 0.9; color: white !important; }}
-    .banner-profit {{ font-size: 1.4rem; font-weight: 900; color: white !important; }}
+    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
+    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
-    /* --- 7. MOBILE OPTIMIZATION QUERIES --- */
+    /* --- MOBILE RESPONSIVE LOGIC (The Magic Part) --- */
     @media only screen and (max-width: 768px) {{
-        /* 1. Remove text from competition banners */
-        .comp-banner-title {{ display: none !important; }}
-        .banner-container {{ justify-content: center !important; padding: 15px !important; }}
-        .banner-container img {{ margin-right: 0 !important; height: 65px !important; }}
         
-        /* 2. Scale down main headers */
-        h1 {{ font-size: 1.8rem !important; text-align: center !important; }}
-        .bankroll-text {{ font-size: 2.2rem !important; }}
-        
-        /* 3. Reformat Activity Log for Mobile */
-        .log-banner {{
-            flex-direction: column !important;
-            text-align: center !important;
-            padding: 15px !important;
+        /* 1. Hide the Text in the Banner */
+        .banner-text {{
+            display: none !important;
         }}
-        .log-banner > div {{
-            flex: none !important;
-            width: 100% !important;
-            margin-bottom: 8px !important;
-        }}
-        .banner-profit {{ font-size: 1.2rem !important; }}
         
-        /* 4. Sidebar spacing */
-        [data-testid="stSidebar"] {{ width: 100% !important; }}
+        /* 2. Center the Logo since text is gone */
+        .banner-container {{
+            justify-content: center !important;
+            padding: 10px !important;
+        }}
+        
+        /* 3. Make Logo Bigger on Mobile */
+        .banner-img {{
+            height: 120px !important;
+            margin: 0 !important;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)) !important;
+        }}
+        
+        /* 4. Fix Table Font Size for Mobile */
+        [data-testid="stDataFrame"] * {{
+            font-size: 12px !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA & LOGIC ENGINE (BACKEND) ---
-
-def get_connection():
+# --- 3. BACKEND LOGIC ---
+def get_data_from_sheets():
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
-        ws = sh.get_worksheet(0)
-        data = ws.get_all_records()
+        worksheet = sh.get_worksheet(0)
+        data = worksheet.get_all_records()
         try:
-            br_cell = ws.cell(1, 10).value
-            base_br = float(str(br_cell).replace(',', '')) if br_cell else 5000.0
-        except: base_br = 5000.0
-        return data, ws, base_br
+            val = worksheet.cell(1, 10).value
+            initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
+        except: initial_bankroll = 5000.0
+        return data, worksheet, initial_bankroll
     except Exception as e:
-        st.error(f"Sync Error: {e}")
+        st.error(f"Connection Error: {e}")
         return [], None, 5000.0
 
-def process_data(raw_data):
-    if not raw_data: return pd.DataFrame()
+def update_bankroll(worksheet, val):
+    try:
+        worksheet.update_cell(1, 10, val)
+        return True
+    except: return False
+
+def calculate_logic(raw_data, br_base, af_base):
     processed = []
-    cycle_trackers = {}
-    
+    next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
+    cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
+
     for row in raw_data:
         try:
-            comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
-            if comp not in cycle_trackers:
-                cycle_trackers[comp] = 0.0
-                
-            odds = float(str(row.get('Odds', 1)).replace(',', '.'))
-            stake = float(str(row.get('Stake', 0)).replace(',', '')) if row.get('Stake') else 0.0
+            comp = str(row.get('Competition', 'Brighton')).strip()
+            if not comp: comp = 'Brighton'
+            try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+            except: odds = 1.0
+            try:
+                stake_val = row.get('Stake')
+                if stake_val in [None, '', ' ']: exp = next_bets[comp]
+                else: exp = float(str(stake_val).replace(',', ''))
+            except: exp = next_bets[comp]
             res = str(row.get('Result', '')).strip()
-            
+            cycle_invest[comp] += exp
             is_win = "Draw (X)" in res
-            income = stake * odds if is_win else 0.0
-            cycle_trackers[comp] += stake
             
             if is_win:
-                cycle_profit = income - cycle_trackers[comp]
-                cycle_trackers[comp] = 0.0
+                inc = exp * odds
+                net = inc - cycle_invest[comp]
+                try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                except: roi = "0.0%"
+                next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
+                cycle_invest[comp] = 0.0
+                status = "✅ Won"
             else:
-                cycle_profit = -stake
-            
+                inc = 0.0
+                net = -exp
+                roi = "N/A"
+                next_bets[comp] = exp * 2.0
+                status = "❌ Lost"
             processed.append({
-                "Date": row.get('Date', ''),
-                "Comp": comp,
-                "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
-                "Odds": odds,
-                "Expense": stake,
-                "Income": income,
-                "Cycle_Profit": cycle_profit,
-                "Status": "✅ Won" if is_win else "❌ Lost"
+                "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
+                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net, "Status": status, "ROI": roi
             })
         except: continue
-    return pd.DataFrame(processed)
+    return processed, next_bets
 
-# --- 4. EXECUTION FLOW ---
-raw_rows, sheet_ws, initial_bankroll = get_connection()
-df = process_data(raw_rows)
-
-if not df.empty:
-    net_change = df['Income'].sum() - df['Expense'].sum()
-    live_bankroll = initial_bankroll + net_change
+# --- 4. EXECUTION ---
+raw_data, worksheet, saved_br = get_data_from_sheets()
+processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
+if processed:
+    df = pd.DataFrame(processed)
+    current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
 else:
-    live_bankroll = initial_bankroll
+    df = pd.DataFrame()
+    current_bal = saved_br
 
-# --- 5. UI COMPONENTS ---
+# --- 5. UI LAYOUT ---
 
 # SIDEBAR
 with st.sidebar:
-    st.image(APP_LOGO, width=120)
-    st.markdown("### WALLET CONTROL")
-    st.metric("Base Bankroll", f"₪{initial_bankroll:,.0f}")
-    amt = st.number_input("Transaction", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    try: st.image(APP_LOGO_URL, use_container_width=True)
+    except: pass
+    st.markdown("## WALLET CONTROL")
+    st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
+    st.write("Transaction Amount:")
+    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
     c1, c2 = st.columns(2)
-    if c1.button("Deposit", use_container_width=True):
-        sheet_ws.update_cell(1, 10, initial_bankroll + amt)
-        st.rerun()
-    if c2.button("Withdraw", use_container_width=True):
-        sheet_ws.update_cell(1, 10, initial_bankroll - amt)
-        st.rerun()
+    with c1:
+        if st.button("Deposit", use_container_width=True):
+            if update_bankroll(worksheet, saved_br + amt): st.rerun()
+    with c2:
+        if st.button("Withdraw", use_container_width=True):
+            if update_bankroll(worksheet, saved_br - amt): st.rerun()
     st.divider()
-    view = st.selectbox("Navigation", ["🏆 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
-    if st.button("🔄 Sync Systems", use_container_width=True): st.rerun()
+    st.write("Current Track:")
+    track = st.selectbox("Track", ["Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
+    if st.button("🔄 Sync Cloud", use_container_width=True): st.rerun()
 
-# MAIN VIEW SWITCHER
-if view == "🏆 Overview":
-    st.markdown("<h1 style='text-align: center;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 class='bankroll-text' style='text-align: center; font-size: 3.5rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; opacity: 0.7; letter-spacing: 2px;'>LIVE BANKROLL POSITION</p>", unsafe_allow_html=True)
+# BANNER (With Mobile Logic Classes)
+brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
+afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
-    if not df.empty:
-        summary = df.groupby('Comp').agg({
-            'Match': 'count', 'Expense': 'sum', 'Income': 'sum', 'Status': lambda x: (x == '✅ Won').sum()
-        }).reset_index()
-        summary['Net Profit'] = summary['Income'] - summary['Expense']
-        
-        total_p = summary['Net Profit'].sum()
-        p_color = "#2ecc71" if total_p >= 0 else "#e74c3c"
-
-        col1, col2, col3 = st.columns(3)
-        with col1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Profit</div><div class="c-value" style="color:{p_color}!important">₪{total_p:,.0f}</div></div>', unsafe_allow_html=True)
-        with col2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Games</div><div class="c-value">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
-        with col3: 
-            avg_rate = (summary['Status'].sum() / summary['Match'].sum() * 100)
-            st.markdown(f'<div class="custom-metric-card"><div class="c-label">Success Rate</div><div class="c-value">{avg_rate:.1f}%</div></div>', unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        ch, tb = st.columns([1, 1.2])
-        with ch:
-            fig = px.bar(summary, x='Comp', y='Net Profit', color='Net Profit', color_continuous_scale=['#e74c3c', '#2ecc71'])
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        with tb:
-            st.dataframe(summary[['Comp', 'Match', 'Status', 'Net Profit']].rename(columns={'Comp': 'Track', 'Status': 'Wins'}), use_container_width=True, hide_index=True)
-
+if track == "Brighton":
+    banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
+    text_color = "#004085"
+    logo_src = brighton_logo
+    shadow_style = "none"
 else:
-    # SPECIFIC TRACK VIEW
-    logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
-    grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
-    
-    # Updated banner with CSS class for the title to hide it on mobile
-    st.markdown(f"""
-        <div class="banner-container" style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;">
-            <img src="{logos[view]}" style="height:80px; margin-right:30px;">
-            <h1 class="comp-banner-title" style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0;">{view.upper()}</h1>
+    banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
+    text_color = "#FFFFFF"
+    logo_src = afcon_logo
+    shadow_style = "2px 2px 4px #000000"
+
+# Note the specific classes: 'banner-container', 'banner-img', 'banner-text'
+st.markdown(f"""
+    <div class="banner-container" style="
+        background: {banner_bg};
+        border-radius: 15px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 2px solid rgba(255,255,255,0.4);
+    ">
+        <img class="banner-img" src="{logo_src}" style="height: 70px; margin-right: 25px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: all 0.3s;">
+        <h1 class="banner-text" style="
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: {text_color} !important;
+            text-shadow: {shadow_style};
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 2px;
+            flex: 1;
+            text-align: left;
+        ">{track.upper()}</h1>
+    </div>
+""", unsafe_allow_html=True)
+
+# LIVE BANKROLL
+st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 35px;">
+        <div style="font-size: 2.3rem; font-weight: 300; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.3); line-height: 1; margin-bottom: 8px;">
+            ₪{current_bal:,.2f}
         </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"<h2 class='bankroll-text' style='text-align: center; font-size: 3rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
+        <div style="font-size: 0.8rem; font-weight: 600; color: #cccccc; letter-spacing: 3px; text-transform: uppercase;">
+            LIVE BANKROLL
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-    f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
-    t_net = f_df['Income'].sum() - f_df['Expense'].sum() if not f_df.empty else 0.0
+# METRICS
+if not df.empty:
+    f_df = df[df['Comp'] == track].copy()
+else:
+    f_df = pd.DataFrame()
+if not f_df.empty:
+    m_exp = f_df['Expense'].sum(); m_inc = f_df['Income'].sum(); m_net = m_inc - m_exp
+else: m_exp = 0.0; m_inc = 0.0; m_net = 0.0
 
-    mc1, mc2, mc3 = st.columns(3)
-    with mc1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Invested</div><div class="c-value">₪{f_df["Expense"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    with mc2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Revenue</div><div class="c-value">₪{f_df["Income"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    with mc3: 
-        nc_col = "#2ecc71" if t_net >= 0 else "#e74c3c"
-        st.markdown(f'<div class="custom-metric-card"><div class="c-label">Profit</div><div class="c-value" style="color:{nc_col}!important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
+c1, c2, c3 = st.columns(3)
+with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
+with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
+with c3:
+    color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
+    st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_f, col_g = st.columns([1, 1.2])
-    
-    with col_f:
-        with st.form("new_entry"):
-            st.subheader("Add Match")
-            h = st.text_input("Home", value="Brighton" if view == "Brighton" else "")
-            a = st.text_input("Away")
-            o = st.number_input("Odds", value=3.2, step=0.1)
-            s = st.number_input("Stake", value=30.0)
-            r = st.radio("Outcome", ["Draw (X)", "No Draw"], horizontal=True)
-            if st.form_submit_button("SUBMIT GAME", use_container_width=True):
-                sheet_ws.append_row([str(datetime.date.today()), view, h, a, o, r, s, 0.0])
+# NEXT BET
+next_val = next_stakes.get(track, 30.0)
+st.markdown(f"""
+    <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 1.4rem; color: white; font-weight: bold;">Next Bet: </span>
+        <span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900; text-shadow: 0 0 10px rgba(76,175,80,0.6);">₪{next_val:,.0f}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# FORM & CHART
+col_form, col_chart = st.columns([1, 1])
+with col_form:
+    with st.form("new_match"):
+        st.subheader("Add Match")
+        h_team = st.text_input("Home Team", value="Brighton" if track == "Brighton" else "")
+        a_team = st.text_input("Away Team")
+        odds_val = st.number_input("Odds", value=3.2, step=0.1)
+        stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
+        result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+        if st.form_submit_button("Submit Game", use_container_width=True):
+            if h_team and a_team:
+                worksheet.append_row([str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val, 0.0])
+                st.toast("Match Added!", icon="✅")
                 st.rerun()
+            else: st.warning("Please enter team names")
 
-    with col_g:
-        if not f_df.empty:
-            f_df['Equity'] = initial_bankroll + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
-            fig_l = px.line(f_df, y='Equity', x=f_df.index)
-            fig_l.update_traces(line_color='#00ff88', line_width=4)
-            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=250, margin=dict(l=0,r=0,t=0,b=0))
-            st.plotly_chart(fig_l, use_container_width=True)
-
-    st.markdown("### 📜 Activity Log")
+with col_chart:
+    st.subheader("Performance")
     if not f_df.empty:
-        for index, row in f_df.sort_index(ascending=False).iterrows():
-            is_win = "✅ Won" in row['Status']
-            bg_class = "banner-win" if is_win else "banner-loss"
-            st.markdown(f"""
-                <div class="log-banner {bg_class}">
-                    <div style="flex: 2;">
-                        <div class="banner-text-main">{row['Match']}</div>
-                        <div class="banner-text-sub">{row['Date']} | Odds: {row['Odds']:.2f}</div>
-                    </div>
-                    <div style="flex: 1.5; text-align: center;">
-                        <div class="banner-text-sub">Stake: ₪{row['Expense']:,.0f} | Gross: ₪{row['Income']:,.0f}</div>
-                    </div>
-                    <div style="flex: 1.2; text-align: right;">
-                        <div class="banner-text-sub">{"Cycle Net" if is_win else "Loss"}</div>
-                        <div class="banner-profit">₪{row['Cycle_Profit']:,.0f}</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+        f_df['Balance'] = saved_br + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
+        fig = px.line(f_df, y='Balance', x=f_df.index, title=None)
+        fig.update_traces(line_color='#00ff88', line_width=3)
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.2)',
+            font=dict(color='white'), margin=dict(l=20, r=20, t=20, b=20), height=300
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        wins = len(f_df[f_df['Status'] == "✅ Won"]); losses = len(f_df[f_df['Status'] == "❌ Lost"])
+        rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
+        st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
+
+# LOG
+st.subheader("📜 Activity Log")
+if not f_df.empty:
+    def highlight_results(row):
+        bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
+        return [f'background-color: {bg}'] * len(row)
+    display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
+    display_df = display_df.sort_index(ascending=False)
+    st.dataframe(
+        display_df.style.apply(highlight_results, axis=1).format({
+            "Odds": "{:.2f}", "Expense": "{:,.0f}", "Income": "{:,.0f}", "Net Profit": "{:,.0f}"
+        }),
+        use_container_width=True, hide_index=True
+    )
+else: st.info("No matches found.")
+
+with st.expander("🛠️ Admin Actions"):
+    if st.button("Undo Last Entry"):
+        if len(raw_data) > 0:
+            try: worksheet.delete_rows(len(raw_data) + 1); st.rerun()
+            except: st.error("Error")
+        else: st.warning("Empty")
