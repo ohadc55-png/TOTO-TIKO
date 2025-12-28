@@ -9,11 +9,8 @@ APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
-# --- CUSTOM ARROW IMAGES (YOUR UPLOADS) ---
-# Arrow for Main Screen (Dark Background -> Needs Light Arrow)
+# Keeping the arrow vars for future use, leaving logic as is
 ARROW_OPEN_URL = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
-
-# Arrow for Sidebar (White Background -> Needs Dark Arrow)
 ARROW_CLOSE_URL = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
 
 st.set_page_config(
@@ -23,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (CUSTOM IMAGES IMPLEMENTED) ---
+# --- 2. CSS STYLING (SIDEBAR TEXT FIX) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
@@ -33,46 +30,34 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* 2. ARROW CONTROLS - CUSTOM IMAGES */
-    
-    /* A. OPEN BUTTON (Floating on Stadium) */
+    /* 2. ARROWS (Existing Logic) */
     button[aria-label="Open sidebar"] {{
-        background-color: rgba(0, 0, 0, 0.6) !important; /* Semi-transparent bubble */
+        background-color: rgba(0, 0, 0, 0.6) !important;
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 12px !important;
-        width: 50px !important; height: 50px !important; /* Slightly larger for your image */
+        width: 50px !important; height: 50px !important;
         margin-top: 20px !important;
-        
-        /* IMAGE MAGIC */
         background-image: url('{ARROW_OPEN_URL}') !important;
-        background-size: 30px 30px !important; /* Adjust icon size */
+        background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
-        
-        /* Hide original text/icon */
         color: transparent !important;
         font-size: 0px !important;
     }}
     button[aria-label="Open sidebar"] svg {{ display: none !important; }}
     
-    /* B. CLOSE BUTTON (Inside White Sidebar) */
     button[aria-label="Collapse sidebar"] {{
         background-color: transparent !important;
         border: none !important;
         width: 50px !important; height: 50px !important;
-        
-        /* IMAGE MAGIC */
         background-image: url('{ARROW_CLOSE_URL}') !important;
         background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
-        
-        /* Hide original text/icon */
         color: transparent !important;
         font-size: 0px !important;
     }}
     button[aria-label="Collapse sidebar"] svg {{ display: none !important; }}
-    
     .stTooltipIcon {{ display: none !important; }}
 
     /* 3. MAIN AREA TEXT (WHITE ON DARK) */
@@ -87,8 +72,6 @@ st.markdown(f"""
         text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
         font-family: 'Montserrat', sans-serif;
     }}
-
-    /* Metrics */
     [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
     [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
@@ -102,22 +85,48 @@ st.markdown(f"""
     }}
     [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 600; }}
 
-    /* 5. INPUT FIELDS */
+    /* 5. INPUT FIELDS (Global) */
     input {{ background-color: #ffffff !important; color: #000000 !important; font-weight: bold; border-radius: 5px; }}
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: #000000 !important; }}
     div[data-baseweb="select"] span {{ color: #000000 !important; }}
 
-    /* 6. SIDEBAR (BLACK TEXT) */
-    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
+    /* --- 6. SIDEBAR FIX (THE REQUESTED CHANGE) --- */
+    [data-testid="stSidebar"] {{ 
+        background-color: rgba(255, 255, 255, 0.95) !important; 
+    }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("{SIDEBAR_BG}"); background-size: cover;
         filter: blur(5px); z-index: -1;
     }}
-    /* Force BLACK text in sidebar */
-    [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {{
+    
+    /* FORCE ALL TEXT IN SIDEBAR TO BE BLACK */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] [data-testid="stMetricValue"],
+    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
         color: #000000 !important;
         text-shadow: none !important;
+    }}
+    
+    /* Fix specific Labels inside Sidebar widgets */
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }}
+    
+    /* Fix Buttons in Sidebar (Deposit/Withdraw) */
+    [data-testid="stSidebar"] button {{
+        border: 1px solid #cccccc !important;
+        background-color: #f0f0f0 !important;
+    }}
+    [data-testid="stSidebar"] button p {{
+        color: #000000 !important;
     }}
 
     /* 7. BANNERS */
