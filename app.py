@@ -53,116 +53,19 @@ def get_custom_css() -> str:
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* ===== CUSTOM ARROWS (תיקון: חצים במקום טקסט) ===== */
-    
-    /* Open Sidebar Arrow - WHITE ARROW */
+    /* ===== TEST: הפיכת כפתור הסיידבר לאדום ===== */
     button[aria-label="Open sidebar"] {{
-        background-color: rgba(0, 0, 0, 0.85) !important;
-        border: 3px solid rgba(255, 255, 255, 0.95) !important;
-        border-radius: 12px !important;
-        width: 60px !important; 
-        height: 60px !important;
-        margin-top: 20px !important;
-        margin-left: 10px !important;
-        position: relative !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.8) !important;
-        font-size: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
+        background-color: red !important;
+        border: 5px solid yellow !important;
+        width: 100px !important;
+        height: 100px !important;
     }}
     
-    /* הסתרת האייקון המקורי */
-    button[aria-label="Open sidebar"] > div,
-    button[aria-label="Open sidebar"] > svg,
-    button[aria-label="Open sidebar"] > span,
-    button[aria-label="Open sidebar"] * {{
-        display: none !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-    }}
-    
-    /* יצירת חץ גדול ולבן עם ::before */
-    button[aria-label="Open sidebar"]::before {{
-        content: "◄" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) rotate(180deg) !important;
-        font-size: 40px !important;
-        font-weight: 900 !important;
-        color: #ffffff !important;
-        text-shadow: 0px 3px 8px rgba(0,0,0,0.9) !important;
-        line-height: 1 !important;
-        display: block !important;
-        opacity: 1 !important;
-        z-index: 9999 !important;
-    }}
-    
-    button[aria-label="Open sidebar"]:hover {{
-        background-color: rgba(0, 0, 0, 0.95) !important;
-        border-color: #ffffff !important;
-        transform: scale(1.1) !important;
-        box-shadow: 0 6px 25px rgba(0,0,0,0.9) !important;
-    }}
-    
-    button[aria-label="Open sidebar"]:hover::before {{
-        transform: translate(-50%, -50%) rotate(180deg) scale(1.1) !important;
-    }}
-    
-    /* Close Sidebar Arrow - BLACK ARROW */
     button[aria-label="Collapse sidebar"] {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border: 3px solid rgba(0, 0, 0, 0.5) !important;
-        border-radius: 12px !important;
-        width: 60px !important;
-        height: 60px !important;
-        position: relative !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.3) !important;
-        font-size: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-    }}
-    
-    /* הסתרת האייקון המקורי */
-    button[aria-label="Collapse sidebar"] > div,
-    button[aria-label="Collapse sidebar"] > svg,
-    button[aria-label="Collapse sidebar"] > span,
-    button[aria-label="Collapse sidebar"] * {{
-        display: none !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-    }}
-    
-    /* יצירת חץ גדול ושחור עם ::before */
-    button[aria-label="Collapse sidebar"]::before {{
-        content: "◄" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        font-size: 40px !important;
-        font-weight: 900 !important;
-        color: #000000 !important;
-        text-shadow: 0px 1px 3px rgba(255,255,255,0.5) !important;
-        line-height: 1 !important;
-        display: block !important;
-        opacity: 1 !important;
-        z-index: 9999 !important;
-    }}
-    
-    button[aria-label="Collapse sidebar"]:hover {{
-        background-color: #ffffff !important;
-        border-color: rgba(0, 0, 0, 0.7) !important;
-        transform: scale(1.1) !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
-    }}
-    
-    button[aria-label="Collapse sidebar"]:hover::before {{
-        transform: translate(-50%, -50%) scale(1.1) !important;
+        background-color: blue !important;
+        border: 5px solid green !important;
+        width: 100px !important;
+        height: 100px !important;
     }}
     
     .stTooltipIcon {{ display: none !important; }}
