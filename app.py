@@ -9,11 +9,11 @@ APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
-# --- CUSTOM ARROW IMAGES ---
-# Arrow for Main Screen (Dark Background -> White Arrow Image)
-ARROW_OPEN_URL = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
-# Arrow for Sidebar (White Background -> Dark Arrow Image)
-ARROW_CLOSE_URL = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
+# --- CUSTOM ARROW IMAGES (YOUR UPLOADS) ---
+# Main Screen Arrow (White Arrow for Dark Background)
+IMG_ARROW_MAIN = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
+# Sidebar Arrow (Dark Arrow for White Background)
+IMG_ARROW_SIDEBAR = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
 
 st.set_page_config(
     page_title="GoalMetric Elite Dashboard",
@@ -22,62 +22,62 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (CLEAN SLATE) ---
+# --- 2. CSS STYLING (IMAGE REPLACEMENT STRATEGY) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
     
-    /* 1. RESET DEFAULT STREAMLIT STYLES */
+    /* 1. RESET */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* --- 2. ARROW FIX (IMAGE REPLACEMENT) --- */
+    /* --- 2. ARROW REPLACEMENT (THE FIX) --- */
     
-    /* A. OPEN SIDEBAR BUTTON (On Dark Background) */
+    /* A. OPEN BUTTON (Floating on Dark Stadium) */
     button[aria-label="Open sidebar"] {{
-        background-color: rgba(0, 0, 0, 0.6) !important;
+        background-color: rgba(0, 0, 0, 0.6) !important; /* Dark bubble */
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 12px !important;
         width: 50px !important; height: 50px !important;
         margin-top: 20px !important;
         
-        /* Replace content with image */
-        background-image: url('{ARROW_OPEN_URL}') !important;
+        /* YOUR IMAGE HERE */
+        background-image: url('{IMG_ARROW_MAIN}') !important;
         background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         
-        /* Hide original text/icon */
+        /* HIDE ORIGINAL CONTENT */
         color: transparent !important;
         font-size: 0px !important;
     }}
-    /* Ensure internal SVG is hidden */
+    /* Kill the original icon */
     button[aria-label="Open sidebar"] svg {{ display: none !important; }}
     
-    /* B. CLOSE SIDEBAR BUTTON (Inside White Sidebar) */
+    /* B. CLOSE BUTTON (Inside White Sidebar) */
     button[aria-label="Collapse sidebar"] {{
         background-color: transparent !important;
         border: none !important;
         width: 50px !important; height: 50px !important;
         
-        /* Replace content with image */
-        background-image: url('{ARROW_CLOSE_URL}') !important;
+        /* YOUR IMAGE HERE */
+        background-image: url('{IMG_ARROW_SIDEBAR}') !important;
         background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         
-        /* Hide original text/icon */
+        /* HIDE ORIGINAL CONTENT */
         color: transparent !important;
         font-size: 0px !important;
     }}
-    /* Ensure internal SVG is hidden */
+    /* Kill the original icon */
     button[aria-label="Collapse sidebar"] svg {{ display: none !important; }}
     
-    /* Kill tooltips */
+    /* Clean Tooltips */
     .stTooltipIcon {{ display: none !important; }}
 
-    /* --- 3. MAIN AREA TEXT (WHITE) --- */
+    /* --- 3. MAIN AREA TEXT (WHITE ON DARK) --- */
     [data-testid="stAppViewContainer"] h1, 
     [data-testid="stAppViewContainer"] h2, 
     [data-testid="stAppViewContainer"] h3, 
@@ -89,50 +89,34 @@ st.markdown(f"""
         text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
         font-family: 'Montserrat', sans-serif;
     }}
-    
-    /* Metrics in Main Area */
-    [data-testid="stAppViewContainer"] [data-testid="stMetricValue"] {{ 
-        color: #ffffff !important; 
-        text-shadow: 0px 2px 5px rgba(0,0,0,1); 
-    }}
-    [data-testid="stAppViewContainer"] [data-testid="stMetricLabel"] {{ 
-        color: #dddddd !important; 
-    }}
+    [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
+    [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
     /* --- 4. SIDEBAR STYLING (BLACK TEXT ON WHITE) --- */
-    [data-testid="stSidebar"] {{ 
-        background-color: rgba(255, 255, 255, 0.95) !important; 
-    }}
+    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("{SIDEBAR_BG}"); background-size: cover;
         filter: blur(5px); z-index: -1;
     }}
-    
-    /* FORCE BLACK TEXT FOR SIDEBAR ELEMENTS */
+    /* FORCE BLACK TEXT IN SIDEBAR */
     [data-testid="stSidebar"] *, 
     [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] span, 
     [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] [data-testid="stMetricValue"],
-    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
+    [data-testid="stSidebar"] span, 
+    [data-testid="stSidebar"] div {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
-    
-    /* Sidebar Inputs */
+    /* Sidebar Input Fields */
     [data-testid="stSidebar"] input {{
         background-color: #ffffff !important;
         color: #000000 !important;
-        border: 1px solid #cccccc !important;
+        border: 1px solid #ccc !important;
     }}
 
     /* --- 5. COMPONENT STYLING --- */
-    
-    /* Form Container */
+    /* Add Match Form */
     [data-testid="stForm"] {{
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         backdrop-filter: blur(10px);
@@ -140,10 +124,9 @@ st.markdown(f"""
         border-radius: 16px;
         padding: 25px;
     }}
-    /* Form Labels (Must be white) */
     [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 600; }}
 
-    /* Main Inputs */
+    /* General Inputs */
     .stTextInput input, .stNumberInput input {{
         background-color: #ffffff !important;
         color: #000000 !important;
@@ -153,7 +136,7 @@ st.markdown(f"""
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: #000000 !important; }}
     div[data-baseweb="select"] span {{ color: #000000 !important; }}
 
-    /* Banners (Overview & Activity) */
+    /* Banners */
     .banner-card {{
         background: rgba(255, 255, 255, 0.95);
         border-radius: 12px;
@@ -165,7 +148,6 @@ st.markdown(f"""
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         border-left: 10px solid #333;
     }}
-    /* Banner text must be black */
     .banner-card span, .banner-card div {{
         color: #000000 !important;
         text-shadow: none !important;
@@ -174,7 +156,7 @@ st.markdown(f"""
     .status-win {{ border-left-color: #2d6a4f; background: linear-gradient(90deg, #e6fffa, #ffffff); }}
     .status-loss {{ border-left-color: #d32f2f; background: linear-gradient(90deg, #fff5f5, #ffffff); }}
 
-    /* Metric Boxes (Main Area) */
+    /* Metric Boxes */
     .metric-box {{
         background-color: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
@@ -186,7 +168,6 @@ st.markdown(f"""
     .m-lbl {{ font-size: 0.8rem; font-weight: bold; color: #ddd !important; text-transform: uppercase; }}
     .m-val {{ font-size: 1.8rem; font-weight: 900; color: white !important; }}
 
-    /* Background */
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("{BG_IMAGE}");
         background-attachment: fixed; background-size: cover; background-position: center;
@@ -228,6 +209,7 @@ def process_logic(raw):
             cycle_tracker[comp] += stake 
             
             if win:
+                # Cycle Profit logic: Gross Win - Total invested in cycle
                 net_cycle_profit = gross_win - cycle_tracker[comp]
                 cycle_tracker[comp] = 0.0 
             else:
