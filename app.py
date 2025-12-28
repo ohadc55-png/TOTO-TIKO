@@ -415,35 +415,36 @@ if track == "📊 Overview":
     
     comp_stats = get_competition_stats(df, saved_br)
     
-    # Competition logos and colors
-    comp_config = {
-        "Brighton": {
-            "logo": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png",
-            "bg": "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)",
-            "text_color": "#004085"
-        },
-        "Africa Cup of Nations": {
-            "logo": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png",
-            "bg": "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)",
-            "text_color": "#FFFFFF"
-        }
-    }
+    # Competition logos and colors - check exact names from data
+    brighton_logo = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
+    afcon_logo = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
     
     if comp_stats:
         for stat in comp_stats:
             comp_name = stat['Competition']
-            config = comp_config.get(comp_name, {
-                "logo": APP_LOGO_URL,
-                "bg": "linear-gradient(90deg, #1b4332 0%, #40916c 100%)",
-                "text_color": "#FFFFFF"
-            })
             
-            profit_class = "profit-positive" if stat['Net Profit'] >= 0 else "profit-negative"
+            # Determine config based on competition name
+            if "Brighton" in comp_name or "brighton" in comp_name.lower():
+                logo_src = brighton_logo
+                banner_bg = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
+                text_color = "#004085"
+                shadow_style = "2px 2px 4px rgba(0,0,0,0.2)"
+            elif "Africa" in comp_name or "africa" in comp_name.lower():
+                logo_src = afcon_logo
+                banner_bg = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
+                text_color = "#FFFFFF"
+                shadow_style = "2px 2px 4px rgba(0,0,0,0.5)"
+            else:
+                logo_src = APP_LOGO_URL
+                banner_bg = "linear-gradient(90deg, #1b4332 0%, #40916c 100%)"
+                text_color = "#FFFFFF"
+                shadow_style = "2px 2px 4px rgba(0,0,0,0.5)"
+            
             profit_color = "#2d6a4f" if stat['Net Profit'] >= 0 else "#d32f2f"
             
             st.markdown(f"""
                 <div style="
-                    background: {config['bg']};
+                    background: {banner_bg};
                     border-radius: 15px;
                     padding: 25px;
                     margin-bottom: 20px;
@@ -451,14 +452,14 @@ if track == "📊 Overview":
                     border: 2px solid rgba(255,255,255,0.4);
                 ">
                     <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                        <img src="{config['logo']}" style="height: 60px; margin-right: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+                        <img src="{logo_src}" style="height: 60px; margin-right: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
                         <h2 style="
                             margin: 0;
                             font-size: 1.8rem;
                             font-weight: 900;
                             text-transform: uppercase;
-                            color: {config['text_color']} !important;
-                            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                            color: {text_color} !important;
+                            text-shadow: {shadow_style};
                             font-family: 'Montserrat', sans-serif;
                             letter-spacing: 2px;
                         ">{comp_name}</h2>
