@@ -25,8 +25,16 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     [data-testid="stSidebarNav"] {{display: none;}}
     
-    /* --- KEEP SIDEBAR TOGGLE BUTTON VISIBLE --- */
+    /* --- KEEP SIDEBAR TOGGLE BUTTONS VISIBLE (OPEN & CLOSE) --- */
     [data-testid="collapsedControl"] {{
+        display: block !important;
+        visibility: visible !important;
+    }}
+    [data-testid="stSidebarCollapsedControl"] {{
+        display: block !important;
+        visibility: visible !important;
+    }}
+    button[kind="header"] {{
         display: block !important;
         visibility: visible !important;
     }}
