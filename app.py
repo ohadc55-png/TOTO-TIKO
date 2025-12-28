@@ -310,6 +310,55 @@ def get_custom_css() -> str:
         display: none; 
     }}
     </style>
+    
+    <script>
+    // Force arrow replacement with images
+    function replaceArrows() {{
+        // Open sidebar button (main screen)
+        const openBtn = document.querySelector('button[aria-label="Open sidebar"]');
+        if (openBtn) {{
+            openBtn.innerHTML = '';
+            openBtn.style.backgroundImage = 'url({ARROW_OPEN_URL})';
+            openBtn.style.backgroundSize = '35px 35px';
+            openBtn.style.backgroundRepeat = 'no-repeat';
+            openBtn.style.backgroundPosition = 'center';
+            openBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            openBtn.style.border = '3px solid rgba(255, 255, 255, 0.9)';
+            openBtn.style.width = '60px';
+            openBtn.style.height = '60px';
+            openBtn.style.borderRadius = '12px';
+            openBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.7)';
+        }}
+        
+        // Close sidebar button (inside sidebar)
+        const closeBtn = document.querySelector('button[aria-label="Collapse sidebar"]');
+        if (closeBtn) {{
+            closeBtn.innerHTML = '';
+            closeBtn.style.backgroundImage = 'url({ARROW_CLOSE_URL})';
+            closeBtn.style.backgroundSize = '35px 35px';
+            closeBtn.style.backgroundRepeat = 'no-repeat';
+            closeBtn.style.backgroundPosition = 'center';
+            closeBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            closeBtn.style.border = '3px solid rgba(0, 0, 0, 0.4)';
+            closeBtn.style.width = '60px';
+            closeBtn.style.height = '60px';
+            closeBtn.style.borderRadius = '12px';
+            closeBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+        }}
+    }}
+    
+    // Run immediately
+    replaceArrows();
+    
+    // Run after a small delay to catch late-loading elements
+    setTimeout(replaceArrows, 100);
+    setTimeout(replaceArrows, 500);
+    setTimeout(replaceArrows, 1000);
+    
+    // Watch for DOM changes
+    const observer = new MutationObserver(replaceArrows);
+    observer.observe(document.body, {{ childList: true, subtree: true }});
+    </script>
     """
 
 st.markdown(get_custom_css(), unsafe_allow_html=True)
