@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. ADVANCED CSS (FIXES ARROWS, HEADERS & BANNERS) ---
+# --- 2. ADVANCED CSS (MOBILE OPTIMIZED) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
@@ -88,19 +88,43 @@ st.markdown(f"""
         border-left: 8px solid;
     }}
     .banner-win {{
-        background-color: rgba(46, 204, 113, 0.5) !important; /* 50% Green */
+        background-color: rgba(46, 204, 113, 0.5) !important;
         border-color: #27ae60;
     }}
     .banner-loss {{
-        background-color: rgba(231, 76, 60, 0.5) !important; /* 50% Red */
+        background-color: rgba(231, 76, 60, 0.5) !important;
         border-color: #c0392b;
     }}
     .banner-text-main {{ font-size: 1.1rem; font-weight: 800; color: white !important; }}
     .banner-text-sub {{ font-size: 0.85rem; opacity: 0.9; color: white !important; }}
     .banner-profit {{ font-size: 1.4rem; font-weight: 900; color: white !important; }}
 
-    @media only screen and (max-width: 768 {{
-        .banner-text {{ display: none !important; }}
+    /* --- 7. MOBILE OPTIMIZATION QUERIES --- */
+    @media only screen and (max-width: 768px) {{
+        /* 1. Remove text from competition banners */
+        .comp-banner-title {{ display: none !important; }}
+        .banner-container {{ justify-content: center !important; padding: 15px !important; }}
+        .banner-container img {{ margin-right: 0 !important; height: 65px !important; }}
+        
+        /* 2. Scale down main headers */
+        h1 {{ font-size: 1.8rem !important; text-align: center !important; }}
+        .bankroll-text {{ font-size: 2.2rem !important; }}
+        
+        /* 3. Reformat Activity Log for Mobile */
+        .log-banner {{
+            flex-direction: column !important;
+            text-align: center !important;
+            padding: 15px !important;
+        }}
+        .log-banner > div {{
+            flex: none !important;
+            width: 100% !important;
+            margin-bottom: 8px !important;
+        }}
+        .banner-profit {{ font-size: 1.2rem !important; }}
+        
+        /* 4. Sidebar spacing */
+        [data-testid="stSidebar"] {{ width: 100% !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -123,11 +147,8 @@ def get_connection():
         return [], None, 5000.0
 
 def process_data(raw_data):
-    """Processes raw sheets data with Martingale Cycle Logic."""
     if not raw_data: return pd.DataFrame()
     processed = []
-    
-    # Dictionary to track cumulative stake per competition until a win
     cycle_trackers = {}
     
     for row in raw_data:
@@ -142,16 +163,12 @@ def process_data(raw_data):
             
             is_win = "Draw (X)" in res
             income = stake * odds if is_win else 0.0
-            
-            # Update cycle tracker
             cycle_trackers[comp] += stake
             
             if is_win:
-                # Cycle profit = Total revenue from this bet minus all stakes in this cycle
                 cycle_profit = income - cycle_trackers[comp]
-                cycle_trackers[comp] = 0.0  # Reset cycle
+                cycle_trackers[comp] = 0.0
             else:
-                # Still in cycle, current profit for this specific step is a loss
                 cycle_profit = -stake
             
             processed.append({
@@ -199,19 +216,14 @@ with st.sidebar:
 # MAIN VIEW SWITCHER
 if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; opacity: 0.7;'>AGGREGATED GLOBAL POSITION</p>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='bankroll-text' style='text-align: center; font-size: 3.5rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; opacity: 0.7; letter-spacing: 2px;'>LIVE BANKROLL POSITION</p>", unsafe_allow_html=True)
 
     if not df.empty:
         summary = df.groupby('Comp').agg({
-            'Match': 'count',
-            'Expense': 'sum',
-            'Income': 'sum',
-            'Status': lambda x: (x == '✅ Won').sum()
+            'Match': 'count', 'Expense': 'sum', 'Income': 'sum', 'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
-        
         summary['Net Profit'] = summary['Income'] - summary['Expense']
-        summary['Win Rate'] = (summary['Status'] / summary['Match'] * 100).map("{:.1f}%".format)
         
         total_p = summary['Net Profit'].sum()
         p_color = "#2ecc71" if total_p >= 0 else "#e74c3c"
@@ -221,40 +233,41 @@ if view == "🏆 Overview":
         with col2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Games</div><div class="c-value">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
         with col3: 
             avg_rate = (summary['Status'].sum() / summary['Match'].sum() * 100)
-            st.markdown(f'<div class="custom-metric-card"><div class="c-label">Global Health</div><div class="c-value">{avg_rate:.1f}%</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="custom-metric-card"><div class="c-label">Success Rate</div><div class="c-value">{avg_rate:.1f}%</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         ch, tb = st.columns([1, 1.2])
         with ch:
-            st.subheader("Distribution")
             fig = px.bar(summary, x='Comp', y='Net Profit', color='Net Profit', color_continuous_scale=['#e74c3c', '#2ecc71'])
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=350, showlegend=False)
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=300, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         with tb:
-            st.subheader("Track Performance")
-            # In Overview we keep the dataframe for clean summary
-            st.dataframe(summary[['Comp', 'Match', 'Status', 'Win Rate', 'Net Profit']].rename(columns={'Comp': 'Competition', 'Status': 'Wins'}), use_container_width=True, hide_index=True)
-    else:
-        st.info("No data found in cloud storage.")
+            st.dataframe(summary[['Comp', 'Match', 'Status', 'Net Profit']].rename(columns={'Comp': 'Track', 'Status': 'Wins'}), use_container_width=True, hide_index=True)
 
 else:
     # SPECIFIC TRACK VIEW
     logos = {"Brighton": "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png", "Africa Cup of Nations": "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"}
     grad = "linear-gradient(90deg, #4CABFF, #E6F7FF)" if view == "Brighton" else "linear-gradient(90deg, #CE1126, #FCD116, #007A33)"
     
-    st.markdown(f'<div class="banner-container" style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;"><img src="{logos[view]}" style="height:80px; margin-right:30px;"><h1 style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0;">{view.upper()}</h1></div>', unsafe_allow_html=True)
+    # Updated banner with CSS class for the title to hide it on mobile
+    st.markdown(f"""
+        <div class="banner-container" style="background:{grad}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:40px;">
+            <img src="{logos[view]}" style="height:80px; margin-right:30px;">
+            <h1 class="comp-banner-title" style="color:{"#004085" if view=="Brighton" else "white"} !important; margin:0;">{view.upper()}</h1>
+        </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown(f"<h2 style='text-align: center;'>₪{live_bankroll:,.2f}</h2><p style='text-align: center; opacity: 0.7;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='bankroll-text' style='text-align: center; font-size: 3rem;'>₪{live_bankroll:,.2f}</h2>", unsafe_allow_html=True)
 
     f_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
     t_net = f_df['Income'].sum() - f_df['Expense'].sum() if not f_df.empty else 0.0
 
     mc1, mc2, mc3 = st.columns(3)
-    with mc1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Invested</div><div class="c-value">₪{f_df["Expense"].sum() if not f_df.empty else 0:,.0f}</div></div>', unsafe_allow_html=True)
-    with mc2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Total Revenue</div><div class="c-value">₪{f_df["Income"].sum() if not f_df.empty else 0:,.0f}</div></div>', unsafe_allow_html=True)
+    with mc1: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Invested</div><div class="c-value">₪{f_df["Expense"].sum():,.0f}</div></div>', unsafe_allow_html=True)
+    with mc2: st.markdown(f'<div class="custom-metric-card"><div class="c-label">Revenue</div><div class="c-value">₪{f_df["Income"].sum():,.0f}</div></div>', unsafe_allow_html=True)
     with mc3: 
         nc_col = "#2ecc71" if t_net >= 0 else "#e74c3c"
-        st.markdown(f'<div class="custom-metric-card"><div class="c-label">Net Profit</div><div class="c-value" style="color:{nc_col}!important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="custom-metric-card"><div class="c-label">Profit</div><div class="c-value" style="color:{nc_col}!important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_f, col_g = st.columns([1, 1.2])
@@ -272,23 +285,18 @@ else:
                 st.rerun()
 
     with col_g:
-        st.subheader("Performance")
         if not f_df.empty:
             f_df['Equity'] = initial_bankroll + (f_df['Income'].cumsum() - f_df['Expense'].cumsum())
             fig_l = px.line(f_df, y='Equity', x=f_df.index)
             fig_l.update_traces(line_color='#00ff88', line_width=4)
-            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=280, margin=dict(l=0,r=0,t=0,b=0))
+            fig_l.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0.1)', font=dict(color='white'), height=250, margin=dict(l=0,r=0,t=0,b=0))
             st.plotly_chart(fig_l, use_container_width=True)
-            wins = len(f_df[f_df['Status'] == "✅ Won"])
-            st.caption(f"Success Rate: {(wins/len(f_df)*100):.1f}% ({wins} W / {len(f_df)-wins} L)")
 
     st.markdown("### 📜 Activity Log")
     if not f_df.empty:
-        # Loop through rows to create Banners
         for index, row in f_df.sort_index(ascending=False).iterrows():
             is_win = "✅ Won" in row['Status']
             bg_class = "banner-win" if is_win else "banner-loss"
-            
             st.markdown(f"""
                 <div class="log-banner {bg_class}">
                     <div style="flex: 2;">
@@ -296,17 +304,11 @@ else:
                         <div class="banner-text-sub">{row['Date']} | Odds: {row['Odds']:.2f}</div>
                     </div>
                     <div style="flex: 1.5; text-align: center;">
-                        <div class="banner-text-sub">Stake: ₪{row['Expense']:,.0f}</div>
-                        <div class="banner-text-sub">Gross: ₪{row['Income']:,.0f}</div>
+                        <div class="banner-text-sub">Stake: ₪{row['Expense']:,.0f} | Gross: ₪{row['Income']:,.0f}</div>
                     </div>
-                    <div style="flex: 1.5; text-align: right;">
-                        <div class="banner-text-sub">{"Cycle Profit" if is_win else "Step Loss"}</div>
+                    <div style="flex: 1.2; text-align: right;">
+                        <div class="banner-text-sub">{"Cycle Net" if is_win else "Loss"}</div>
                         <div class="banner-profit">₪{row['Cycle_Profit']:,.0f}</div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-
-with st.expander("🛠️ Admin Console"):
-    if st.button("Undo Last Entry"):
-        sheet_ws.delete_rows(len(raw_rows) + 1)
-        st.rerun()
