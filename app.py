@@ -40,10 +40,18 @@ st.set_page_config(
 # 2. STYLING WITH WORKING ARROWS
 # ============================================================================
 
+# VERSION CONTROL - Change this number to force CSS reload
+# IMPORTANT: After making CSS changes:
+# 1. Increase this version number (e.g., v2.5 -> v2.6)
+# 2. Commit and push to GitHub
+# 3. Go to Streamlit Cloud → Manage app → Reboot
+# 4. Clear browser cache (Ctrl+Shift+Delete)
+CSS_VERSION = "v2.6"  # <-- CHANGED TO v2.6 TO FORCE UPDATE
+
 def get_custom_css() -> str:
     """Returns custom CSS styling with Unicode arrow solution"""
     return f"""
-    <style>
+    <style data-version="{CSS_VERSION}">
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
     
     /* ===== RESET ===== */
@@ -354,7 +362,13 @@ def get_custom_css() -> str:
     </style>
     """
 
+# Apply CSS - MUST be called BEFORE any other content
 st.markdown(get_custom_css(), unsafe_allow_html=True)
+
+# Add cache buster meta tag
+st.markdown(f'<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">', unsafe_allow_html=True)
+st.markdown(f'<meta http-equiv="Pragma" content="no-cache">', unsafe_allow_html=True)
+st.markdown(f'<meta http-equiv="Expires" content="0">', unsafe_allow_html=True)
 
 # ============================================================================
 # 3. BACKEND LOGIC
@@ -549,6 +563,7 @@ with st.sidebar:
     
     st.divider()
     st.caption(f"🕐 Last refresh: {st.session_state['last_refresh'].strftime('%H:%M:%S')}")
+    st.caption(f"🎨 CSS Version: {CSS_VERSION}")  # <-- להראות איזו גרסה רצה!
 
 # MAIN CONTENT
 if view == "🏆 Overview":
