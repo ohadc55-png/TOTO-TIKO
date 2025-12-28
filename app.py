@@ -9,11 +9,9 @@ APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
 
-# --- CUSTOM ARROW IMAGES (YOUR UPLOADS) ---
-# Main Screen Arrow (White Arrow for Dark Background)
-IMG_ARROW_MAIN = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
-# Sidebar Arrow (Dark Arrow for White Background)
-IMG_ARROW_SIDEBAR = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
+# --- CUSTOM ARROW IMAGES ---
+ARROW_OPEN_URL = "https://i.postimg.cc/vHQy61dy/Gemini-Generated-Image-dl91ekdl91ekdl91.png"
+ARROW_CLOSE_URL = "https://i.postimg.cc/hvVG4Nxz/Gemini-Generated-Image-2tueuy2tueuy2tue.png"
 
 st.set_page_config(
     page_title="GoalMetric Elite Dashboard",
@@ -22,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (IMAGE REPLACEMENT STRATEGY) ---
+# --- 2. CSS STYLING (50% OPACITY UPDATE) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
@@ -32,52 +30,40 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* --- 2. ARROW REPLACEMENT (THE FIX) --- */
+    /* 2. ARROWS (IMAGE REPLACEMENT) */
     
-    /* A. OPEN BUTTON (Floating on Dark Stadium) */
+    /* Open Sidebar (Dark Background) */
     button[aria-label="Open sidebar"] {{
-        background-color: rgba(0, 0, 0, 0.6) !important; /* Dark bubble */
+        background-color: rgba(0, 0, 0, 0.6) !important;
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 12px !important;
         width: 50px !important; height: 50px !important;
         margin-top: 20px !important;
-        
-        /* YOUR IMAGE HERE */
-        background-image: url('{IMG_ARROW_MAIN}') !important;
+        background-image: url('{ARROW_OPEN_URL}') !important;
         background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
-        
-        /* HIDE ORIGINAL CONTENT */
         color: transparent !important;
         font-size: 0px !important;
     }}
-    /* Kill the original icon */
     button[aria-label="Open sidebar"] svg {{ display: none !important; }}
     
-    /* B. CLOSE BUTTON (Inside White Sidebar) */
+    /* Close Sidebar (Light Background) */
     button[aria-label="Collapse sidebar"] {{
         background-color: transparent !important;
         border: none !important;
         width: 50px !important; height: 50px !important;
-        
-        /* YOUR IMAGE HERE */
-        background-image: url('{IMG_ARROW_SIDEBAR}') !important;
+        background-image: url('{ARROW_CLOSE_URL}') !important;
         background-size: 30px 30px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
-        
-        /* HIDE ORIGINAL CONTENT */
         color: transparent !important;
         font-size: 0px !important;
     }}
-    /* Kill the original icon */
     button[aria-label="Collapse sidebar"] svg {{ display: none !important; }}
-    
-    /* Clean Tooltips */
     .stTooltipIcon {{ display: none !important; }}
 
-    /* --- 3. MAIN AREA TEXT (WHITE ON DARK) --- */
+    /* 3. MAIN AREA TEXT (WHITE) */
     [data-testid="stAppViewContainer"] h1, 
     [data-testid="stAppViewContainer"] h2, 
     [data-testid="stAppViewContainer"] h3, 
@@ -92,31 +78,7 @@ st.markdown(f"""
     [data-testid="stMetricValue"] {{ color: #ffffff !important; text-shadow: 0px 2px 5px rgba(0,0,0,1); }}
     [data-testid="stMetricLabel"] {{ color: #dddddd !important; }}
 
-    /* --- 4. SIDEBAR STYLING (BLACK TEXT ON WHITE) --- */
-    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
-    [data-testid="stSidebar"]::before {{
-        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: url("{SIDEBAR_BG}"); background-size: cover;
-        filter: blur(5px); z-index: -1;
-    }}
-    /* FORCE BLACK TEXT IN SIDEBAR */
-    [data-testid="stSidebar"] *, 
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] span, 
-    [data-testid="stSidebar"] div {{
-        color: #000000 !important;
-        text-shadow: none !important;
-    }}
-    /* Sidebar Input Fields */
-    [data-testid="stSidebar"] input {{
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #ccc !important;
-    }}
-
-    /* --- 5. COMPONENT STYLING --- */
-    /* Add Match Form */
+    /* 4. FORM */
     [data-testid="stForm"] {{
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
         backdrop-filter: blur(10px);
@@ -126,37 +88,79 @@ st.markdown(f"""
     }}
     [data-testid="stForm"] label p {{ color: #ffffff !important; font-weight: 600; }}
 
-    /* General Inputs */
-    .stTextInput input, .stNumberInput input {{
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        font-weight: bold;
-        border-radius: 5px;
-    }}
+    /* 5. INPUT FIELDS */
+    input {{ background-color: #ffffff !important; color: #000000 !important; font-weight: bold; border-radius: 5px; }}
     div[data-baseweb="select"] > div {{ background-color: #ffffff !important; color: #000000 !important; }}
     div[data-baseweb="select"] span {{ color: #000000 !important; }}
 
-    /* Banners */
-    .banner-card {{
-        background: rgba(255, 255, 255, 0.95);
+    /* 6. SIDEBAR (BLACK TEXT) */
+    [data-testid="stSidebar"] {{ background-color: rgba(255, 255, 255, 0.95); }}
+    [data-testid="stSidebar"]::before {{
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("{SIDEBAR_BG}"); background-size: cover;
+        filter: blur(5px); z-index: -1;
+    }}
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div {{
+        color: #000000 !important;
+        text-shadow: none !important;
+    }}
+    [data-testid="stSidebar"] input {{
+        border: 1px solid #ccc !important;
+    }}
+
+    /* 7. BANNERS (50% OPACITY UPDATE) */
+    .banner-container {{
         border-radius: 12px;
         padding: 15px 20px;
         margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        border-left: 10px solid #333;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        backdrop-filter: blur(5px);
     }}
-    .banner-card span, .banner-card div {{
+    
+    /* UPDATED: Green Win Banner (0.5 Opacity) */
+    .status-win {{ 
+        background: rgba(46, 204, 113, 0.5) !important; /* Changed from 0.2 to 0.5 */
+        border-left: 10px solid #27ae60; 
+        border: 1px solid rgba(46, 204, 113, 0.6);
+    }}
+    
+    /* UPDATED: Red Loss Banner (0.5 Opacity) */
+    .status-loss {{ 
+        background: rgba(231, 76, 60, 0.5) !important; /* Changed from 0.2 to 0.5 */
+        border-left: 10px solid #c0392b; 
+        border: 1px solid rgba(231, 76, 60, 0.6);
+    }}
+
+    .banner-container span, .banner-container div {{
+        color: #ffffff !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+    }}
+    
+    /* Overview Light Banners */
+    .track-overview-banner {{
+        background: linear-gradient(90deg, #ffffff, #f0f0f0);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 10px solid #333;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }}
+    .track-overview-banner span, .track-overview-banner div {{
         color: #000000 !important;
         text-shadow: none !important;
     }}
-    
-    .status-win {{ border-left-color: #2d6a4f; background: linear-gradient(90deg, #e6fffa, #ffffff); }}
-    .status-loss {{ border-left-color: #d32f2f; background: linear-gradient(90deg, #fff5f5, #ffffff); }}
 
-    /* Metric Boxes */
+    /* 8. METRIC BOXES */
     .metric-box {{
         background-color: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
@@ -209,7 +213,6 @@ def process_logic(raw):
             cycle_tracker[comp] += stake 
             
             if win:
-                # Cycle Profit logic: Gross Win - Total invested in cycle
                 net_cycle_profit = gross_win - cycle_tracker[comp]
                 cycle_tracker[comp] = 0.0 
             else:
@@ -264,9 +267,7 @@ if view == "🏆 Overview":
         
         total_profit = summary['Profit'].sum()
         col1, col2, col3 = st.columns(3)
-        
-        pc = "#00ff88"
-        if total_profit < 0: pc = "#ff4b4b"
+        pc = "#00ff88" if total_profit >= 0 else "#ff4b4b"
         
         col1.markdown(f'<div class="metric-box"><div class="m-lbl">Total Profit</div><div class="m-val" style="color:{pc}!important">₪{total_profit:,.0f}</div></div>', unsafe_allow_html=True)
         col2.markdown(f'<div class="metric-box"><div class="m-lbl">Total Volume</div><div class="m-val">{summary["Match"].sum()}</div></div>', unsafe_allow_html=True)
@@ -277,21 +278,12 @@ if view == "🏆 Overview":
         
         for _, row in summary.iterrows():
             prof = row['Profit']
-            
-            if prof >= 0:
-                p_text = f"+₪{prof:,.0f}"
-                p_style = "#2d6a4f"
-                border_style = "status-win"
-            else:
-                p_text = f"-₪{abs(prof):,.0f}"
-                p_style = "#d32f2f"
-                border_style = "status-loss"
-            
-            wr_val = 0.0
-            if row['Match'] > 0: wr_val = (row['Status'] / row['Match'] * 100)
+            p_text = f"+₪{prof:,.0f}" if prof >= 0 else f"-₪{abs(prof):,.0f}"
+            p_style = "#2d6a4f" if prof >= 0 else "#d32f2f"
+            wr = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
             
             st.markdown(f"""
-                <div class="banner-card {border_style}">
+                <div class="track-overview-banner">
                     <div style="flex: 1.5;">
                         <span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span>
                     </div>
@@ -301,7 +293,7 @@ if view == "🏆 Overview":
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">WINS</span><br>
-                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({wr_val:.1f}%)</span>
+                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({wr:.1f}%)</span>
                     </div>
                     <div style="flex: 1.2; text-align: right;">
                         <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">NET PROFIT</span><br>
@@ -328,10 +320,7 @@ else:
     mc1, mc2, mc3 = st.columns(3)
     mc1.markdown(f'<div class="metric-box"><div class="m-lbl">Invested</div><div class="m-val">₪{f_df["Stake"].sum():,.0f}</div></div>', unsafe_allow_html=True)
     mc2.markdown(f'<div class="metric-box"><div class="m-lbl">Gross Rev</div><div class="m-val">₪{f_df["Gross"].sum():,.0f}</div></div>', unsafe_allow_html=True)
-    
-    nc = "#00ff88"
-    if t_net < 0: nc = "#ff4b4b"
-    
+    nc = "#00ff88" if t_net >= 0 else "#ff4b4b"
     mc3.markdown(f'<div class="metric-box"><div class="m-lbl">Net Profit</div><div class="m-val" style="color:{nc} !important">₪{t_net:,.0f}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br><h2>Performance Strategy</h2>", unsafe_allow_html=True)
@@ -360,28 +349,23 @@ else:
     if not f_df.empty:
         for _, row in f_df.sort_index(ascending=False).iterrows():
             is_win = "Won" in row['Status']
+            # New classes with 50% opacity
             b_class = "status-win" if is_win else "status-loss"
             
-            if is_win:
-                cycle_val = f"+₪{row['Cycle_Net']:,.0f}"
-                cycle_col = "#2d6a4f"
-                lbl = "CYCLE PROFIT"
-            else:
-                cycle_val = f"-₪{abs(row['Cycle_Net']):,.0f}"
-                cycle_col = "#d32f2f"
-                lbl = "LOSS"
-            
+            cycle_val = f"+₪{row['Cycle_Net']:,.0f}" if is_win else f"-₪{abs(row['Cycle_Net']):,.0f}"
+            cycle_col = "#2ecc71" if is_win else "#e74c3c"
+            lbl = "CYCLE PROFIT" if is_win else "LOSS"
             stake_display = f"Stake: ₪{row['Stake']:,.0f}"
             
             st.markdown(f"""
-                <div class="banner-card {b_class}">
+                <div class="banner-container {b_class}">
                     <div style="flex: 2;">
                         <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
-                        <span style="font-size: 0.85rem; opacity: 0.7;">{row['Date']} | Odds: {row['Odds']}</span><br>
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #333 !important;">{stake_display}</span>
+                        <span style="font-size: 0.85rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']}</span><br>
+                        <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.9;">{stake_display}</span>
                     </div>
                     <div style="flex: 1; text-align: right;">
-                        <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">{lbl}</span><br>
+                        <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.8;">{lbl}</span><br>
                         <span style="font-size: 1.4rem; font-weight: 900; color: {cycle_col} !important;">{cycle_val}</span>
                     </div>
                 </div>
