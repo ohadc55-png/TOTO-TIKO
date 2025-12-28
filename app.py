@@ -12,8 +12,6 @@ from typing import Tuple, List, Dict, Optional
 APP_LOGO = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
 SIDEBAR_BG = "https://i.postimg.cc/NfdK3hck/'yzwb-ll'-sm-(1).png"
-ARROW_OPEN_URL = "https://i.postimg.cc/PNF9g5xV/arrow-open.png"
-ARROW_CLOSE_URL = "https://i.postimg.cc/CnL0mPcS/arrow-close.png"
 
 # Google Sheets Constants
 BANKROLL_ROW = 1
@@ -39,11 +37,11 @@ st.set_page_config(
 )
 
 # ============================================================================
-# 2. STYLING
+# 2. STYLING WITH WORKING ARROWS
 # ============================================================================
 
 def get_custom_css() -> str:
-    """Returns custom CSS styling for the application"""
+    """Returns custom CSS styling with Unicode arrow solution"""
     return f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
@@ -53,19 +51,122 @@ def get_custom_css() -> str:
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* ===== TEST: הפיכת כפתור הסיידבר לאדום ===== */
+    /* ===== WORKING ARROWS SOLUTION ===== */
+    
+    /* Open Sidebar Button - Main Screen */
     button[aria-label="Open sidebar"] {{
-        background-color: red !important;
-        border: 5px solid yellow !important;
-        width: 100px !important;
-        height: 100px !important;
+        background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(40,40,40,0.9)) !important;
+        border: 3px solid rgba(255,255,255,0.95) !important;
+        border-radius: 14px !important;
+        width: 65px !important;
+        height: 65px !important;
+        margin: 20px 0 0 15px !important;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.8), inset 0 1px 3px rgba(255,255,255,0.2) !important;
+        position: relative !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        cursor: pointer !important;
+        overflow: visible !important;
     }}
     
+    /* Hide original content completely */
+    button[aria-label="Open sidebar"] svg,
+    button[aria-label="Open sidebar"] > div,
+    button[aria-label="Open sidebar"] > span {{
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        pointer-events: none !important;
+    }}
+    
+    /* Create white arrow with pseudo-element */
+    button[aria-label="Open sidebar"]::after {{
+        content: "➤" !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        font-size: 32px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        text-shadow: 
+            0 2px 8px rgba(0,0,0,0.9),
+            0 0 20px rgba(255,255,255,0.3) !important;
+        display: block !important;
+        line-height: 1 !important;
+        z-index: 10 !important;
+    }}
+    
+    button[aria-label="Open sidebar"]:hover {{
+        background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)) !important;
+        border-color: #ffffff !important;
+        transform: scale(1.12) translateY(-2px) !important;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.9), inset 0 1px 3px rgba(255,255,255,0.3) !important;
+    }}
+    
+    button[aria-label="Open sidebar"]:hover::after {{
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        text-shadow: 
+            0 3px 12px rgba(0,0,0,1),
+            0 0 30px rgba(255,255,255,0.5) !important;
+    }}
+    
+    /* Close Sidebar Button - Inside Sidebar */
     button[aria-label="Collapse sidebar"] {{
-        background-color: blue !important;
-        border: 5px solid green !important;
-        width: 100px !important;
-        height: 100px !important;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,245,245,0.98)) !important;
+        border: 3px solid rgba(0,0,0,0.5) !important;
+        border-radius: 14px !important;
+        width: 65px !important;
+        height: 65px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.1) !important;
+        position: relative !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+    }}
+    
+    /* Hide original content */
+    button[aria-label="Collapse sidebar"] svg,
+    button[aria-label="Collapse sidebar"] > div,
+    button[aria-label="Collapse sidebar"] > span {{
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        pointer-events: none !important;
+    }}
+    
+    /* Create black arrow pointing left */
+    button[aria-label="Collapse sidebar"]::after {{
+        content: "◄" !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        font-size: 36px !important;
+        font-weight: 900 !important;
+        color: #000000 !important;
+        text-shadow: 
+            0 1px 3px rgba(255,255,255,0.8),
+            0 0 15px rgba(0,0,0,0.2) !important;
+        display: block !important;
+        line-height: 1 !important;
+        z-index: 10 !important;
+    }}
+    
+    button[aria-label="Collapse sidebar"]:hover {{
+        background: linear-gradient(135deg, #ffffff, #f8f8f8) !important;
+        border-color: rgba(0,0,0,0.7) !important;
+        transform: scale(1.12) translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.35), inset 0 1px 2px rgba(0,0,0,0.15) !important;
+    }}
+    
+    button[aria-label="Collapse sidebar"]:hover::after {{
+        transform: translate(-50%, -50%) scale(1.15) !important;
+        color: #000000 !important;
+        text-shadow: 
+            0 2px 5px rgba(255,255,255,0.9),
+            0 0 20px rgba(0,0,0,0.3) !important;
     }}
     
     .stTooltipIcon {{ display: none !important; }}
@@ -118,7 +219,7 @@ def get_custom_css() -> str:
         color: #000000 !important; 
     }}
 
-    /* ===== SIDEBAR (תיקון: טקסט שחור ברור) ===== */
+    /* ===== SIDEBAR (BLACK TEXT) ===== */
     [data-testid="stSidebar"] {{ 
         background-color: rgba(255, 255, 255, 0.98) !important;
     }}
@@ -137,7 +238,7 @@ def get_custom_css() -> str:
         z-index: -1;
     }}
     
-    /* תיקון קריטי: כל הטקסט בסיידבר יהיה שחור */
+    /* All sidebar text in BLACK */
     [data-testid="stSidebar"] *,
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
@@ -160,7 +261,6 @@ def get_custom_css() -> str:
         color: #000000 !important;
     }}
     
-    /* כפתורים בסיידבר */
     [data-testid="stSidebar"] button {{
         color: #000000 !important;
         font-weight: 700 !important;
@@ -195,7 +295,6 @@ def get_custom_css() -> str:
         text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
     }}
     
-    /* Overview Light Banners */
     .track-overview-banner {{
         background: linear-gradient(90deg, #ffffff, #f0f0f0);
         border-radius: 12px;
@@ -245,132 +344,58 @@ def get_custom_css() -> str:
         display: none; 
     }}
     </style>
-    
-    <script>
-    // Force arrow replacement with images
-    function replaceArrows() {{
-        // Open sidebar button (main screen)
-        const openBtn = document.querySelector('button[aria-label="Open sidebar"]');
-        if (openBtn) {{
-            openBtn.innerHTML = '';
-            openBtn.style.backgroundImage = 'url({ARROW_OPEN_URL})';
-            openBtn.style.backgroundSize = '35px 35px';
-            openBtn.style.backgroundRepeat = 'no-repeat';
-            openBtn.style.backgroundPosition = 'center';
-            openBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-            openBtn.style.border = '3px solid rgba(255, 255, 255, 0.9)';
-            openBtn.style.width = '60px';
-            openBtn.style.height = '60px';
-            openBtn.style.borderRadius = '12px';
-            openBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.7)';
-        }}
-        
-        // Close sidebar button (inside sidebar)
-        const closeBtn = document.querySelector('button[aria-label="Collapse sidebar"]');
-        if (closeBtn) {{
-            closeBtn.innerHTML = '';
-            closeBtn.style.backgroundImage = 'url({ARROW_CLOSE_URL})';
-            closeBtn.style.backgroundSize = '35px 35px';
-            closeBtn.style.backgroundRepeat = 'no-repeat';
-            closeBtn.style.backgroundPosition = 'center';
-            closeBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-            closeBtn.style.border = '3px solid rgba(0, 0, 0, 0.4)';
-            closeBtn.style.width = '60px';
-            closeBtn.style.height = '60px';
-            closeBtn.style.borderRadius = '12px';
-            closeBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
-        }}
-    }}
-    
-    // Run immediately
-    replaceArrows();
-    
-    // Run after a small delay to catch late-loading elements
-    setTimeout(replaceArrows, 100);
-    setTimeout(replaceArrows, 500);
-    setTimeout(replaceArrows, 1000);
-    
-    // Watch for DOM changes
-    const observer = new MutationObserver(replaceArrows);
-    observer.observe(document.body, {{ childList: true, subtree: true }});
-    </script>
     """
 
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # ============================================================================
-# 3. BACKEND LOGIC WITH ERROR HANDLING & CACHING
+# 3. BACKEND LOGIC
 # ============================================================================
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300)
 def connect_db() -> Tuple[List[Dict], Optional[object], float]:
-    """
-    Connect to Google Sheets and retrieve data
-    Returns: (data, worksheet_object, base_bankroll)
-    """
     try:
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         sh = gc.open_by_url(st.secrets["sheet_url"])
         ws = sh.get_worksheet(0)
         data = ws.get_all_records()
         
-        # Get bankroll with proper error handling
         try:
             bankroll_value = ws.cell(BANKROLL_ROW, BANKROLL_COL).value
             base_br = float(str(bankroll_value).replace(',', '')) if bankroll_value else DEFAULT_BANKROLL
-        except (ValueError, AttributeError) as e:
-            st.warning(f"לא ניתן לקרוא bankroll, משתמש בערך ברירת מחדל: ₪{DEFAULT_BANKROLL:,.0f}")
+        except:
             base_br = DEFAULT_BANKROLL
         
         return data, ws, base_br
-        
-    except gspread.exceptions.APIError as e:
-        st.error(f"שגיאת API של Google Sheets: {e}")
-        return [], None, DEFAULT_BANKROLL
     except Exception as e:
-        st.error(f"שגיאה בחיבור למסד הנתונים: {e}")
+        st.error(f"שגיאה בחיבור: {e}")
         return [], None, DEFAULT_BANKROLL
 
 
 def process_logic(raw: List[Dict]) -> pd.DataFrame:
-    """
-    Process raw data from Google Sheets into structured DataFrame
-    Maintains cycle tracking logic for profit/loss calculation
-    """
     if not raw:
         return pd.DataFrame()
     
     rows = []
-    cycle_tracker = {}  # Tracks accumulated stakes per competition
+    cycle_tracker = {}
     
     for r in raw:
         try:
-            # Get competition name
             comp = str(r.get('Competition', 'Brighton')).strip() or 'Brighton'
             if comp not in cycle_tracker:
                 cycle_tracker[comp] = 0.0
             
-            # Parse odds and stake
-            odds_str = str(r.get('Odds', 1)).replace(',', '.')
-            odds = float(odds_str)
-            
-            stake_str = str(r.get('Stake', 0)).replace(',', '')
-            stake = float(stake_str) if r.get('Stake') else 0.0
-            
-            # Determine win/loss
+            odds = float(str(r.get('Odds', 1)).replace(',', '.'))
+            stake = float(str(r.get('Stake', 0)).replace(',', '')) if r.get('Stake') else 0.0
             result = str(r.get('Result', '')).strip()
             is_win = "Draw (X)" in result
             
-            # Calculate gross winnings
             gross_win = stake * odds if is_win else 0.0
-            
-            # Update cycle tracker
             cycle_tracker[comp] += stake
             
-            # Calculate net cycle profit
             if is_win:
                 net_cycle_profit = gross_win - cycle_tracker[comp]
-                cycle_tracker[comp] = 0.0  # Reset cycle after win
+                cycle_tracker[comp] = 0.0
             else:
                 net_cycle_profit = -stake
             
@@ -384,19 +409,13 @@ def process_logic(raw: List[Dict]) -> pd.DataFrame:
                 "Cycle_Net": net_cycle_profit,
                 "Status": "✅ Won" if is_win else "❌ Lost"
             })
-            
-        except ValueError as e:
-            st.warning(f"שגיאה בעיבוד שורה (תאריך: {r.get('Date', 'לא ידוע')}): {e}")
-            continue
-        except Exception as e:
-            st.error(f"שגיאה לא צפויה בעיבוד נתונים: {e}")
+        except:
             continue
     
     return pd.DataFrame(rows)
 
 
 def validate_match_input(home: str, away: str, odds: float, stake: float) -> None:
-    """Validate user input before adding to database"""
     if not home or not away:
         raise ValueError("חובה למלא שם שתי הקבוצות")
     if odds < 1.01:
@@ -406,10 +425,6 @@ def validate_match_input(home: str, away: str, odds: float, stake: float) -> Non
 
 
 def update_bankroll(worksheet: object, current_br: float, amount: float, operation: str) -> bool:
-    """
-    Update bankroll in Google Sheets
-    Returns True if successful, False otherwise
-    """
     try:
         new_bankroll = current_br + amount if operation == "deposit" else current_br - amount
         
@@ -420,66 +435,43 @@ def update_bankroll(worksheet: object, current_br: float, amount: float, operati
         worksheet.update_cell(BANKROLL_ROW, BANKROLL_COL, new_bankroll)
         st.success(f"✅ {'הפקדה' if operation == 'deposit' else 'משיכה'} של ₪{amount:,.0f} בוצעה בהצלחה!")
         return True
-        
     except Exception as e:
-        st.error(f"שגיאה בעדכון הבנקרול: {e}")
+        st.error(f"שגיאה: {e}")
         return False
 
 
 # ============================================================================
-# 4. UI COMPONENT FUNCTIONS
+# 4. UI COMPONENTS
 # ============================================================================
 
 def render_metric_box(label: str, value: str, color: Optional[str] = None) -> str:
-    """Create HTML for metric display box"""
     color_style = f"color:{color} !important" if color else ""
-    return f'''
-    <div class="metric-box">
-        <div class="m-lbl">{label}</div>
-        <div class="m-val" style="{color_style}">{value}</div>
-    </div>
-    '''
+    return f'<div class="metric-box"><div class="m-lbl">{label}</div><div class="m-val" style="{color_style}">{value}</div></div>'
 
 
 def display_live_bankroll(value: float) -> None:
-    """Display prominent live bankroll value"""
     st.markdown(f"""
         <div style="text-align: center; margin-bottom: 40px;">
-            <div style="font-size: 3.5rem; font-weight: 300; color: #fff; text-shadow: 0 0 25px rgba(255,255,255,0.5);">
-                ₪{value:,.2f}
-            </div>
-            <div style="font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: 3px; text-transform: uppercase;">
-                LIVE BANKROLL
-            </div>
+            <div style="font-size: 3.5rem; font-weight: 300; color: #fff; text-shadow: 0 0 25px rgba(255,255,255,0.5);">₪{value:,.2f}</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: 3px; text-transform: uppercase;">LIVE BANKROLL</div>
         </div>
     """, unsafe_allow_html=True)
 
 
 def render_competition_header(competition: str) -> None:
-    """Render competition-specific header with logo"""
     logo = COMPETITION_LOGOS.get(competition, "")
     gradient = COMPETITION_GRADIENTS.get(competition, "linear-gradient(90deg, #4CABFF, #E6F7FF)")
     text_color = "#004085" if competition == "Brighton" else "white"
     
     st.markdown(f'''
-        <div style="
-            background:{gradient}; 
-            border-radius:15px; 
-            padding:25px; 
-            display:flex; 
-            align-items:center; 
-            margin-bottom:20px; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <div style="background:{gradient}; border-radius:15px; padding:25px; display:flex; align-items:center; margin-bottom:20px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
             <img src="{logo}" style="height:80px; margin-right:30px;">
-            <h1 style="color:{text_color} !important; margin:0; text-shadow:none !important;">
-                {competition.upper()}
-            </h1>
+            <h1 style="color:{text_color} !important; margin:0; text-shadow:none !important;">{competition.upper()}</h1>
         </div>
     ''', unsafe_allow_html=True)
 
 
 def render_activity_log(df: pd.DataFrame) -> None:
-    """Render activity log with banners"""
     st.markdown("### 📜 Activity Log")
     
     if df.empty:
@@ -489,18 +481,16 @@ def render_activity_log(df: pd.DataFrame) -> None:
     for _, row in df.sort_index(ascending=False).iterrows():
         is_win = "Won" in row['Status']
         banner_class = "status-win" if is_win else "status-loss"
-        
         cycle_val = f"+₪{row['Cycle_Net']:,.0f}" if is_win else f"-₪{abs(row['Cycle_Net']):,.0f}"
         cycle_col = "#2ecc71" if is_win else "#e74c3c"
         label = "CYCLE PROFIT" if is_win else "LOSS"
-        stake_display = f"Stake: ₪{row['Stake']:,.0f}"
         
         st.markdown(f"""
             <div class="banner-container {banner_class}">
                 <div style="flex: 2;">
                     <span style="font-size: 1.2rem; font-weight: 900;">{row['Match']}</span><br>
                     <span style="font-size: 0.85rem; opacity: 0.8;">{row['Date']} | Odds: {row['Odds']}</span><br>
-                    <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.9;">{stake_display}</span>
+                    <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.9;">Stake: ₪{row['Stake']:,.0f}</span>
                 </div>
                 <div style="flex: 1; text-align: right;">
                     <span style="font-size: 0.8rem; font-weight: bold; opacity: 0.8;">{label}</span><br>
@@ -511,35 +501,25 @@ def render_activity_log(df: pd.DataFrame) -> None:
 
 
 # ============================================================================
-# 5. MAIN APPLICATION LOGIC
+# 5. MAIN APP
 # ============================================================================
 
-# Initialize session state for confirmation dialogs
-if 'confirm_withdraw' not in st.session_state:
-    st.session_state['confirm_withdraw'] = False
 if 'last_refresh' not in st.session_state:
     st.session_state['last_refresh'] = datetime.datetime.now()
 
-# Load data with spinner
-with st.spinner('טוען נתונים מהשרת...'):
+with st.spinner('טוען נתונים...'):
     raw_data, worksheet, base_br = connect_db()
     df = process_logic(raw_data)
 
-# Calculate live bankroll
 live_br_val = base_br + (df['Gross'].sum() - df['Stake'].sum()) if not df.empty else base_br
 
-# ============================================================================
-# 6. SIDEBAR
-# ============================================================================
-
+# SIDEBAR
 with st.sidebar:
     st.image(APP_LOGO, width=120)
-    
     st.markdown("### 💰 WALLET CONTROL")
     st.metric("Base Bankroll", f"₪{base_br:,.0f}")
     
-    amount = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, key="amount_input")
-    
+    amount = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0)
     col1, col2 = st.columns(2)
     
     if col1.button("💵 Deposit", use_container_width=True):
@@ -553,68 +533,54 @@ with st.sidebar:
             st.rerun()
     
     st.divider()
-    
     view = st.selectbox("🧭 Navigation", ["🏆 Overview", "Brighton", "Africa Cup of Nations"])
     
     if st.button("🔄 Sync Cloud", use_container_width=True):
         st.cache_data.clear()
-        st.session_state['last_refresh'] = datetime.datetime.now()
         st.rerun()
     
     st.divider()
     st.caption(f"🕐 Last refresh: {st.session_state['last_refresh'].strftime('%H:%M:%S')}")
 
-# ============================================================================
-# 7. MAIN CONTENT AREA
-# ============================================================================
-
+# MAIN CONTENT
 if view == "🏆 Overview":
     st.markdown("<h1 style='text-align: center; letter-spacing: 5px;'>CENTRAL COMMAND</h1>", unsafe_allow_html=True)
     display_live_bankroll(live_br_val)
 
     if not df.empty:
-        # Calculate summary statistics
         summary = df.groupby('Comp').agg({
-            'Match': 'count',
-            'Stake': 'sum',
-            'Gross': 'sum',
+            'Match': 'count', 'Stake': 'sum', 'Gross': 'sum',
             'Status': lambda x: (x == '✅ Won').sum()
         }).reset_index()
         summary['Profit'] = summary['Gross'] - summary['Stake']
         
-        # Display top-level metrics
         total_profit = summary['Profit'].sum()
         col1, col2, col3 = st.columns(3)
-        
         profit_color = "#00ff88" if total_profit >= 0 else "#ff4b4b"
         
         col1.markdown(render_metric_box("Total Profit", f"₪{total_profit:,.0f}", profit_color), unsafe_allow_html=True)
         col2.markdown(render_metric_box("Total Volume", f"{summary['Match'].sum()}", None), unsafe_allow_html=True)
-        
         win_rate = (summary['Status'].sum() / summary['Match'].sum() * 100) if summary['Match'].sum() > 0 else 0
         col3.markdown(render_metric_box("Win Rate", f"{win_rate:.1f}%", None), unsafe_allow_html=True)
 
         st.markdown("<br><h3>📊 Performance Breakdown</h3>", unsafe_allow_html=True)
         
-        # Display competition breakdowns
         for _, row in summary.iterrows():
             profit = row['Profit']
             profit_text = f"+₪{profit:,.0f}" if profit >= 0 else f"-₪{abs(profit):,.0f}"
             profit_style = "#2d6a4f" if profit >= 0 else "#d32f2f"
-            win_rate_comp = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
+            wr = (row['Status'] / row['Match'] * 100) if row['Match'] > 0 else 0
             
             st.markdown(f"""
                 <div class="track-overview-banner">
-                    <div style="flex: 1.5;">
-                        <span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span>
-                    </div>
+                    <div style="flex: 1.5;"><span style="font-size: 1.4rem; font-weight: 900;">{row['Comp']}</span></div>
                     <div style="flex: 1; text-align: center;">
                         <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">GAMES</span><br>
                         <span style="font-size: 1.2rem; font-weight: 800;">{row['Match']}</span>
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">WINS</span><br>
-                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({win_rate_comp:.1f}%)</span>
+                        <span style="font-size: 1.2rem; font-weight: 800;">{row['Status']} ({wr:.1f}%)</span>
                     </div>
                     <div style="flex: 1.2; text-align: right;">
                         <span style="font-size: 0.8rem; font-weight: bold; color: #555 !important;">NET PROFIT</span><br>
@@ -623,7 +589,6 @@ if view == "🏆 Overview":
                 </div>
             """, unsafe_allow_html=True)
         
-        # Profit distribution chart
         st.markdown("<h3>📈 Distribution</h3>", unsafe_allow_html=True)
         fig = px.bar(summary, x='Comp', y='Profit', color='Profit', 
                      color_continuous_scale=['#ff4b4b', '#00ff88'])
@@ -639,14 +604,13 @@ if view == "🏆 Overview":
         st.info("אין נתונים להצגה. הוסף משחקים כדי להתחיל!")
 
 else:
-    # Competition-specific view
+    # Competition View
     render_competition_header(view)
     display_live_bankroll(live_br_val)
 
     filtered_df = df[df['Comp'] == view].copy() if not df.empty else pd.DataFrame()
     total_net = filtered_df['Gross'].sum() - filtered_df['Stake'].sum() if not filtered_df.empty else 0.0
 
-    # Display metrics
     mc1, mc2, mc3 = st.columns(3)
     mc1.markdown(render_metric_box("Invested", f"₪{filtered_df['Stake'].sum():,.0f}"), unsafe_allow_html=True)
     mc2.markdown(render_metric_box("Gross Rev", f"₪{filtered_df['Gross'].sum():,.0f}"), unsafe_allow_html=True)
@@ -710,5 +674,4 @@ else:
         else:
             st.info("📊 No data to display yet")
 
-    # Display activity log
     render_activity_log(filtered_df)
