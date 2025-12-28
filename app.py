@@ -51,125 +51,133 @@ def get_custom_css() -> str:
     footer {{visibility: hidden;}}
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     
-    /* ===== WORKING ARROWS SOLUTION ===== */
+    /* ===== HIDE ARROW BUTTON TEXT COMPLETELY ===== */
     
-    /* Open Sidebar Button - Main Screen */
-    button[aria-label="Open sidebar"] {{
-        background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(40,40,40,0.9)) !important;
-        border: 3px solid rgba(255,255,255,0.95) !important;
-        border-radius: 14px !important;
-        width: 65px !important;
-        height: 65px !important;
-        margin: 20px 0 0 15px !important;
-        box-shadow: 0 6px 25px rgba(0,0,0,0.8), inset 0 1px 3px rgba(255,255,255,0.2) !important;
-        position: relative !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        cursor: pointer !important;
-        overflow: visible !important;
-    }}
+    /* Open Sidebar Button - REMOVE ALL TEXT */
+    button[aria-label="Open sidebar"] {
+        font-size: 0 !important;
+        color: transparent !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        border-radius: 12px !important;
+        width: 50px !important;
+        height: 50px !important;
+        min-width: 50px !important;
+        padding: 0 !important;
+        margin: 15px 0 0 10px !important;
+    }
     
-    /* Hide original content completely */
+    /* Hide everything inside */
+    button[aria-label="Open sidebar"] * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        font-size: 0 !important;
+        color: transparent !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    
     button[aria-label="Open sidebar"] svg,
-    button[aria-label="Open sidebar"] > div,
-    button[aria-label="Open sidebar"] > span {{
+    button[aria-label="Open sidebar"] span,
+    button[aria-label="Open sidebar"] div,
+    button[aria-label="Open sidebar"]::before,
+    button[aria-label="Open sidebar"]::after {
+        display: none !important;
+        content: "" !important;
+        visibility: hidden !important;
+    }
+    
+    /* Close Sidebar Button - REMOVE ALL TEXT */
+    button[aria-label="Collapse sidebar"] {
+        font-size: 0 !important;
+        color: transparent !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 2px solid rgba(0, 0, 0, 0.3) !important;
+        border-radius: 12px !important;
+        width: 50px !important;
+        height: 50px !important;
+        min-width: 50px !important;
+        padding: 0 !important;
+    }
+    
+    /* Hide everything inside */
+    button[aria-label="Collapse sidebar"] * {
+        display: none !important;
+        visibility: hidden !important;
         opacity: 0 !important;
+        font-size: 0 !important;
+        color: transparent !important;
         width: 0 !important;
         height: 0 !important;
-        position: absolute !important;
-        pointer-events: none !important;
-    }}
+    }
     
-    /* Create white arrow with pseudo-element */
-    button[aria-label="Open sidebar"]::after {{
-        content: "➤" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        font-size: 32px !important;
-        font-weight: 900 !important;
-        color: #ffffff !important;
-        text-shadow: 
-            0 2px 8px rgba(0,0,0,0.9),
-            0 0 20px rgba(255,255,255,0.3) !important;
-        display: block !important;
-        line-height: 1 !important;
-        z-index: 10 !important;
-    }}
-    
-    button[aria-label="Open sidebar"]:hover {{
-        background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)) !important;
-        border-color: #ffffff !important;
-        transform: scale(1.12) translateY(-2px) !important;
-        box-shadow: 0 10px 35px rgba(0,0,0,0.9), inset 0 1px 3px rgba(255,255,255,0.3) !important;
-    }}
-    
-    button[aria-label="Open sidebar"]:hover::after {{
-        transform: translate(-50%, -50%) scale(1.15) !important;
-        text-shadow: 
-            0 3px 12px rgba(0,0,0,1),
-            0 0 30px rgba(255,255,255,0.5) !important;
-    }}
-    
-    /* Close Sidebar Button - Inside Sidebar */
-    button[aria-label="Collapse sidebar"] {{
-        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,245,245,0.98)) !important;
-        border: 3px solid rgba(0,0,0,0.5) !important;
-        border-radius: 14px !important;
-        width: 65px !important;
-        height: 65px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.1) !important;
-        position: relative !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        cursor: pointer !important;
-        overflow: visible !important;
-    }}
-    
-    /* Hide original content */
     button[aria-label="Collapse sidebar"] svg,
-    button[aria-label="Collapse sidebar"] > div,
-    button[aria-label="Collapse sidebar"] > span {{
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        pointer-events: none !important;
-    }}
+    button[aria-label="Collapse sidebar"] span,
+    button[aria-label="Collapse sidebar"] div,
+    button[aria-label="Collapse sidebar"]::before,
+    button[aria-label="Collapse sidebar"]::after {
+        display: none !important;
+        content: "" !important;
+        visibility: hidden !important;
+    }
     
-    /* Create black arrow pointing left */
-    button[aria-label="Collapse sidebar"]::after {{
-        content: "◄" !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        font-size: 36px !important;
-        font-weight: 900 !important;
-        color: #000000 !important;
-        text-shadow: 
-            0 1px 3px rgba(255,255,255,0.8),
-            0 0 15px rgba(0,0,0,0.2) !important;
-        display: block !important;
-        line-height: 1 !important;
-        z-index: 10 !important;
-    }}
+    /* ===== MOBILE RESPONSIVE TEXT ===== */
     
-    button[aria-label="Collapse sidebar"]:hover {{
-        background: linear-gradient(135deg, #ffffff, #f8f8f8) !important;
-        border-color: rgba(0,0,0,0.7) !important;
-        transform: scale(1.12) translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.35), inset 0 1px 2px rgba(0,0,0,0.15) !important;
-    }}
+    /* Main titles */
+    h1 {
+        font-size: clamp(1.5rem, 5vw, 3rem) !important;
+    }
     
-    button[aria-label="Collapse sidebar"]:hover::after {{
-        transform: translate(-50%, -50%) scale(1.15) !important;
-        color: #000000 !important;
-        text-shadow: 
-            0 2px 5px rgba(255,255,255,0.9),
-            0 0 20px rgba(0,0,0,0.3) !important;
-    }}
+    h2 {
+        font-size: clamp(1.2rem, 4vw, 2rem) !important;
+    }
     
-    .stTooltipIcon {{ display: none !important; }}
+    h3 {
+        font-size: clamp(1rem, 3vw, 1.5rem) !important;
+    }
+    
+    /* Live Bankroll - responsive */
+    [data-testid="stAppViewContainer"] div[style*="font-size: 3.5rem"] {
+        font-size: clamp(2rem, 8vw, 3.5rem) !important;
+    }
+    
+    /* Metric boxes */
+    .m-lbl {
+        font-size: clamp(0.65rem, 2vw, 0.8rem) !important;
+    }
+    
+    .m-val {
+        font-size: clamp(1.2rem, 4vw, 1.8rem) !important;
+    }
+    
+    /* Banners */
+    .banner-container span {
+        font-size: clamp(0.8rem, 2.5vw, 1.2rem) !important;
+    }
+    
+    .track-overview-banner span {
+        font-size: clamp(0.75rem, 2.5vw, 1.4rem) !important;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .banner-container {
+            flex-direction: column !important;
+            gap: 10px !important;
+            text-align: center !important;
+        }
+        
+        .track-overview-banner {
+            flex-direction: column !important;
+            gap: 10px !important;
+            text-align: center !important;
+        }
+        
+        [data-testid="stForm"] {
+            padding: 15px !important;
+        }
+    }
 
     /* ===== MAIN AREA TEXT (WHITE) ===== */
     [data-testid="stAppViewContainer"] h1, 
