@@ -373,7 +373,7 @@ with st.sidebar:
         get_data_from_sheets.clear()
         st.rerun()
 
-# --- MAIN TABS ---
+# --- MAIN TABS (OUTSIDE SIDEBAR) ---
 tab1, tab2 = st.tabs(["📊 Overview", "🏆 Competitions"])
 
 # ==================== OVERVIEW TAB ====================
