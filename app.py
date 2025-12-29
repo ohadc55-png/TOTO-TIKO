@@ -436,119 +436,51 @@ if track == "📊 Overview":
             # Determine styling based on competition name
             if "Brighton" in comp_name or "brighton" in comp_name.lower():
                 logo_src = brighton_logo
-                banner_bg = "#4CABFF"
                 gradient = "linear-gradient(90deg, #4CABFF 0%, #E6F7FF 50%, #4CABFF 100%)"
                 text_color = "#004085"
                 shadow_style = "none"
             elif "Africa" in comp_name or "africa" in comp_name.lower():
                 logo_src = afcon_logo
-                banner_bg = "#CE1126"
                 gradient = "linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A33 100%)"
                 text_color = "#FFFFFF"
                 shadow_style = "2px 2px 4px #000000"
             else:
                 logo_src = APP_LOGO_URL
-                banner_bg = "#1b4332"
                 gradient = "linear-gradient(90deg, #1b4332 0%, #40916c 100%)"
                 text_color = "#FFFFFF"
                 shadow_style = "2px 2px 4px rgba(0,0,0,0.5)"
             
             profit_color = "#2d6a4f" if stat['Net Profit'] >= 0 else "#d32f2f"
             
-            # Create HTML with inline styles that override everything
-            html_content = f"""
-            <style>
-            .comp-banner-{stat['Matches']} {{
-                background: {gradient} !important;
-                border-radius: 15px !important;
-                padding: 25px !important;
-                margin-bottom: 20px !important;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-                border: 2px solid rgba(255,255,255,0.4) !important;
-            }}
-            .comp-header-{stat['Matches']} {{
-                display: flex !important;
-                align-items: center !important;
-                margin-bottom: 20px !important;
-            }}
-            .comp-logo-{stat['Matches']} {{
-                height: 60px !important;
-                margin-right: 20px !important;
-                filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)) !important;
-            }}
-            .comp-title-{stat['Matches']} {{
-                margin: 0 !important;
-                font-size: 1.8rem !important;
-                font-weight: 900 !important;
-                text-transform: uppercase !important;
-                color: {text_color} !important;
-                text-shadow: {shadow_style} !important;
-                font-family: 'Montserrat', sans-serif !important;
-                letter-spacing: 2px !important;
-            }}
-            .comp-stats-box-{stat['Matches']} {{
-                background-color: rgba(255, 255, 255, 0.95) !important;
-                border-radius: 10px !important;
-                padding: 20px !important;
-            }}
-            .comp-stats-grid-{stat['Matches']} {{
-                display: flex !important;
-                flex-wrap: wrap !important;
-                gap: 30px !important;
-            }}
-            .comp-stat-item-{stat['Matches']} {{
-                flex: 1 !important;
-                min-width: 120px !important;
-            }}
-            .comp-stat-label-{stat['Matches']} {{
-                font-size: 0.75rem !important;
-                color: #666 !important;
-                font-weight: 600 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
-                margin-bottom: 5px !important;
-                text-shadow: none !important;
-            }}
-            .comp-stat-value-{stat['Matches']} {{
-                font-size: 1.6rem !important;
-                font-weight: 900 !important;
-                text-shadow: none !important;
-            }}
-            </style>
-            
-            <div class="comp-banner-{stat['Matches']}">
-                <div class="comp-header-{stat['Matches']}">
-                    <img src="{logo_src}" class="comp-logo-{stat['Matches']}">
-                    <h2 class="comp-title-{stat['Matches']}">{comp_name}</h2>
-                </div>
-                
-                <div class="comp-stats-box-{stat['Matches']}">
-                    <div class="comp-stats-grid-{stat['Matches']}">
-                        <div class="comp-stat-item-{stat['Matches']}">
-                            <div class="comp-stat-label-{stat['Matches']}">Matches</div>
-                            <div class="comp-stat-value-{stat['Matches']}" style="color: #1b4332 !important;">{stat['Matches']}</div>
-                        </div>
-                        
-                        <div class="comp-stat-item-{stat['Matches']}">
-                            <div class="comp-stat-label-{stat['Matches']}">Wins</div>
-                            <div class="comp-stat-value-{stat['Matches']}" style="color: #1b4332 !important;">{stat['Wins']}</div>
-                        </div>
-                        
-                        <div class="comp-stat-item-{stat['Matches']}">
-                            <div class="comp-stat-label-{stat['Matches']}">Net Profit</div>
-                            <div class="comp-stat-value-{stat['Matches']}" style="color: {profit_color} !important;">₪{stat['Net Profit']:,.0f}</div>
-                        </div>
-                        
-                        <div class="comp-stat-item-{stat['Matches']}">
-                            <div class="comp-stat-label-{stat['Matches']}">Profit %</div>
-                            <div class="comp-stat-value-{stat['Matches']}" style="color: {profit_color} !important;">{stat['Profit %']:.1f}%</div>
-                        </div>
-                    </div>
-                </div>
+            # Simple HTML with inline styles only
+            st.markdown(f"""
+<div style="background: {gradient}; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);">
+    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <img src="{logo_src}" style="height: 60px; margin-right: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+        <h2 style="margin: 0; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; color: {text_color}; text-shadow: {shadow_style}; font-family: 'Montserrat', sans-serif; letter-spacing: 2px;">{comp_name}</h2>
+    </div>
+    <div style="background-color: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">Matches</div>
+                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">{stat['Matches']}</div>
             </div>
-            """
-            
-            st.markdown(html_content, unsafe_allow_html=True)
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">Wins</div>
+                <div style="font-size: 1.6rem; font-weight: 900; color: #1b4332; text-shadow: none;">{stat['Wins']}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">Net Profit</div>
+                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">₪{stat['Net Profit']:,.0f}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: none;">Profit %</div>
+                <div style="font-size: 1.6rem; font-weight: 900; color: {profit_color}; text-shadow: none;">{stat['Profit %']:.1f}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+            """, unsafe_allow_html=True)
     else:
         st.info("No competitions yet. Start betting in the Competitions tab!")
 
