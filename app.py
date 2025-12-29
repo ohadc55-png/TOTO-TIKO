@@ -385,7 +385,7 @@ if track == "📊 Overview":
     # OVERVIEW BANNER (like competition banners)
     st.markdown(f"""
         <div class="banner-container" style="
-            background: linear-gradient(90deg, #1b4332 0%, #52b788 50%, #1b4332 100%);
+            background: linear-gradient(90deg, #40916c 0%, #95d5b2 50%, #40916c 100%);
             border-radius: 15px;
             padding: 20px;
             display: flex;
@@ -400,8 +400,8 @@ if track == "📊 Overview":
                 font-size: 2.2rem;
                 font-weight: 900;
                 text-transform: uppercase;
-                color: #FFFFFF !important;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                color: #081c15 !important;
+                text-shadow: 1px 1px 2px rgba(255,255,255,0.3);
                 font-family: 'Montserrat', sans-serif;
                 letter-spacing: 2px;
                 flex: 1;
