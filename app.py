@@ -109,15 +109,15 @@ st.markdown(f"""
     }}
     .activity-card-won {{
         border-left: 5px solid #2d6a4f;
-        background: linear-gradient(135deg, rgba(45, 106, 79, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-card-lost {{
         border-left: 5px solid #d32f2f;
-        background: linear-gradient(135deg, rgba(211, 47, 47, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, rgba(211, 47, 47, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-card-pending {{
         border-left: 5px solid #ffc107;
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-header {{
         display: flex;
