@@ -86,7 +86,8 @@ st.markdown(f"""
 
     /* Activity Log Cards */
     .activity-card {{
-        background-color: rgba(255, 255, 255, 0.95);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 15px;
@@ -99,12 +100,15 @@ st.markdown(f"""
     }}
     .activity-card-won {{
         border-left: 5px solid #2d6a4f;
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
     }}
     .activity-card-lost {{
         border-left: 5px solid #d32f2f;
+        background: linear-gradient(135deg, rgba(211, 47, 47, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
     }}
     .activity-card-pending {{
         border-left: 5px solid #ffc107;
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
     }}
     .activity-header {{
         display: flex;
@@ -408,7 +412,21 @@ def get_competition_stats(df, initial_bankroll):
     
     return stats_df.to_dict('records') if not stats_df.empty else []
 
-def add_match_to_sheet(worksheet, date, comp, home, away, odds, result, stake):
+def update_match_result(worksheet, row_num, result):
+    """Update a pending match result."""
+    if worksheet is None:
+        return False
+    
+    try:
+        worksheet.update_cell(row_num, 6, result)  # Column 6 is Result
+        get_data_from_sheets.clear()
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"Failed to update result: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Error updating result: {e}")
+        return False
     """Add new match with proper error handling."""
     if worksheet is None:
         st.error("No connection to Google Sheets")
@@ -701,7 +719,7 @@ else:
             a_team = st.text_input("Away Team")
             odds_val = st.number_input("Odds", value=3.2, step=0.1)
             stake_val = st.number_input("Stake", value=float(next_val), step=10.0)
-            result_val = st.radio("Result", ["Draw (X)", "No Draw"], horizontal=True)
+            result_val = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
             
             if st.form_submit_button("Submit Game", use_container_width=True):
                 if h_team and a_team:
