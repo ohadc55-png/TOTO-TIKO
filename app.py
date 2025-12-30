@@ -84,6 +84,91 @@ st.markdown(f"""
         color: #000000 !important;
     }}
 
+    /* Activity Log Cards */
+    .activity-card {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }}
+    .activity-card:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }}
+    .activity-card-won {{
+        border-left: 5px solid #2d6a4f;
+    }}
+    .activity-card-lost {{
+        border-left: 5px solid #d32f2f;
+    }}
+    .activity-card-pending {{
+        border-left: 5px solid #ffc107;
+    }}
+    .activity-header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+    }}
+    .activity-match {{
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1b4332;
+        text-shadow: none;
+    }}
+    .activity-date {{
+        font-size: 0.85rem;
+        color: #666;
+        text-shadow: none;
+    }}
+    .activity-stats {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+    }}
+    .activity-stat-item {{
+        flex: 1;
+        min-width: 80px;
+    }}
+    .activity-stat-label {{
+        font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-shadow: none;
+    }}
+    .activity-stat-value {{
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1b4332;
+        text-shadow: none;
+    }}
+    .activity-status {{
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-shadow: none;
+    }}
+    .status-won {{
+        background-color: #d1e7dd;
+        color: #2d6a4f;
+    }}
+    .status-lost {{
+        background-color: #f8d7da;
+        color: #d32f2f;
+    }}
+    .status-pending {{
+        background-color: #fff3cd;
+        color: #856404;
+    }}
+
     /* Metric Cards */
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95);
@@ -212,7 +297,7 @@ def calculate_logic(raw_data, br_base, af_base):
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
 
-    for row in raw_data:
+    for idx, row in enumerate(raw_data):
         try:
             comp = str(row.get('Competition', 'Brighton')).strip()
             if not comp:
@@ -227,6 +312,23 @@ def calculate_logic(raw_data, br_base, af_base):
                 exp = safe_float_conversion(stake_val, next_bets[comp])
             
             res = str(row.get('Result', '')).strip()
+            
+            # Check if pending
+            if res == "Pending":
+                processed.append({
+                    "Row": idx + 2,  # +2 because sheet has header and is 1-indexed
+                    "Date": row.get('Date', ''),
+                    "Comp": comp,
+                    "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
+                    "Odds": odds,
+                    "Expense": 0.0,
+                    "Income": 0.0,
+                    "Net Profit": 0.0,
+                    "Status": "⏳ Pending",
+                    "ROI": "N/A"
+                })
+                continue
+            
             cycle_invest[comp] += exp
             is_win = "Draw (X)" in res
             
@@ -248,6 +350,7 @@ def calculate_logic(raw_data, br_base, af_base):
                 status = "❌ Lost"
             
             processed.append({
+                "Row": idx + 2,
                 "Date": row.get('Date', ''),
                 "Comp": comp,
                 "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}",
@@ -320,6 +423,22 @@ def add_match_to_sheet(worksheet, date, comp, home, away, odds, result, stake):
         return False
     except Exception as e:
         st.error(f"Error adding match: {e}")
+        return False
+
+def update_match_result(worksheet, row_num, result):
+    """Update a pending match result."""
+    if worksheet is None:
+        return False
+    
+    try:
+        worksheet.update_cell(row_num, 6, result)  # Column 6 is Result
+        get_data_from_sheets.clear()
+        return True
+    except gspread.exceptions.APIError as e:
+        st.error(f"Failed to update result: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Error updating result: {e}")
         return False
 
 def delete_last_row(worksheet, row_count):
@@ -611,18 +730,77 @@ else:
     # LOG
     st.subheader("📜 Activity Log")
     if not f_df.empty:
-        def highlight_results(row):
-            bg = '#d1e7dd' if 'Won' in str(row['Status']) else '#f8d7da'
-            return [f'background-color: {bg}'] * len(row)
+        # Sort by most recent first
+        f_df_sorted = f_df.sort_index(ascending=False)
         
-        display_df = f_df[['Date', 'Match', 'Odds', 'Expense', 'Income', 'Net Profit', 'Status', 'ROI']].copy()
-        display_df = display_df.sort_index(ascending=False)
-        st.dataframe(
-            display_df.style.apply(highlight_results, axis=1).format({
-                "Odds": "{:.2f}", "Expense": "{:,.0f}", "Income": "{:,.0f}", "Net Profit": "{:,.0f}"
-            }),
-            use_container_width=True, hide_index=True
-        )
+        for idx, match in f_df_sorted.iterrows():
+            # Determine card class
+            if 'Won' in str(match['Status']):
+                card_class = "activity-card-won"
+                status_class = "status-won"
+            elif 'Pending' in str(match['Status']):
+                card_class = "activity-card-pending"
+                status_class = "status-pending"
+            else:
+                card_class = "activity-card-lost"
+                status_class = "status-lost"
+            
+            # Determine profit color
+            profit_color = "#2d6a4f" if match['Net Profit'] >= 0 else "#d32f2f"
+            
+            st.markdown(f"""
+                <div class="activity-card {card_class}">
+                    <div class="activity-header">
+                        <div>
+                            <div class="activity-match">{match['Match']}</div>
+                            <div class="activity-date">📅 {match['Date']}</div>
+                        </div>
+                        <span class="activity-status {status_class}">{match['Status']}</span>
+                    </div>
+                    <div class="activity-stats">
+                        <div class="activity-stat-item">
+                            <div class="activity-stat-label">Odds</div>
+                            <div class="activity-stat-value">{match['Odds']:.2f}</div>
+                        </div>
+                        <div class="activity-stat-item">
+                            <div class="activity-stat-label">Stake</div>
+                            <div class="activity-stat-value">₪{match['Expense']:,.0f}</div>
+                        </div>
+                        <div class="activity-stat-item">
+                            <div class="activity-stat-label">Return</div>
+                            <div class="activity-stat-value">₪{match['Income']:,.0f}</div>
+                        </div>
+                        <div class="activity-stat-item">
+                            <div class="activity-stat-label">Profit</div>
+                            <div class="activity-stat-value" style="color: {profit_color};">₪{match['Net Profit']:,.0f}</div>
+                        </div>
+                        <div class="activity-stat-item">
+                            <div class="activity-stat-label">ROI</div>
+                            <div class="activity-stat-value">{match['ROI']}</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        # Update pending matches section
+        pending_matches = f_df[f_df['Status'] == "⏳ Pending"]
+        if not pending_matches.empty:
+            st.markdown("---")
+            st.markdown("#### ⏳ Update Pending Matches")
+            for idx, match in pending_matches.iterrows():
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.write(f"**{match['Match']}** - {match['Date']}")
+                with col2:
+                    if st.button("✅ Draw", key=f"draw_{match.get('Row', idx)}"):
+                        if 'Row' in match and update_match_result(worksheet, match['Row'], "Draw (X)"):
+                            st.toast("Updated to Draw!", icon="✅")
+                            st.rerun()
+                with col3:
+                    if st.button("❌ No Draw", key=f"nodraw_{match.get('Row', idx)}"):
+                        if 'Row' in match and update_match_result(worksheet, match['Row'], "No Draw"):
+                            st.toast("Updated to No Draw!", icon="✅")
+                            st.rerun()
     else:
         st.info("No matches found.")
 
