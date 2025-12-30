@@ -84,10 +84,19 @@ st.markdown(f"""
         color: #000000 !important;
     }}
 
+    /* Metric Cards */
+    .custom-metric-box {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }}
+    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
+    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
+
     /* Activity Log Cards */
     .activity-card {{
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
-        backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 15px;
@@ -100,15 +109,15 @@ st.markdown(f"""
     }}
     .activity-card-won {{
         border-left: 5px solid #2d6a4f;
-        background: linear-gradient(135deg, rgba(45, 106, 79, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-card-lost {{
         border-left: 5px solid #d32f2f;
-        background: linear-gradient(135deg, rgba(211, 47, 47, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
+        background: linear-gradient(135deg, rgba(211, 47, 47, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-card-pending {{
         border-left: 5px solid #ffc107;
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 255, 255, 0.5) 100%);
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
     }}
     .activity-header {{
         display: flex;
@@ -172,17 +181,6 @@ st.markdown(f"""
         background-color: #fff3cd;
         color: #856404;
     }}
-
-    /* Metric Cards */
-    .custom-metric-box {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }}
-    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
-    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
 
     /* Overview Competition Card */
     .comp-card {{
@@ -296,7 +294,7 @@ def safe_float_conversion(value, default=0.0):
         return default
 
 def calculate_logic(raw_data, br_base, af_base):
-    """Calculate betting logic with improved error handling."""
+    """Calculate betting logic with improved error handling and Pending support."""
     processed = []
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
@@ -317,7 +315,7 @@ def calculate_logic(raw_data, br_base, af_base):
             
             res = str(row.get('Result', '')).strip()
             
-            # Check if pending
+            # Check if pending - NO impact on bankroll
             if res == "Pending":
                 processed.append({
                     "Row": idx + 2,  # +2 because sheet has header and is 1-indexed
@@ -412,21 +410,7 @@ def get_competition_stats(df, initial_bankroll):
     
     return stats_df.to_dict('records') if not stats_df.empty else []
 
-def update_match_result(worksheet, row_num, result):
-    """Update a pending match result."""
-    if worksheet is None:
-        return False
-    
-    try:
-        worksheet.update_cell(row_num, 6, result)  # Column 6 is Result
-        get_data_from_sheets.clear()
-        return True
-    except gspread.exceptions.APIError as e:
-        st.error(f"Failed to update result: {e}")
-        return False
-    except Exception as e:
-        st.error(f"Error updating result: {e}")
-        return False
+def add_match_to_sheet(worksheet, date, comp, home, away, odds, result, stake):
     """Add new match with proper error handling."""
     if worksheet is None:
         st.error("No connection to Google Sheets")
@@ -745,7 +729,7 @@ else:
             rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
             st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
-    # LOG
+    # LOG - NEW CARD DESIGN
     st.subheader("📜 Activity Log")
     if not f_df.empty:
         # Sort by most recent first
