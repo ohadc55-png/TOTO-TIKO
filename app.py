@@ -97,89 +97,132 @@ st.markdown(f"""
 
     /* Activity Log Cards */
     .activity-card {{
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }}
+    .activity-card::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transition: height 0.3s ease;
     }}
     .activity-card:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    }}
+    .activity-card:hover::before {{
+        height: 6px;
     }}
     .activity-card-won {{
-        border-left: 5px solid #2d6a4f;
-        background: linear-gradient(135deg, rgba(45, 106, 79, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 50%, #b1dfbb 100%);
+        border-left: 6px solid #28a745;
+    }}
+    .activity-card-won::before {{
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
     }}
     .activity-card-lost {{
-        border-left: 5px solid #d32f2f;
-        background: linear-gradient(135deg, rgba(211, 47, 47, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%);
+        border-left: 6px solid #dc3545;
+    }}
+    .activity-card-lost::before {{
+        background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);
     }}
     .activity-card-pending {{
-        border-left: 5px solid #ffc107;
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 50%, #fdcb6e 100%);
+        border-left: 6px solid #ffc107;
+    }}
+    .activity-card-pending::before {{
+        background: linear-gradient(90deg, #ffc107 0%, #ffb300 100%);
     }}
     .activity-header {{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
     }}
     .activity-match {{
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1b4332;
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #1a1a1a;
         text-shadow: none;
+        letter-spacing: 0.5px;
     }}
     .activity-date {{
-        font-size: 0.85rem;
-        color: #666;
+        font-size: 0.9rem;
+        color: #555;
         text-shadow: none;
+        font-weight: 600;
+        margin-top: 3px;
     }}
     .activity-stats {{
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
-        margin-top: 10px;
+        gap: 20px;
+        margin-top: 15px;
     }}
     .activity-stat-item {{
         flex: 1;
-        min-width: 80px;
+        min-width: 90px;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }}
+    .activity-stat-item:hover {{
+        background: rgba(255, 255, 255, 0.9);
+        transform: scale(1.05);
     }}
     .activity-stat-label {{
         font-size: 0.7rem;
-        color: #888;
+        color: #666;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         text-shadow: none;
+        font-weight: 700;
+        margin-bottom: 5px;
     }}
     .activity-stat-value {{
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1b4332;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #1a1a1a;
         text-shadow: none;
     }}
     .activity-status {{
         display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 900;
         text-shadow: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+    }}
+    .activity-status:hover {{
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }}
     .status-won {{
-        background-color: #d1e7dd;
-        color: #2d6a4f;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: #ffffff;
     }}
     .status-lost {{
-        background-color: #f8d7da;
-        color: #d32f2f;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: #ffffff;
     }}
     .status-pending {{
-        background-color: #fff3cd;
-        color: #856404;
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: #ffffff;
     }}
 
     /* Overview Competition Card */
