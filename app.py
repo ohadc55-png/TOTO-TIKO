@@ -579,6 +579,29 @@ else:
                 status_class = "status-lost"
             profit_color = "#2d6a4f" if match['Net Profit'] >= 0 else "#d32f2f"
             
+            # If pending, add update buttons ABOVE the card
+            if 'Pending' in str(match['Status']):
+                st.markdown("#### ⏳ Update Result")
+                col1, col2, col3 = st.columns([2, 1, 1])
+                with col1:
+                    st.write(f"**{match['Match']}**")
+                with col2:
+                    if st.button("✅ Draw (Won)", key=f"draw_{match.get('Row', idx)}", use_container_width=True):
+                        row_num = match.get('Row')
+                        if row_num and update_match_result(worksheet, row_num, "Draw (X)"):
+                            st.toast("Updated to Draw!", icon="✅")
+                            st.rerun()
+                        else:
+                            st.error("Failed to update")
+                with col3:
+                    if st.button("❌ No Draw (Lost)", key=f"nodraw_{match.get('Row', idx)}", use_container_width=True):
+                        row_num = match.get('Row')
+                        if row_num and update_match_result(worksheet, row_num, "No Draw"):
+                            st.toast("Updated to No Draw!", icon="✅")
+                            st.rerun()
+                        else:
+                            st.error("Failed to update")
+            
             # Display card
             st.markdown(f"""
 <div class="activity-card {card_class}">
@@ -598,29 +621,6 @@ else:
     </div>
 </div>
             """, unsafe_allow_html=True)
-            
-            # If pending, add update buttons RIGHT BELOW the card
-            if 'Pending' in str(match['Status']):
-                col1, col2, col3 = st.columns([2, 1, 1])
-                with col1:
-                    st.markdown("**Update Result:**")
-                with col2:
-                    if st.button("✅ Draw (Won)", key=f"draw_{match.get('Row', idx)}", use_container_width=True):
-                        row_num = match.get('Row')
-                        if row_num and update_match_result(worksheet, row_num, "Draw (X)"):
-                            st.toast("Updated to Draw!", icon="✅")
-                            st.rerun()
-                        else:
-                            st.error("Failed to update")
-                with col3:
-                    if st.button("❌ No Draw (Lost)", key=f"nodraw_{match.get('Row', idx)}", use_container_width=True):
-                        row_num = match.get('Row')
-                        if row_num and update_match_result(worksheet, row_num, "No Draw"):
-                            st.toast("Updated to No Draw!", icon="✅")
-                            st.rerun()
-                        else:
-                            st.error("Failed to update")
-                st.markdown("---")
     else:
         st.info("No matches found.")
 
