@@ -420,9 +420,9 @@ with st.sidebar:
 
 if track == "📊 Overview":
     st.markdown(f"""
-        <div class="banner-container" style="background: linear-gradient(90deg, #40916c 0%, #95d5b2 50%, #40916c 100%); border-radius: 15px; padding: 20px; display: flex; align-items: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);">
+        <div class="banner-container" style="background: linear-gradient(90deg, #40916c 0%, #95d5b2 50%, #40916c 100%); border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);">
             <img class="banner-img" src="{APP_LOGO_URL}" style="height: 70px; margin-right: 25px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: all 0.3s;">
-            <h1 class="banner-text" style="margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; color: #081c15 !important; text-shadow: 1px 1px 2px rgba(255,255,255,0.3); font-family: 'Montserrat', sans-serif; letter-spacing: 2px; flex: 1; text-align: left;">OVERVIEW</h1>
+            <h1 class="banner-text" style="margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; color: #081c15 !important; text-shadow: 1px 1px 2px rgba(255,255,255,0.3); font-family: 'Montserrat', sans-serif; letter-spacing: 2px; text-align: center;">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     st.markdown(f"""
@@ -490,9 +490,9 @@ else:
         shadow_style = "2px 2px 4px #000000"
 
     st.markdown(f"""
-        <div class="banner-container" style="background: {banner_bg}; border-radius: 15px; padding: 20px; display: flex; align-items: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);">
+        <div class="banner-container" style="background: {banner_bg}; border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);">
             <img class="banner-img" src="{logo_src}" style="height: 70px; margin-right: 25px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: all 0.3s;">
-            <h1 class="banner-text" style="margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; color: {text_color} !important; text-shadow: {shadow_style}; font-family: 'Montserrat', sans-serif; letter-spacing: 2px; flex: 1; text-align: left;">{track.upper()}</h1>
+            <h1 class="banner-text" style="margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; color: {text_color} !important; text-shadow: {shadow_style}; font-family: 'Montserrat', sans-serif; letter-spacing: 2px; text-align: center;">{track.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
 
