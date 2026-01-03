@@ -210,6 +210,49 @@ st.markdown(f"""
         .banner-img {{ height: 120px !important; margin: 0 !important; }}
         [data-testid="stDataFrame"] * {{ font-size: 12px !important; }}
     }}
+    
+    /* Custom Loading Spinner */
+    .stSpinner > div {{
+        display: none !important;
+    }}
+    [data-testid="stStatusWidget"] {{
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 9999 !important;
+        background: rgba(0, 0, 0, 0.9) !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    [data-testid="stStatusWidget"]::before {{
+        content: '' !important;
+        width: 80px !important;
+        height: 80px !important;
+        border: 8px solid rgba(255, 255, 255, 0.2) !important;
+        border-top: 8px solid #4CAF50 !important;
+        border-radius: 50% !important;
+        animation: spin 1s linear infinite !important;
+        position: absolute !important;
+    }}
+    [data-testid="stStatusWidget"]::after {{
+        content: 'DRAW IT' !important;
+        color: #ffffff !important;
+        font-size: 1.5rem !important;
+        font-weight: 900 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        letter-spacing: 3px !important;
+        position: absolute !important;
+        margin-top: 120px !important;
+        text-shadow: 0 0 20px rgba(76, 175, 80, 0.8) !important;
+    }}
+    @keyframes spin {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(360deg); }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
