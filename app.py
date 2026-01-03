@@ -586,21 +586,32 @@ else:
                 with col1:
                     st.write(f"**{match['Match']}**")
                 with col2:
-                    if st.button("✅ Draw (Won)", key=f"draw_{match.get('Row', idx)}", use_container_width=True):
-                        row_num = match.get('Row')
-                        if row_num and update_match_result(worksheet, row_num, "Draw (X)"):
-                            st.toast("Updated to Draw!", icon="✅")
-                            st.rerun()
+                    row_num = int(match.get('Row', 0))
+                    if st.button("✅ Draw (Won)", key=f"draw_{row_num}_{idx}", use_container_width=True):
+                        if row_num > 0:
+                            try:
+                                if update_match_result(worksheet, row_num, "Draw (X)"):
+                                    st.success("Updated!")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Update failed - Row: {row_num}")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
                         else:
-                            st.error("Failed to update")
+                            st.error(f"Invalid row number: {row_num}")
                 with col3:
-                    if st.button("❌ No Draw (Lost)", key=f"nodraw_{match.get('Row', idx)}", use_container_width=True):
-                        row_num = match.get('Row')
-                        if row_num and update_match_result(worksheet, row_num, "No Draw"):
-                            st.toast("Updated to No Draw!", icon="✅")
-                            st.rerun()
+                    if st.button("❌ No Draw (Lost)", key=f"nodraw_{row_num}_{idx}", use_container_width=True):
+                        if row_num > 0:
+                            try:
+                                if update_match_result(worksheet, row_num, "No Draw"):
+                                    st.success("Updated!")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Update failed - Row: {row_num}")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
                         else:
-                            st.error("Failed to update")
+                            st.error(f"Invalid row number: {row_num}")
             
             # Display card
             st.markdown(f"""
