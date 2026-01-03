@@ -564,15 +564,11 @@ else:
             rate = (wins / len(f_df) * 100) if len(f_df) > 0 else 0
             st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
-    st.subheader("📜 Activity Log")
+    # Activity Log Header
     st.markdown("""
-        <style>
-        .main h2, .main h3 {
-            color: #ffffff !important;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.9) !important;
-            font-weight: 900 !important;
-        }
-        </style>
+        <h2 style="color: #ffffff !important; text-shadow: 3px 3px 8px rgba(0,0,0,1) !important; font-weight: 900 !important; font-size: 1.8rem !important; margin-bottom: 20px !important;">
+            📜 Activity Log
+        </h2>
     """, unsafe_allow_html=True)
     if not f_df.empty:
         f_df_sorted = f_df.sort_index(ascending=False)
