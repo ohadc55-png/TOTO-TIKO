@@ -565,6 +565,15 @@ else:
             st.caption(f"Win Rate: {rate:.1f}% ({wins} W / {losses} L)")
 
     st.subheader("📜 Activity Log")
+    st.markdown("""
+        <style>
+        .main h2, .main h3 {
+            color: #ffffff !important;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9) !important;
+            font-weight: 900 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     if not f_df.empty:
         f_df_sorted = f_df.sort_index(ascending=False)
         for idx, match in f_df_sorted.iterrows():
