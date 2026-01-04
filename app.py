@@ -611,7 +611,7 @@ else:
             result_val = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
             if st.form_submit_button("Submit Game", use_container_width=True):
                 if h_team and a_team:
-                    if add_match_to_sheet(matches_sheet, str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val):
+                    if add_match_to_sheet(worksheet, str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val):
                         st.toast("Match Added!", icon="✅")
                         st.rerun()
                 else:
@@ -661,7 +661,7 @@ else:
                     if st.button("✅ Draw (Won)", key=f"draw_{row_num}_{idx}", use_container_width=True):
                         if row_num > 0:
                             try:
-                                if update_match_result(matches_sheet, row_num, "Draw (X)"):
+                                if update_match_result(worksheet, row_num, "Draw (X)"):
                                     st.success("Updated!")
                                     st.rerun()
                                 else:
@@ -674,7 +674,7 @@ else:
                     if st.button("❌ No Draw (Lost)", key=f"nodraw_{row_num}_{idx}", use_container_width=True):
                         if row_num > 0:
                             try:
-                                if update_match_result(matches_sheet, row_num, "No Draw"):
+                                if update_match_result(worksheet, row_num, "No Draw"):
                                     st.success("Updated!")
                                     st.rerun()
                                 else:
@@ -709,7 +709,7 @@ else:
     with st.expander("🛠️ Admin Actions"):
         if st.button("Undo Last Entry"):
             if len(raw_data) > 0:
-                if delete_last_row(matches_sheet, len(raw_data)):
+                if delete_last_row(worksheet, len(raw_data)):
                     st.toast("Last entry deleted", icon="✅")
                     st.rerun()
             else:
