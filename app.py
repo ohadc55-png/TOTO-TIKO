@@ -4,6 +4,7 @@ import plotly.express as px
 import gspread
 import datetime
 
+# גרסת אפליקציה לעדכון Cache: 1.0.4
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
@@ -20,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS STYLING (The Final Look) ---
+# --- 2. CSS STYLING (UX/UI Optimized) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&display=swap');
@@ -29,7 +30,7 @@ st.markdown(f"""
     footer {{visibility: hidden;}}
     [data-testid="stSidebarNav"] {{display: none;}}
 
-    /* Arrows Fix */
+    /* תיקון חצים מוחלט */
     [data-testid="stSidebarCollapsedControl"] {{
         background-color: rgba(0, 0, 0, 0.6) !important;
         background-image: url('{IMG_ARROW_MAIN}') !important;
@@ -50,7 +51,6 @@ st.markdown(f"""
         background-attachment: fixed; background-size: cover; background-position: center;
     }}
 
-    /* Sidebar Fixes */
     [data-testid="stSidebar"] {{ background-color: #f8f9fa !important; border-right: 1px solid #ddd; }}
     [data-testid="stSidebar"]::before {{
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -61,7 +61,7 @@ st.markdown(f"""
 
     .main h1, .main h2, .main h3, .main p {{ color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }}
 
-    /* Competition Banners */
+    /* באנרים ותגיות */
     .comp-banner {{
         border-radius: 15px; padding: 20px; display: flex; align-items: center; 
         justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -69,9 +69,8 @@ st.markdown(f"""
     .comp-logo {{ height: 80px; }}
     .comp-title {{ font-size: 2rem; font-weight: 900; margin-left: 20px; text-transform: uppercase; }}
 
-    /* Activity Cards - 50% Opacity */
     .activity-card {{
-        border-radius: 15px !important; padding: 25px !important; margin-bottom: 20px !important;
+        border-radius: 15px !important; padding: 20px !important; margin-bottom: 15px !important;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; position: relative !important; overflow: hidden !important;
     }}
     .activity-card-won {{ background: rgba(40, 167, 69, 0.5) !important; border-left: 6px solid #28a745 !important; }}
@@ -84,7 +83,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CORE LOGIC ---
+# --- 3. BACKEND LOGIC ---
 def safe_float(v, default=0.0):
     try: return float(str(v).replace(',', '.'))
     except: return default
@@ -106,11 +105,12 @@ def get_data_sync():
 
 m_raw, c_raw, sheet_m, sheet_c, initial_br = get_data_sync()
 
-def process_matches(raw):
-    if not raw: return pd.DataFrame()
+# פונקציית עיבוד משחקים עם לוגיקת סייקלים
+def process_matches(raw_matches):
+    if not raw_matches: return pd.DataFrame()
     processed = []
     cycle_invest = {}
-    for idx, row in enumerate(raw):
+    for idx, row in enumerate(raw_matches):
         comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
         if comp not in cycle_invest: cycle_invest[comp] = 0.0
         odds = safe_float(row.get('Odds', 1.0))
@@ -135,19 +135,18 @@ def process_matches(raw):
         processed.append({"Row": idx+2, "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}", "Net Profit": net, "Status": status, "Expense": stake, "Income": inc, "Date": row.get('Date', ''), "Odds": odds})
     return pd.DataFrame(processed)
 
+# הגדרת ה-DF הראשי לפני הכל כדי למנוע NameError
 df = process_matches(m_raw)
 current_bal = initial_br + (df['Income'].sum() - df['Expense'].sum()) if not df.empty else initial_br
 
-# --- 4. NAVIGATION шחזור אוטומטי ---
-# זיהוי תחרויות מההיסטוריה שחסרות בלשונית ההגדרות
-legacy_comps = df['Comp'].unique().tolist() if not df.empty else []
+# שחזור היסטוריה אוטומטי לרשימת הניווט
+legacy_list = df['Comp'].unique().tolist() if not df.empty else []
 active_from_sheet = [c['Name'] for c in c_raw if c.get('Status') == 'Active']
 archived_from_sheet = [c['Name'] for c in c_raw if c.get('Status') == 'Archived']
+# הצגת כל מה שפעיל בשיטס + כל מה שיש לו היסטוריה ועדיין לא הוגדר כ-Archived
+full_nav = list(set(active_from_sheet + [c for c in legacy_list if c not in archived_from_sheet]))
 
-# מיזוג: מה שפעיל בשיטס + מה שיש לו היסטוריה ועדיין לא הוגדר כ-Archived
-nav_list = list(set(active_from_sheet + [c for c in legacy_comps if c not in archived_from_sheet]))
-
-# --- 5. SIDEBAR ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
     st.image(APP_LOGO_URL, use_container_width=True)
     st.metric("Base Bankroll", f"₪{initial_br:,.0f}")
@@ -155,36 +154,36 @@ with st.sidebar:
         st.session_state.show_modal = True
 
     st.divider()
-    track = st.selectbox("Navigation", ["📊 Overview", "📚 History"] + sorted(nav_list))
+    track = st.selectbox("Navigation", ["📊 Overview", "📚 History"] + sorted(full_nav))
     if st.button("🔄 Sync Cloud", use_container_width=True):
         get_data_sync.clear(); st.rerun()
 
-# Modal Logic
+# Modal ליצירת תחרות
 if st.session_state.get('show_modal', False):
-    with st.form("new_comp"):
-        st.write("### 🆕 Create New Track")
-        n = st.text_input("Competition Name")
+    with st.form("new_comp_form"):
+        st.write("### 🆕 New Competition")
+        n = st.text_input("Name")
         b = st.number_input("Starting Bet", value=30.0)
         l = st.text_input("Logo URL")
-        c1 = st.color_picker("Primary Color", "#4CABFF")
-        c2 = st.color_picker("Secondary Color", "#E6F7FF")
+        c1 = st.color_picker("Color 1", "#4CABFF")
+        c2 = st.color_picker("Color 2", "#E6F7FF")
         if st.form_submit_button("Launch"):
-            if n:
+            if n and sheet_c:
                 sheet_c.append_row([n, "Active", b, l, c1, c2])
                 get_data_sync.clear(); st.session_state.show_modal = False; st.rerun()
 
-# --- 6. CONTENT ---
+# --- 5. MAIN CONTENT ---
 if track == "📊 Overview":
-    st.markdown(f'<div class="comp-banner" style="background: linear-gradient(90deg, #1b4332, #40916c);"><img src="{APP_LOGO_URL}" class="comp-logo"><span class="comp-title">Global Overview</span></div>', unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{current_bal:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown(f'<div class="comp-banner" style="background: linear-gradient(90deg, #40916c, #95d5b2);"><img src="{APP_LOGO_URL}" class="comp-logo"><span class="comp-title" style="color:#081c15">Overview</span></div>', unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; font-size: 3rem;'>₪{current_bal:,.2f}</h2><p style='text-align: center; opacity: 0.7;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
     
     if not df.empty:
-        summary = df.groupby('Comp').agg({'Match': 'count', 'Net Profit': 'sum'}).reset_index()
+        summary = df.groupby('Comp').agg({'Net Profit': 'sum'}).reset_index()
         for _, row in summary.iterrows():
             st.markdown(f"""
                 <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="color: black !important; margin:0;">{row['Comp']}</h3>
-                    <div style="text-align: right;"><div style="color: #666; font-size: 0.8rem;">NET PROFIT</div><div style="font-size: 1.5rem; font-weight: 900; color: {'#2d6a4f' if row['Net Profit']>=0 else '#d32f2f'};">₪{row['Net Profit']:,.0f}</div></div>
+                    <div style="text-align: right;"><div style="color: #666; font-size: 0.8rem;">PROFIT</div><div style="font-size: 1.5rem; font-weight: 900; color: {'#2d6a4f' if row['Net Profit']>=0 else '#dc3545'};">₪{row['Net Profit']:,.0f}</div></div>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -195,30 +194,28 @@ elif track == "📚 History":
         st.write(f"### {c['Name']} (Archived)")
 
 else:
-    # עמוד תחרות ספציפית (מחפש הגדרות בשיטס או משתמש בברירת מחדל להיסטוריה)
+    # עמוד תחרות ספציפית
     config = next((c for c in c_raw if c['Name'] == track), None)
     c1, c2, logo = (config['PrimaryColor'], config['SecondaryColor'], config['LogoURL']) if config else ("#4CABFF", "#E6F7FF", APP_LOGO_URL)
     
     st.markdown(f'<div class="comp-banner" style="background: linear-gradient(90deg, {c1}, {c2});"><img src="{logo if logo else APP_LOGO_URL}" class="comp-logo"><span class="comp-title">{track}</span></div>', unsafe_allow_html=True)
     
-    # Form to add match
+    # הוספת משחק
     with st.form("add_game"):
         col1, col2, col3 = st.columns(3)
-        h = col1.text_input("Home")
-        a = col2.text_input("Away")
-        o = col3.number_input("Odds", value=3.2)
+        h, a, o = col1.text_input("Home"), col2.text_input("Away"), col3.number_input("Odds", value=3.2)
         s = st.number_input("Stake", value=30.0)
         res_radio = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
         if st.form_submit_button("SUBMIT"):
             sheet_m.append_row([str(datetime.date.today()), track, h, a, o, res_radio, s, 0.0])
             get_data_sync.clear(); st.rerun()
 
-    if st.button("🏁 Close & Archive Competition", use_container_width=True):
-        # אם התחרות לא קיימת בלשונית ההגדרות, נוסיף אותה כ-Archived
-        if not config: sheet_c.append_row([track, "Archived", 30, "", "#555", "#888"])
-        else:
+    if st.button("🏁 Close Competition", use_container_width=True):
+        if config:
             cell = sheet_c.find(track)
             sheet_c.update_cell(cell.row, 2, "Archived")
+        else:
+            sheet_c.append_row([track, "Archived", 30.0, "", "#555", "#888"])
         get_data_sync.clear(); st.rerun()
 
     st.markdown("### 📜 Activity Log")
