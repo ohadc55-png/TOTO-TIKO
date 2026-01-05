@@ -92,7 +92,9 @@ def get_data_from_sheets():
         st.write("📄 **Sheet URL:**", st.secrets["sheet_url"][:50] + "...")
         # ============ DEBUG END ============
         
-        gc = gspread.service_account_from_dict(dict(st.secrets["service_account"]))
+	creds = dict(st.secrets["service_account"])
+	creds["private_key"] = creds["private_key"].replace("\\n", "\n")
+	gc = gspread.service_account_from_dict(creds)
         sh = gc.open_by_url(st.secrets["sheet_url"])
         
         matches_sheet = sh.get_worksheet(0)
