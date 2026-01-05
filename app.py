@@ -7,7 +7,7 @@ import plotly.express as px
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-# הלינק לשיטס צרוב כאן בקוד ליתר ביטחון
+# הלינק לשיטס נמצא כאן בקוד כדי למנוע תקלות ב-Secrets
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o7OO2nyqAEqRgUq5makKZKR7ZtFyeh2JcJlzXnEmsv8/edit?gid=0#gid=0"
 
 st.set_page_config(
@@ -80,13 +80,17 @@ st.markdown(f"""
 @st.cache_data(ttl=30)
 def get_data_from_sheets():
     try:
-        # בדיקת חיבור בסיסית
         if "service_account" not in st.secrets:
-            st.error("Missing [service_account] in Secrets")
+            st.error("Error: [service_account] section missing in Secrets!")
             return [], None, 5000.0
             
-        gc = gspread.service_account_from_dict(st.secrets["service_account"])
-        # שימוש בלינק הצרוב בקוד
+        # יצירת החיבור עם טיפול בשגיאות
+        try:
+            gc = gspread.service_account_from_dict(st.secrets["service_account"])
+        except Exception as auth_err:
+            st.error(f"Authentication Failed: {auth_err}")
+            return [], None, 5000.0
+
         sh = gc.open_by_url(SHEET_URL)
         worksheet = sh.get_worksheet(0)
         data = worksheet.get_all_records()
@@ -96,9 +100,12 @@ def get_data_from_sheets():
             initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
         except:
             initial_bankroll = 5000.0
+            
         return data, worksheet, initial_bankroll
+        
     except Exception as e:
-        st.error(f"Connection Error: {e}")
+        # הצגת שגיאה מפורטת למקרה של בעיית חיבור
+        st.error(f"Connection Error Details: {e}")
         return [], None, 5000.0
 
 def update_bankroll(worksheet, val):
@@ -226,9 +233,13 @@ if track == "📊 Overview":
         </div>
     """, unsafe_allow_html=True)
     
-    # תיקון השורה שגרמה לקריסה:
-    st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#ccc; font-weight:bold;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
+    # תיקון קריטי: שימוש בגרשיים משולשים כדי למנוע SyntaxError
+    st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin: 0;">₪{current_bal:,.2f}</h1>
+            <p style="color: #ccc; font-weight: bold; margin-top: 5px;">LIVE BANKROLL</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     stats = get_stats(df, saved_br)
     for stat in stats:
@@ -259,12 +270,12 @@ else:
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
+    st.markdown(f"""<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>""", unsafe_allow_html=True)
 
     f_df = df[df['Comp'] == track].copy() if not df.empty else pd.DataFrame()
     next_bet = next_stakes.get(track, 30.0)
     
-    st.markdown(f"<div style='text-align:center; margin:20px;'>Next Bet: <span style='color:#4CAF50; font-weight:900; font-size:1.5rem;'>₪{next_bet:,.0f}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"""<div style='text-align:center; margin:20px;'>Next Bet: <span style='color:#4CAF50; font-weight:900; font-size:1.5rem;'>₪{next_bet:,.0f}</span></div>""", unsafe_allow_html=True)
 
     # טופס
     c_form, c_chart = st.columns(2)
