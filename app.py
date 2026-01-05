@@ -16,12 +16,11 @@ st.set_page_config(
 )
 
 # --- 2. CSS STYLING ---
-# הערה: בתוך f-string של פייתון, חייבים להכפיל סוגריים מסולסלים ב-CSS כדי למנוע SyntaxError
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&family=Inter:wght@400;600&display=swap');
     
-    #MainMenu, footer, [data-testid="stSidebarNav"] {{visibility: none; display: none !important;}}
+    #MainMenu, footer, [data-testid="stSidebarNav"] {{display: none;}}
     [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"], button[kind="header"] {{display: block !important; visibility: visible !important;}}
 
     [data-testid="stAppViewContainer"] {{
@@ -49,7 +48,7 @@ st.markdown(f"""
     /* --- NEW BANNER STYLING (PROPORTIONAL & MOBILE READY) --- */
     .comp-banner-box {{
         border-radius: 15px;
-        padding: 15px 25px !important;
+        padding: 20px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -57,15 +56,16 @@ st.markdown(f"""
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         border: 2px solid rgba(255,255,255,0.4);
         width: 100%;
+        min-height: 100px; /* Proportional height */
     }}
     .comp-banner-logo {{
-        height: 55px !important;
+        height: 60px !important;
         margin-right: 20px;
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
     }}
     .comp-banner-text {{
         margin: 0 !important;
-        font-size: 1.8rem !important;
+        font-size: 2rem !important;
         font-weight: 900 !important;
         text-transform: uppercase !important;
         letter-spacing: 2px !important;
@@ -73,23 +73,37 @@ st.markdown(f"""
     }}
 
     @media only screen and (max-width: 768px) {{
-        .comp-banner-text {{ display: none !important; }}
-        .comp-banner-logo {{ margin-right: 0 !important; height: 50px !important; }}
-        .comp-banner-box {{ padding: 15px !important; min-height: 80px; }}
+        .comp-banner-text {{ display: none !important; }} /* Hides text on mobile */
+        .comp-banner-logo {{ margin-right: 0 !important; height: 70px !important; }}
+        .comp-banner-box {{ padding: 15px !important; }}
+        
+        .banner-text {{display: none !important;}}
+        .banner-container {{justify-content: center !important; padding: 10px !important;}}
+        .banner-img {{height: 80px !important; margin: 0 !important;}}
         [data-testid="stDataFrame"] * {{font-size: 12px !important;}}
     }}
 
     /* Activity Cards */
     .activity-card {{border-radius: 15px !important; padding: 25px !important; margin-bottom: 20px !important; box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; transition: all 0.3s ease !important; position: relative !important; overflow: hidden !important;}}
     .activity-card::before {{content: '' !important; position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 4px !important; transition: height 0.3s ease !important;}}
+    .activity-card:hover {{transform: translateY(-5px) !important; box-shadow: 0 12px 35px rgba(0,0,0,0.5) !important;}}
+    .activity-card:hover::before {{height: 6px !important;}}
     .activity-card-won {{background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 50%, #b1dfbb 100%) !important; border-left: 6px solid #28a745 !important;}}
+    .activity-card-won::before {{background: linear-gradient(90deg, #28a745 0%, #20c997 100%) !important;}}
     .activity-card-lost {{background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%) !important; border-left: 6px solid #dc3545 !important;}}
+    .activity-card-lost::before {{background: linear-gradient(90deg, #dc3545 0%, #c82333 100%) !important;}}
     .activity-card-pending {{background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 50%, #fdcb6e 100%) !important; border-left: 6px solid #ffc107 !important;}}
+    .activity-card-pending::before {{background: linear-gradient(90deg, #ffc107 0%, #ffb300 100%) !important;}}
     .activity-header {{display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important; padding-bottom: 12px !important; border-bottom: 2px solid rgba(0,0,0,0.1) !important;}}
-    .activity-match {{font-size: 1.2rem !important; font-weight: 900 !important; color: #1a1a1a !important; letter-spacing: 0.5px !important;}}
+    .activity-match {{font-size: 1.2rem !important; font-weight: 900 !important; color: #1a1a1a !important; text-shadow: none !important; letter-spacing: 0.5px !important;}}
+    .activity-date {{font-size: 0.9rem !important; color: #555 !important; text-shadow: none !important; font-weight: 600 !important; margin-top: 3px !important;}}
     .activity-stats {{display: flex !important; flex-wrap: wrap !important; gap: 20px !important; margin-top: 15px !important;}}
-    .activity-stat-item {{flex: 1 !important; min-width: 90px !important; background: rgba(255, 255, 255, 0.7) !important; padding: 10px !important; border-radius: 8px !important; text-align: center !important;}}
-    .activity-status {{display: inline-block !important; padding: 8px 16px !important; border-radius: 25px !important; font-size: 0.9rem !important; font-weight: 900 !important;}}
+    .activity-stat-item {{flex: 1 !important; min-width: 90px !important; background: rgba(255, 255, 255, 0.7) !important; padding: 10px !important; border-radius: 8px !important; text-align: center !important; transition: all 0.2s ease !important;}}
+    .activity-stat-item:hover {{background: rgba(255, 255, 255, 0.9) !important; transform: scale(1.05) !important;}}
+    .activity-stat-label {{font-size: 0.7rem !important; color: #666 !important; text-transform: uppercase !important; letter-spacing: 1px !important; text-shadow: none !important; font-weight: 700 !important; margin-bottom: 5px !important;}}
+    .activity-stat-value {{font-size: 1.1rem !important; font-weight: 900 !important; color: #1a1a1a !important; text-shadow: none !important;}}
+    .activity-status {{display: inline-block !important; padding: 8px 16px !important; border-radius: 25px !important; font-size: 0.9rem !important; font-weight: 900 !important; text-shadow: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; transition: all 0.2s ease !important;}}
+    .activity-status:hover {{transform: scale(1.05) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;}}
     .status-won {{background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important; color: #ffffff !important;}}
     .status-lost {{background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important; color: #ffffff !important;}}
     .status-pending {{background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important; color: #ffffff !important;}}
@@ -97,12 +111,12 @@ st.markdown(f"""
     /* Loading Spinner */
     [data-testid="stStatusWidget"] {{position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 9999 !important; background: rgba(0, 0, 0, 0.9) !important; width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; justify-content: center !important;}}
     [data-testid="stStatusWidget"]::before {{content: '' !important; width: 80px !important; height: 80px !important; border: 8px solid rgba(255, 255, 255, 0.2) !important; border-top: 8px solid #4CAF50 !important; border-radius: 50% !important; animation: spin 1s linear infinite !important; position: absolute !important;}}
-    [data-testid="stStatusWidget"]::after {{content: 'DRAW IT' !important; color: #ffffff !important; font-size: 1.5rem !important; font-weight: 900 !important; letter-spacing: 3px !important; position: absolute !important; margin-top: 120px !important; text-shadow: 0 0 20px rgba(76, 175, 80, 0.8) !important;}}
+    [data-testid="stStatusWidget"]::after {{content: 'DRAW IT' !important; color: #ffffff !important; font-size: 1.5rem !important; font-weight: 900 !important; font-family: 'Montserrat', sans-serif !important; letter-spacing: 3px !important; position: absolute !important; margin-top: 120px !important; text-shadow: 0 0 20px rgba(76, 175, 80, 0.8) !important;}}
     @keyframes spin {{0% {{transform: rotate(0deg);}} 100% {{transform: rotate(360deg);}}}}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. BACKEND LOGIC ---
+# --- 3. BACKEND FUNCTIONS ---
 @st.cache_data(ttl=30)
 def get_data_from_sheets():
     try:
@@ -122,10 +136,10 @@ def get_data_from_sheets():
         st.error(f"Connection Error: {e}")
         return [], None, None, [], 5000.0
 
-def update_bankroll(worksheet, val):
-    if worksheet is None: return False
+def update_bankroll(sheet, val):
+    if sheet is None: return False
     try:
-        worksheet.update_cell(1, 10, val)
+        sheet.update_cell(1, 10, val)
         get_data_from_sheets.clear()
         return True
     except: return False
@@ -138,13 +152,123 @@ def calculate_logic(raw_data, br_base, af_base):
     processed = []
     next_bets = {"Brighton": float(br_base), "Africa Cup of Nations": float(af_base)}
     cycle_invest = {"Brighton": 0.0, "Africa Cup of Nations": 0.0}
+    
     for idx, row in enumerate(raw_data):
         try:
+            # Safely get variables to prevent syntax errors in f-strings
             comp = str(row.get('Competition', 'Brighton')).strip()
             if not comp: comp = 'Brighton'
+            
+            home_team = str(row.get('Home Team', '')).strip()
+            away_team = str(row.get('Away Team', '')).strip()
+            match_label = f"{home_team} vs {away_team}"
+            
             odds = safe_float_conversion(row.get('Odds', 1), 1.0)
             stake_val = row.get('Stake')
-            exp = next_bets.get(comp, 30.0) if stake_val in [None, '', ' '] else safe_float_conversion(stake_val, next_bets.get(comp, 30.0))
+            
+            # Determine expense
+            if stake_val in [None, '', ' ']:
+                exp = next_bets.get(comp, 30.0)
+            else:
+                exp = safe_float_conversion(stake_val, next_bets.get(comp, 30.0))
+            
             res = str(row.get('Result', '')).strip()
+            date_val = str(row.get('Date', ''))
+
             if res == "Pending":
-                processed.append({"Row": idx + 2, "Date": row.get('Date', ''), "Comp": comp, "Match": f"{row.get('Home Team','')} vs {row.get('Away Team','')}", "Odds": odds, "Expense": 0.0, "Income": 0.0, "Net Profit": 0.0, "Status": "⏳ Pending", "ROI
+                processed.append({
+                    "Row": idx + 2,
+                    "Date": date_val,
+                    "Comp": comp,
+                    "Match": match_label,
+                    "Odds": odds,
+                    "Expense": 0.0,
+                    "Income": 0.0,
+                    "Net Profit": 0.0,
+                    "Status": "⏳ Pending",
+                    "ROI": "N/A"
+                })
+                continue
+            
+            cycle_invest[comp] = cycle_invest.get(comp, 0) + exp
+            is_win = "Draw (X)" in res
+            
+            if is_win:
+                inc = exp * odds
+                net = inc - cycle_invest[comp]
+                try:
+                    roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
+                except ZeroDivisionError:
+                    roi = "0.0%"
+                
+                # Logic for next bets (Martingale reset or continue)
+                next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
+                cycle_invest[comp] = 0.0
+                status = "✅ Won"
+            else:
+                inc = 0.0
+                net = -exp
+                roi = "N/A"
+                next_bets[comp] = exp * 2.0
+                status = "❌ Lost"
+            
+            processed.append({
+                "Row": idx + 2,
+                "Date": date_val,
+                "Comp": comp,
+                "Match": match_label,
+                "Odds": odds,
+                "Expense": exp,
+                "Income": inc,
+                "Net Profit": net,
+                "Status": status,
+                "ROI": roi
+            })
+        except Exception:
+            continue
+            
+    return processed, next_bets
+
+def get_competition_stats(df_input, initial_bankroll):
+    if df_input.empty: return []
+    stats = []
+    for comp in df_input['Comp'].unique():
+        comp_df = df_input[df_input['Comp'] == comp].copy()
+        # Safe sorting logic
+        if 'Date' in comp_df.columns:
+            comp_df_sorted = comp_df.sort_values('Date')
+            first_date = comp_df_sorted.iloc[0]['Date'] if len(comp_df_sorted) > 0 else ''
+        else:
+            first_date = ''
+            
+        total_matches = len(comp_df)
+        wins = len(comp_df[comp_df['Status'] == "✅ Won"])
+        total_expense = comp_df['Expense'].sum()
+        total_income = comp_df['Income'].sum()
+        net_profit = total_income - total_expense
+        profit_pct = (net_profit / initial_bankroll * 100) if initial_bankroll > 0 else 0
+        stats.append({'Competition': comp, 'First Date': first_date, 'Matches': total_matches, 'Wins': wins, 'Net Profit': net_profit, 'Profit %': profit_pct})
+    
+    # Sort stats if possible
+    stats_df = pd.DataFrame(stats)
+    if not stats_df.empty and 'First Date' in stats_df.columns:
+        try:
+            stats_df['First Date'] = pd.to_datetime(stats_df['First Date'], errors='coerce')
+            stats_df = stats_df.sort_values('First Date', ascending=False)
+        except:
+            pass
+    return stats_df.to_dict('records') if not stats_df.empty else []
+
+def add_competition(comp_sheet, name, initial_bet, goal, logo_url, color1, color2, text_color):
+    if comp_sheet is None: return False
+    try:
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        comp_sheet.append_row([name, "Active", initial_bet, goal, logo_url, color1, color2, text_color, today, "", 0])
+        get_data_from_sheets.clear()
+        return True
+    except Exception as e:
+        st.error(f"Failed: {e}")
+        return False
+
+def get_active_competitions(competitions_data):
+    return
