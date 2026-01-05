@@ -7,7 +7,7 @@ import plotly.express as px
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-# הלינק שלך (למקרה שהסיקרטס לא עובד)
+# הלינק לשיטס שלך
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o7OO2nyqAEqRgUq5makKZKR7ZtFyeh2JcJlzXnEmsv8/edit?gid=0#gid=0"
 
 st.set_page_config(
@@ -41,13 +41,13 @@ st.markdown(f"""
 @st.cache_data(ttl=15)
 def get_data_from_sheets():
     try:
-        # עדיפות ללינק מהסיקרטס, אם לא קיים משתמש בלינק הצרוב
-        url = st.secrets.get("sheet_url", SHEET_URL)
+        # התחברות
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
-        sh = gc.open_by_url(url)
+        sh = gc.open_by_url(SHEET_URL) # שימוש בלינק הקשיח מהקוד
         worksheet = sh.get_worksheet(0)
         data = worksheet.get_all_records()
         
+        # קריאת בנקרול מתא J1 (עמודה 10)
         try:
             val = worksheet.cell(1, 10).value
             initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
@@ -56,12 +56,11 @@ def get_data_from_sheets():
             
         return data, worksheet, initial_bankroll
     except Exception as e:
-        st.error(f"⚠️ בעיית חיבור לגיליון: {e}")
         return [], None, 5000.0
 
 raw_data, worksheet, saved_br = get_data_from_sheets()
 
-# --- 4. CALCULATION LOGIC ---
+# --- 4. LOGIC ---
 def process_data(raw):
     if not raw: return pd.DataFrame(), {}
     
@@ -72,25 +71,40 @@ def process_data(raw):
     
     for i, row in enumerate(raw):
         try:
-            # ניקוי שמות התחרויות מרווחים מיותרים
-            comp = str(row.get('Competition', 'Brighton')).strip()
+            # קריאת נתונים לפי הכותרות בצילום המסך שלך
+            # שימוש ב-strip() כדי למנוע בעיות רווחים
+            comp = str(row.get('Competition', '')).strip()
+            # אם אין תחרות, נניח שזה ברייטון כברירת מחדל
             if not comp: comp = 'Brighton'
             
-            odds = float(str(row.get('Odds', 1)).replace(',', '.'))
-            stake = float(str(row.get('Stake', 30)).replace(',', '.'))
-            res = str(row.get('Result', '')).strip()
-            home = row.get('Home Team', 'N/A')
-            away = row.get('Away Team', 'N/A')
+            home = str(row.get('Home Team', '')).strip()
+            away = str(row.get('Away Team', '')).strip()
+            match = f"{home} vs {away}"
+            date = str(row.get('Date', ''))
             
+            # המרת מספרים בטוחה
+            try: odds = float(str(row.get('Odds', 1)).replace(',', '.'))
+            except: odds = 1.0
+            
+            try: stake = float(str(row.get('Stake', 0)).replace(',', '.'))
+            except: stake = 0.0
+            
+            res = str(row.get('Result', '')).strip()
+            
+            # חישוב הימור הבא אם ה-Stake ריק
+            if stake == 0: 
+                stake = next_bets.get(comp, 30.0)
+            
+            # לוגיקה למשחק פתוח
             if res == "Pending" or not res:
                 processed.append({
-                    "Row": i+2, "Comp": comp, "Match": f"{home} vs {away}", 
-                    "Date": row.get('Date'), "Profit": 0.0, "Status": "Pending", 
+                    "Row": i+2, "Comp": comp, "Match": match, 
+                    "Date": date, "Profit": 0.0, "Status": "Pending", 
                     "Stake": stake, "Odds": odds, "Income": 0.0, "Expense": 0.0
                 })
                 continue
             
-            # ניהול סייקלים
+            # ניהול סייקלים למשחק סגור
             if comp not in cycles: cycles[comp] = 0.0
             cycles[comp] += stake
             
@@ -98,17 +112,17 @@ def process_data(raw):
                 inc = stake * odds
                 net = inc - cycles[comp]
                 cycles[comp] = 0.0
-                next_bets[comp] = 30.0 # בסיס
+                next_bets[comp] = 30.0
                 status = "Won"
             else:
                 inc = 0.0
                 net = -stake
-                next_bets[comp] = stake * 2.0 # הכפלה
+                next_bets[comp] = stake * 2.0
                 status = "Lost"
             
             processed.append({
-                "Row": i+2, "Comp": comp, "Match": f"{home} vs {away}", 
-                "Date": row.get('Date'), "Profit": net, "Status": status, 
+                "Row": i+2, "Comp": comp, "Match": match, 
+                "Date": date, "Profit": net, "Status": status, 
                 "Stake": stake, "Odds": odds, "Income": inc, "Expense": stake
             })
         except: continue
@@ -116,6 +130,7 @@ def process_data(raw):
     return pd.DataFrame(processed), next_bets
 
 df, next_stakes = process_data(raw_data)
+# חישוב יתרה נוכחית
 current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum()) if not df.empty else saved_br
 
 # --- 5. UI ---
@@ -127,11 +142,12 @@ with st.sidebar:
     if st.button("🔄 Sync with Google Sheets"):
         get_data_from_sheets.clear(); st.rerun()
 
+# --- MAIN PAGES ---
 if track == "📊 Overview":
     st.markdown("<h1 style='text-align:center; color:white;'>SUMMARY OVERVIEW</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h2>", unsafe_allow_html=True)
     
     if not df.empty:
-        # הצגת רווח לפי תחרות
         comp_summary = df.groupby('Comp')['Profit'].sum().reset_index()
         for _, row in comp_summary.iterrows():
             c = "#2d6a4f" if row['Profit'] >= 0 else "#d32f2f"
@@ -142,37 +158,45 @@ if track == "📊 Overview":
                 </div>
             """, unsafe_allow_html=True)
     else:
-        st.warning("לא נמצאו נתונים להצגה. וודא שבגיליון יש נתונים תחת עמודת Competition.")
+        st.info("No data available yet.")
 
 else:
-    # עמוד תחרות ספציפי
+    # עמוד תחרות
     st.markdown(f"<h1 style='text-align:center; color:white;'>{track.upper()}</h1>", unsafe_allow_html=True)
     
     nb = next_stakes.get(track, 30.0)
     st.success(f"Next Bet for {track}: ₪{nb:,.0f}")
     
-    # סינון נתונים
+    # סינון נתונים לפי התחרות שנבחרה
     if not df.empty:
         f_df = df[df['Comp'] == track].sort_index(ascending=False)
-        if f_df.empty:
-            st.info(f"לא נמצאו משחקים עבור {track}. וודא שהשם בגיליון כתוב בדיוק כך.")
-        else:
-            for _, row in f_df.iterrows():
-                cls = "activity-card-won" if row['Status'] == "Won" else "activity-card-pending" if row['Status'] == "Pending" else "activity-card-lost"
-                st.markdown(f"""
-                    <div class="activity-card {cls}">
-                        <div style="display:flex; justify-content:space-between;">
-                            <b>{row['Match']}</b>
-                            <b style="font-size:1.1rem;">₪{row['Profit']:,.0f}</b>
+        
+        # הצגת כרטיסיות משחק
+        for _, row in f_df.iterrows():
+            cls = "activity-card-won" if row['Status'] == "Won" else "activity-card-pending" if row['Status'] == "Pending" else "activity-card-lost"
+            
+            st.markdown(f"""
+                <div class="activity-card {cls}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <b>{row['Match']}</b><br>
+                            <span style="font-size:0.8rem; color:#555;">{row['Date']}</span>
                         </div>
-                        <div style="font-size:0.8rem; color:#555;">{row['Date']} | {row['Status']} | Odds: {row['Odds']}</div>
+                        <div style="text-align:right;">
+                            <b style="font-size:1.1rem;">₪{row['Profit']:,.0f}</b><br>
+                            <span style="font-size:0.8rem;">{row['Status']}</span>
+                        </div>
                     </div>
-                """, unsafe_allow_html=True)
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.warning(f"No matches found for {track}. Check if 'Competition' column in Sheets matches exactly.")
 
-# כלי עזר למציאת בעיות בנתונים (יופיע רק בתחתית)
-with st.expander("🛠️ Raw Data Debugger (וודא שהנתונים מופיעים כאן)"):
+# --- DEBUGGER (יופיע למטה - יראה לך מה השיטס באמת שולח) ---
+st.divider()
+with st.expander("🛠️ Debugger (Check Connection Data)"):
     if raw_data:
-        st.write("אלו הנתונים הגולמיים שהאפליקציה מושכת מהגיליון שלך:")
+        st.write("Connection Successful! Here is the raw data from Google Sheets:")
         st.dataframe(pd.DataFrame(raw_data))
     else:
-        st.error("האפליקציה לא מצליחה למשוך שורות נתונים מהגיליון.")
+        st.error("Connected to Sheets, but the sheet seems empty or could not be read.")
