@@ -51,16 +51,55 @@ st.markdown(f"""
         background-size: cover;
     }}
     
-    /* Make all text white by default for visibility */
-    [data-testid="stAppViewContainer"] h1,
-    [data-testid="stAppViewContainer"] h2,
-    [data-testid="stAppViewContainer"] h3,
-    [data-testid="stAppViewContainer"] h4,
-    [data-testid="stAppViewContainer"] p,
-    [data-testid="stAppViewContainer"] span,
-    [data-testid="stAppViewContainer"] label,
-    [data-testid="stAppViewContainer"] .stMarkdown {{
+    /* Make text white on the main background (stadium image) */
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] h1,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] h2,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] h3,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] h4,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] p,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] span,
+    [data-testid="stAppViewContainer"] > div > div > div > div > section[data-testid="stMain"] label {{
         color: white !important;
+    }}
+    
+    /* Sidebar - Dark text on light background */
+    [data-testid="stSidebar"] {{
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    }}
+    
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stMarkdown {{
+        color: #2d3748 !important;
+    }}
+    
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+        color: #1a365d !important;
+    }}
+    
+    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
+        color: #4a5568 !important;
+    }}
+    
+    /* Form elements inside the main area - dark text */
+    [data-testid="stForm"] label,
+    [data-testid="stForm"] span,
+    [data-testid="stForm"] p {{
+        color: #2d3748 !important;
+    }}
+    
+    [data-testid="stForm"] input {{
+        color: #2d3748 !important;
+    }}
+    
+    /* Radio buttons in form */
+    [data-testid="stForm"] [data-testid="stMarkdownContainer"] {{
+        color: #2d3748 !important;
     }}
     
     /* Form Card Styling - Soft and Inviting */
