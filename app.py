@@ -14,58 +14,68 @@ st.set_page_config(page_title="Elite Football Tracker", layout="wide", page_icon
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&display=swap');
-    
     [data-testid="stAppViewContainer"] {{
         background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("{BG_IMAGE_URL}");
         background-attachment: fixed; background-size: cover;
     }}
-    
-    /* Cards Design */
-    .activity-card {{
-        background: rgba(255,255,255,0.95); border-radius: 12px; padding: 15px; margin-bottom: 10px;
-        border-left: 6px solid #ccc; color: black !important; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }}
-    .activity-card-won {{ border-left-color: #28a745 !important; }}
-    .activity-card-lost {{ border-left-color: #dc3545 !important; }}
-    .activity-card-pending {{ border-left-color: #ffc107 !important; }}
-    
     .metric-box {{
         background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; 
         text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 10px;
     }}
     .metric-label {{ font-size: 0.8rem; color: #555; font-weight: bold; text-transform: uppercase; }}
     .metric-value {{ font-size: 1.4rem; font-weight: 900; color: #000; }}
-
+    .activity-card {{
+        background: rgba(255,255,255,0.95); border-radius: 12px; padding: 15px; margin-bottom: 10px;
+        border-left: 6px solid #ccc; color: black !important;
+    }}
+    .activity-card-won {{ border-left-color: #28a745 !important; }}
+    .activity-card-lost {{ border-left-color: #dc3545 !important; }}
+    .activity-card-pending {{ border-left-color: #ffc107 !important; }}
     .comp-banner-box {{
         border-radius: 15px; padding: 20px; display: flex; align-items: center; 
         justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         border: 2px solid rgba(255,255,255,0.4); width: 100%;
     }}
-    .comp-banner-logo {{ height: 55px; margin-right: 20px; }}
-    .comp-banner-text {{ margin: 0; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; color: white; }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONNECTION MANAGER ---
+# --- 3. SMART CONNECTION MANAGER ---
+def find_sheet_identifier():
+    """פונקציה חכמה שמחפשת את הלינק או ה-ID בכל מקום אפשרי בסיקרטס"""
+    # 1. חיפוש ישיר בראשי
+    if "sheet_url" in st.secrets: return st.secrets["sheet_url"]
+    if "sheet_id" in st.secrets: return st.secrets["sheet_id"]
+    
+    # 2. חיפוש בתוך הבלוק של service_account (למקרה שהסדר התבלבל)
+    if "service_account" in st.secrets:
+        if "sheet_url" in st.secrets["service_account"]: return st.secrets["service_account"]["sheet_url"]
+        if "sheet_id" in st.secrets["service_account"]: return st.secrets["service_account"]["sheet_id"]
+    
+    return None
+
 @st.cache_data(ttl=15)
 def connect_to_sheets():
     try:
-        # בדיקה שהמפתחות קיימים
         if "service_account" not in st.secrets:
-            return None, None, 5000.0, "Missing [service_account] in Secrets"
-        
-        # כאן הקסם קורה: קריאת הלינק מה-Secrets שעדכנת
-        if "sheet_url" not in st.secrets:
-            return None, None, 5000.0, "Missing 'sheet_url' in Secrets"
+            return None, None, 5000.0, "Critical: [service_account] section is completely missing from Secrets."
             
-        # התחברות
+        # שימוש בפונקציית החיפוש החכמה
+        sheet_target = find_sheet_identifier()
+        
+        if not sheet_target:
+            return None, None, 5000.0, "Could not find 'sheet_url' or 'sheet_id' in Secrets (checked all locations)."
+
+        # התחברות לחשבון
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
         
-        # פתיחה לפי הלינק
+        # ניסיון פתיחה חכם (עובד גם עם לינק וגם עם ID)
         try:
-            sh = gc.open_by_url(st.secrets["sheet_url"])
+            if "docs.google.com" in sheet_target:
+                sh = gc.open_by_url(sheet_target)
+            else:
+                sh = gc.open_by_key(sheet_target)
         except Exception as e:
-            return None, None, 5000.0, f"Cannot open URL. Verify you shared the sheet with the bot email. Error: {e}"
+            return None, None, 5000.0, f"Google rejected the connection. Did you share the sheet with the bot email? Error: {e}"
 
         worksheet = sh.get_worksheet(0)
         
@@ -73,14 +83,14 @@ def connect_to_sheets():
         try:
             raw_values = worksheet.get_all_values()
             if len(raw_values) > 1:
-                headers = raw_values[0]
+                headers = [h.strip() for h in raw_values[0]]
                 data = [dict(zip(headers, row)) for row in raw_values[1:] if any(row)]
             else:
                 data = []
         except:
             data = [] 
             
-        # משיכת בנקרול
+        # משיכת בנקרול (ברירת מחדל 5000 אם לא נמצא)
         try:
             val = worksheet.cell(1, 10).value
             bankroll = float(str(val).replace(',', '')) if val else 5000.0
@@ -90,7 +100,7 @@ def connect_to_sheets():
         return data, worksheet, bankroll, None
         
     except Exception as e:
-        return None, None, 5000.0, str(e)
+        return None, None, 5000.0, f"Unexpected Error: {str(e)}"
 
 raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
 
@@ -126,13 +136,9 @@ def process_data(raw):
             
             # PENDING
             if res == "Pending" or not res:
-                processed.append({
-                    "Row": i+2, "Comp": comp, "Match": match, "Date": date, 
-                    "Profit": 0, "Status": "Pending", "Stake": stake, "Odds": odds, 
-                    "Income": 0, "Expense": 0
-                })
+                processed.append({"Row": i+2, "Comp": comp, "Match": match, "Date": date, "Profit": 0, "Status": "Pending", "Stake": stake, "Odds": odds, "Income":0, "Expense":0})
                 continue
-            
+                
             # COMPLETED
             cycles[comp] = cycles.get(comp, 0.0) + stake
             if "Draw (X)" in res:
@@ -147,11 +153,7 @@ def process_data(raw):
                 next_bets[comp] = stake * 2.0
                 status = "Lost"
                 
-            processed.append({
-                "Row": i+2, "Comp": comp, "Match": match, "Date": date, 
-                "Profit": net, "Status": status, "Stake": stake, "Odds": odds, 
-                "Income": income, "Expense": stake
-            })
+            processed.append({"Row": i+2, "Comp": comp, "Match": match, "Date": date, "Profit": net, "Status": status, "Stake": stake, "Odds": odds, "Income": income, "Expense": stake})
         except: continue
         
     return pd.DataFrame(processed), next_bets
@@ -161,9 +163,14 @@ current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0)
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
-    st.image(APP_LOGO_URL, use_container_width=True)
-    if error_msg: st.error("Offline")
-    else: st.success("Connected")
+    try: st.image(APP_LOGO_URL, use_container_width=True)
+    except: pass
+    
+    # תצוגת סטטוס נקייה
+    if error_msg:
+        st.error("System Offline")
+    else:
+        st.success("System Online")
         
     st.metric("Bankroll", f"₪{initial_bankroll:,.0f}")
     
@@ -180,22 +187,19 @@ with st.sidebar:
 
 # --- 6. MAIN CONTENT ---
 if error_msg:
-    st.error(f"⚠️ Connection Error: {error_msg}")
+    st.error(f"⚠️ {error_msg}")
+    with st.expander("Help - What happened?"):
+        st.write("The app couldn't find your Sheet link in the Secrets.")
+        st.write("1. Check if 'sheet_url' is correct in Secrets.")
+        st.write("2. Ensure the sheet is shared with the bot email.")
     st.stop()
 
 # === OVERVIEW PAGE ===
 if track == "📊 Overview":
     st.markdown(f'<div class="comp-banner-box" style="background: linear-gradient(90deg, #40916c, #95d5b2);"><h1 class="comp-banner-text">OVERVIEW</h1></div>', unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
     
-    st.markdown(f"""
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: white; margin: 0; font-size: 3rem;">₪{current_bal:,.2f}</h1>
-            <p style="color: #ccc; font-weight: bold;">LIVE BANKROLL</p>
-        </div>
-    """, unsafe_allow_html=True)
-
     if not df.empty:
-        # Group statistics
         stats = df.groupby('Comp')['Profit'].sum().reset_index()
         for _, row in stats.iterrows():
             c = "#2d6a4f" if row['Profit'] >= 0 else "#d32f2f"
@@ -218,26 +222,26 @@ if track == "📊 Overview":
                 </div>
             </div>""", unsafe_allow_html=True)
     else:
-        st.info("No data yet.")
+        st.info("No matches found. Go to competition pages to add data.")
 
 # === COMPETITION PAGES ===
 else:
     if track == "Brighton":
         c1, c2, logo = "#4CABFF", "#E6F7FF", "https://upload.wikimedia.org/wikipedia/en/f/fd/Brighton_&_Hove_Albion_FC_logo.svg"
-        txt_col = "#004085"
+        txt = "#004085"
     else:
         c1, c2, logo = "#007A33", "#FCD116", "https://upload.wikimedia.org/wikipedia/en/f/f9/2023_Africa_Cup_of_Nations_logo.png"
-        txt_col = "#FFFFFF"
+        txt = "#FFFFFF"
 
     st.markdown(f"""
         <div class="comp-banner-box" style="background: linear-gradient(90deg, {c1}, {c2});">
-            <img src="{logo}" class="comp-banner-logo">
-            <h1 class="comp-banner-text" style="color: {txt_col} !important;">{track.upper()}</h1>
+            <img src="{logo}" style="height:50px; margin-right:15px;">
+            <h1 style="color:{txt}; margin:0;">{track.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
-    
+
     f_df = df[df['Comp'] == track].copy() if not df.empty else pd.DataFrame()
     nb = next_stakes.get(track, 30.0)
     
@@ -251,10 +255,9 @@ else:
     p_color = "#2d6a4f" if total_profit >= 0 else "#d32f2f"
     col3.markdown(f"""<div class="metric-box"><div class="metric-label">NET PROFIT</div><div class="metric-value" style="color:{p_color}">₪{total_profit:,.0f}</div></div>""", unsafe_allow_html=True)
 
-    st.markdown(f"<div style='text-align:center; margin: 30px 0; font-size:1.5rem; color: white;'>Next Bet: <span style='color:#4CAF50; font-weight:900;'>₪{nb:,.0f}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; margin:20px; font-size:1.3rem; color:white;'>Next Bet: <b style='color:#4CAF50;'>₪{nb:,.0f}</b></div>", unsafe_allow_html=True)
 
-    # Add Match
-    with st.form("new_match"):
+    with st.form("new"):
         st.write("### Add Match")
         c1, c2 = st.columns(2)
         h = c1.text_input("Home")
@@ -263,20 +266,17 @@ else:
         o = c3.number_input("Odds", 3.2)
         s = c4.number_input("Stake", float(nb))
         res = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
-        if st.form_submit_button("Submit Match"):
-            if h and a:
-                if worksheet:
-                    worksheet.append_row([str(datetime.date.today()), track, h, a, o, res, s, 0])
-                    st.success("Added!")
-                    connect_to_sheets.clear(); st.rerun()
+        if st.form_submit_button("Submit"):
+            if h and a and worksheet:
+                worksheet.append_row([str(datetime.date.today()), track, h, a, o, res, s, 0])
+                st.success("Added!")
+                connect_to_sheets.clear(); st.rerun()
             else:
                 st.warning("Enter Team Names")
 
-    # History
     st.write("### History")
     if not f_df.empty:
-        f_df = f_df.sort_index(ascending=False)
-        for _, row in f_df.iterrows():
+        for _, row in f_df.sort_index(ascending=False).iterrows():
             cls = "activity-card-won" if row['Status']=="Won" else "activity-card-pending" if row['Status']=="Pending" else "activity-card-lost"
             st.markdown(f"""
                 <div class="activity-card {cls}">
@@ -297,6 +297,6 @@ else:
     else:
         st.info("No matches yet.")
 
-    with st.expander("Admin Actions"):
-        if st.button("Undo Last Entry"):
-            if worksheet and len(raw_data) > 0: worksheet.delete_rows(len(raw_data) + 1); connect_to_sheets.clear(); st.rerun()
+    with st.expander("Admin"):
+        if st.button("Undo Last"):
+             if len(raw_data) > 0: worksheet.delete_rows(len(raw_data) + 1); connect_to_sheets.clear(); st.rerun()
