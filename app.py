@@ -234,4 +234,116 @@ if track == "📊 Overview":
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(f"<h2 style='text-align:center;'>₪{current_bal:,.
+    st.markdown(f"<h2 style='text-align:center;'>₪{current_bal:,.2f}</h2><p style='text-align:center;'>LIVE BALANCE</p>", unsafe_allow_html=True)
+    
+    if not df.empty:
+        # סטטיסטיקה לפי תחרות
+        stats = df.groupby('Comp').agg({'Net Profit': 'sum', 'Match': 'count'}).reset_index()
+        for _, row in stats.iterrows():
+            color = '#2d6a4f' if row['Net Profit'] >= 0 else '#d32f2f'
+            st.markdown(f"""
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="color:black; margin:0;">{row['Comp']}</h3>
+                    <div style="text-align:right;">
+                        <div style="font-weight:900; color:{color}; font-size:1.4rem;">₪{row['Net Profit']:,.0f}</div>
+                        <div style="color:#666; font-size:0.8rem;">{row['Match']} Games</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+# B. SPECIFIC TRACK (Brighton / Africa)
+else:
+    # הגדרות עיצוב לפי התחרות שנבחרה
+    if track == "Brighton":
+        banner_c1, banner_c2 = "#4CABFF", "#E6F7FF"
+        text_color = "#004085"
+        logo = LOGO_BRIGHTON
+        base_stake = 30.0
+    else: # Africa
+        banner_c1, banner_c2 = "#007A33", "#FCD116" # צבעי אפריקה
+        text_color = "#FFFFFF"
+        logo = LOGO_AFRICA
+        base_stake = 30.0
+
+    st.markdown(f"""
+        <div class="comp-banner-box" style="background: linear-gradient(90deg, {banner_c1}, {banner_c2});">
+            <img src="{logo}" class="comp-banner-logo">
+            <h1 class="comp-banner-text" style="color: {text_color} !important;">{track}</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h2 style='text-align:center;'>₪{current_bal:,.2f}</h2>", unsafe_allow_html=True)
+    
+    # סינון הנתונים לתחרות הנוכחית
+    track_df = df[df['Comp'] == track].copy() if not df.empty else pd.DataFrame()
+    
+    # כרטיסי מידע
+    exp = track_df['Expense'].sum() if not track_df.empty else 0
+    inc = track_df['Income'].sum() if not track_df.empty else 0
+    net = inc - exp
+    
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f"<div class='custom-metric-box'><div class='metric-card-label'>EXPENSES</div><div class='metric-card-value'>₪{exp:,.0f}</div></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='custom-metric-box'><div class='metric-card-label'>REVENUE</div><div class='metric-card-value'>₪{inc:,.0f}</div></div>", unsafe_allow_html=True)
+    color = '#2d6a4f' if net >= 0 else '#d32f2f'
+    c3.markdown(f"<div class='custom-metric-box'><div class='metric-card-label'>NET PROFIT</div><div class='metric-card-value' style='color:{color} !important;'>₪{net:,.0f}</div></div>", unsafe_allow_html=True)
+    
+    # ההימור הבא
+    next_s = next_stakes.get(track, base_stake)
+    st.markdown(f"<div style='text-align:center; margin-top:20px; font-size:1.2rem;'>Next Bet: <span style='color:#4CAF50; font-weight:bold;'>₪{next_s:,.0f}</span></div>", unsafe_allow_html=True)
+    
+    # טופס הוספת משחק
+    with st.form("add_game"):
+        st.write("### ⚽ Add Match")
+        c_a, c_b = st.columns(2)
+        h = c_a.text_input("Home")
+        a = c_b.text_input("Away")
+        c_c, c_d = st.columns(2)
+        odds = c_c.number_input("Odds", value=3.2)
+        stake = c_d.number_input("Stake", value=float(next_s))
+        res = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
+        
+        if st.form_submit_button("Submit Game", use_container_width=True):
+            if h and a:
+                sheet_m.append_row([str(datetime.date.today()), track, h, a, odds, res, stake, 0.0])
+                st.toast("Saved!"); get_data_sync.clear(); st.rerun()
+            else:
+                st.warning("Enter team names")
+
+    # לוג פעילות
+    st.write("### 📜 Activity")
+    if not track_df.empty:
+        track_df = track_df.sort_index(ascending=False)
+        for idx, row in track_df.iterrows():
+            if 'Won' in str(row['Status']): cls = 'activity-card-won'
+            elif 'Pending' in str(row['Status']): cls = 'activity-card-pending'
+            else: cls = 'activity-card-lost'
+            
+            # כפתורי עדכון למשחקים פתוחים
+            if 'Pending' in str(row['Status']):
+                st.info(f"Update: {row['Match']}")
+                b1, b2 = st.columns(2)
+                if b1.button("✅ WON", key=f"w{idx}"):
+                    update_match_result(sheet_m, int(row['Row']), "Draw (X)"); st.rerun()
+                if b2.button("❌ LOST", key=f"l{idx}"):
+                    update_match_result(sheet_m, int(row['Row']), "No Draw"); st.rerun()
+            
+            st.markdown(f"""
+                <div class="activity-card {cls}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <div style="font-weight:bold; font-size:1.1rem; color:black;">{row['Match']}</div>
+                            <div style="font-size:0.8rem; color:#555;">{row['Date']}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:bold; font-size:1.2rem; color:black;">₪{row['Net Profit']:,.0f}</div>
+                            <div style="font-size:0.8rem; color:black;">{row['Status']}</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    # כפתור מחיקה אחרון (Admin)
+    with st.expander("Admin Actions"):
+        if st.button("Undo Last Entry"):
+            delete_last_row(sheet_m, len(m_raw)); st.rerun()
