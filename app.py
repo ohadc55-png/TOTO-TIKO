@@ -553,8 +553,16 @@ def process_data(raw):
         comp_stats[comp]["total_staked"] += stake
         
         # Check ACTUAL result from sheet
-        # WIN condition: Result contains "Draw" or is exactly "Draw (X)"
-        is_win = "Draw" in result or result == "Draw (X)" or result.lower() == "draw"
+        # WIN condition: Result is exactly "Draw (X)" or just "Draw"
+        # IMPORTANT: "No Draw" should NOT be a win!
+        result_lower = result.lower().strip()
+        is_win = (result == "Draw (X)" or 
+                  result_lower == "draw" or 
+                  result_lower == "draw (x)")
+        
+        # Make sure "No Draw" is NOT a win
+        if "no draw" in result_lower or "no_draw" in result_lower:
+            is_win = False
         
         if is_win:
             # WIN - Calculate profit based on Martingale
