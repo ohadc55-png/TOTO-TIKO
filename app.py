@@ -51,51 +51,92 @@ st.markdown(f"""
         background-size: cover;
     }}
     
-    /* Form Card Styling */
-    .form-card {{
-        background: rgba(255, 255, 255, 0.97);
-        border-radius: 16px;
-        padding: 25px;
-        margin: 20px 0;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        border: 1px solid rgba(255,255,255,0.5);
+    /* Make all text white by default for visibility */
+    [data-testid="stAppViewContainer"] h1,
+    [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3,
+    [data-testid="stAppViewContainer"] h4,
+    [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] span,
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] .stMarkdown {{
+        color: white !important;
     }}
     
-    .form-card h3 {{
-        color: #333;
-        margin-bottom: 15px;
+    /* Form Card Styling - Soft and Inviting */
+    .form-card {{
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(245, 247, 250, 0.95));
+        border-radius: 20px;
+        padding: 30px;
+        margin: 25px 0;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border: 1px solid rgba(255,255,255,0.8);
+    }}
+    
+    .form-card-title {{
+        color: #2d3748 !important;
+        font-size: 1.3rem;
         font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    
+    /* Style form inputs */
+    .form-card .stTextInput > div > div > input,
+    .form-card .stNumberInput > div > div > input {{
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
+        color: #2d3748 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }}
+    
+    .form-card .stTextInput > div > div > input:focus,
+    .form-card .stNumberInput > div > div > input:focus {{
+        border-color: #4CABFF !important;
+        box-shadow: 0 0 0 3px rgba(76, 171, 255, 0.2) !important;
+    }}
+    
+    .form-card label {{
+        color: #4a5568 !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
     }}
     
     /* Match Activity Cards */
     .match-card {{
-        border-radius: 12px;
-        padding: 18px;
-        margin-bottom: 12px;
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        transition: transform 0.2s ease;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }}
     
     .match-card:hover {{
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }}
     
     .match-card-won {{
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.5) 0%, rgba(40, 167, 69, 0.3) 100%);
-        border: 2px solid rgba(40, 167, 69, 0.6);
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.6) 0%, rgba(40, 167, 69, 0.35) 100%);
+        border: 2px solid rgba(40, 167, 69, 0.7);
     }}
     
     .match-card-lost {{
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.5) 0%, rgba(220, 53, 69, 0.3) 100%);
-        border: 2px solid rgba(220, 53, 69, 0.6);
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.6) 0%, rgba(220, 53, 69, 0.35) 100%);
+        border: 2px solid rgba(220, 53, 69, 0.7);
     }}
     
     .match-card-pending {{
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.5) 0%, rgba(255, 193, 7, 0.3) 100%);
-        border: 2px solid rgba(255, 193, 7, 0.6);
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.6) 0%, rgba(255, 193, 7, 0.35) 100%);
+        border: 2px solid rgba(255, 193, 7, 0.7);
     }}
     
     .match-card .match-info {{
@@ -103,34 +144,35 @@ st.markdown(f"""
     }}
     
     .match-card .match-name {{
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 600;
-        color: white;
-        margin-bottom: 5px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        color: white !important;
+        margin-bottom: 6px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     }}
     
     .match-card .match-details {{
         font-size: 0.85rem;
-        color: rgba(255,255,255,0.9);
-    }}
-    
-    .match-card .match-profit {{
-        font-size: 1.3rem;
-        font-weight: 700;
+        color: rgba(255,255,255,0.95) !important;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }}
     
+    .match-card .match-profit {{
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    }}
+    
     .match-profit-positive {{
-        color: #90EE90;
+        color: #90EE90 !important;
     }}
     
     .match-profit-negative {{
-        color: #FFB6C1;
+        color: #FFB6C1 !important;
     }}
     
     .match-profit-neutral {{
-        color: #FFE066;
+        color: #FFE066 !important;
     }}
     
     /* Competition Banner */
@@ -199,17 +241,18 @@ st.markdown(f"""
     
     .stat-box .stat-label {{
         font-size: 0.85rem;
-        color: rgba(255,255,255,0.85);
+        color: rgba(255,255,255,0.9) !important;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: 8px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }}
     
     .stat-box .stat-value {{
         font-size: 1.6rem;
         font-weight: 700;
-        color: white;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        color: white !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }}
     
     /* Overview Competition Cards */
@@ -236,7 +279,7 @@ st.markdown(f"""
     
     .overview-comp-header h3 {{
         margin: 0;
-        color: #333;
+        color: #333 !important;
         font-weight: 700;
     }}
     
@@ -247,11 +290,11 @@ st.markdown(f"""
     }}
     
     .overview-profit-positive {{
-        color: #28a745;
+        color: #28a745 !important;
     }}
     
     .overview-profit-negative {{
-        color: #dc3545;
+        color: #dc3545 !important;
     }}
     
     /* Next Bet Display */
@@ -266,24 +309,59 @@ st.markdown(f"""
     
     .next-bet-label {{
         font-size: 1rem;
-        color: rgba(255,255,255,0.8);
+        color: rgba(255,255,255,0.85) !important;
         margin-bottom: 5px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }}
     
     .next-bet-value {{
         font-size: 2.2rem;
         font-weight: 700;
-        color: #4CAF50;
+        color: #4CAF50 !important;
         text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
     }}
     
-    /* Metric boxes in sidebar */
-    .sidebar-metric {{
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 15px;
+    /* Section Titles */
+    .section-title {{
+        color: white !important;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 25px 0 15px 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    
+    /* Balance Display */
+    .balance-container {{
         text-align: center;
-        margin-bottom: 15px;
+        margin: 25px 0;
+        padding: 20px;
+    }}
+    
+    .balance-label {{
+        color: rgba(255,255,255,0.8) !important;
+        font-size: 1rem;
+        margin-bottom: 5px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }}
+    
+    .balance-value {{
+        font-size: 3rem;
+        font-weight: 700;
+        text-shadow: 0 0 30px rgba(0,0,0,0.3);
+    }}
+    
+    /* Info messages */
+    .info-message {{
+        background: rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        color: white !important;
+        border: 1px solid rgba(255,255,255,0.2);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -389,6 +467,7 @@ def get_worksheet_for_update():
 def process_data(raw):
     """
     Process raw data from Google Sheets and calculate betting cycles.
+    READS THE ACTUAL RESULT FROM SHEETS - does not override!
     
     The Martingale system works as follows:
     - Start with DEFAULT_STAKE
@@ -449,13 +528,14 @@ def process_data(raw):
         if stake == 0:
             stake = next_bets.get(comp, DEFAULT_STAKE)
         
+        # GET THE ACTUAL RESULT FROM SHEETS - THIS IS CRITICAL!
         result = str(row.get('Result', '')).strip()
         date = str(row.get('Date', '')).strip()
         
-        # Handle pending bets
-        if result == "Pending" or not result:
+        # Handle pending bets - no calculations yet
+        if result == "Pending" or result == "" or not result:
             processed.append({
-                "Row": i + 2,  # +2 because row 1 is header, and enumerate starts at 0
+                "Row": i + 2,
                 "Comp": comp,
                 "Match": match_name,
                 "Date": date,
@@ -468,27 +548,34 @@ def process_data(raw):
             })
             continue
         
-        # Add stake to cycle investment
+        # Add stake to cycle investment (this bet was placed)
         cycle_investment[comp] += stake
         comp_stats[comp]["total_staked"] += stake
         
-        # Determine result
-        if "Draw" in result or result == "Draw (X)":
-            # WIN - Calculate profit
+        # Check ACTUAL result from sheet
+        # WIN condition: Result contains "Draw" or is exactly "Draw (X)"
+        is_win = "Draw" in result or result == "Draw (X)" or result.lower() == "draw"
+        
+        if is_win:
+            # WIN - Calculate profit based on Martingale
             income = stake * odds
-            net_profit = income - cycle_investment[comp]  # Total profit after covering all losses in cycle
+            net_profit = income - cycle_investment[comp]  # Profit after covering all losses
             
             comp_stats[comp]["total_income"] += income
             comp_stats[comp]["net_profit"] += net_profit
             
-            # Reset cycle
+            # Reset cycle for next sequence
             cycle_investment[comp] = 0.0
             next_bets[comp] = DEFAULT_STAKE
             status = "Won"
         else:
-            # LOSS
+            # LOSS - No Draw, 1, 2, X1, X2, etc.
             income = 0.0
             net_profit = -stake
+            
+            # For losses, we don't add to net_profit in comp_stats 
+            # because the loss is accounted for in the next win
+            # But we do track it for display purposes
             
             # Double the stake for next bet (Martingale)
             next_bets[comp] = stake * 2.0
@@ -577,26 +664,24 @@ if error_msg:
 
 # --- OVERVIEW PAGE ---
 if track == "📊 Overview":
-    # Overview Banner
+    # Overview Banner - Dark green gradient, NO logo/icon
     st.markdown("""
-        <div class="comp-banner-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2.5rem; letter-spacing: 3px;">📊 OVERVIEW</h1>
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #4a7c59 100%);">
+            <h1 style="color: white; margin: 0; font-size: 2.5rem; letter-spacing: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.4);">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
     # Total Balance Display
     balance_color = "#4CAF50" if current_bal >= initial_bankroll else "#FF5252"
     st.markdown(f"""
-        <div style="text-align: center; margin: 30px 0;">
-            <p style="color: rgba(255,255,255,0.7); font-size: 1rem; margin-bottom: 5px;">TOTAL BALANCE</p>
-            <h1 style="color: {balance_color}; font-size: 3.5rem; margin: 0; text-shadow: 0 0 30px rgba(76, 175, 80, 0.4);">
-                ₪{current_bal:,.2f}
-            </h1>
+        <div class="balance-container">
+            <p class="balance-label">TOTAL BALANCE</p>
+            <h1 class="balance-value" style="color: {balance_color};">₪{current_bal:,.2f}</h1>
         </div>
     """, unsafe_allow_html=True)
     
     # Competition Cards
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown('<p class="section-title">📈 Competition Performance</p>', unsafe_allow_html=True)
     
     if not df.empty:
         for comp_name, style in COMPETITION_STYLES.items():
@@ -617,22 +702,26 @@ if track == "📊 Overview":
                     </div>
                     <div style="display: flex; justify-content: space-around; text-align: center; color: #666;">
                         <div>
-                            <div style="font-size: 0.85rem;">Total Staked</div>
+                            <div style="font-size: 0.85rem; color: #888;">Total Staked</div>
                             <div style="font-size: 1.2rem; font-weight: 600; color: #333;">₪{stats['total_staked']:,.0f}</div>
                         </div>
                         <div>
-                            <div style="font-size: 0.85rem;">Total Won</div>
+                            <div style="font-size: 0.85rem; color: #888;">Total Won</div>
                             <div style="font-size: 1.2rem; font-weight: 600; color: #28a745;">₪{stats['total_income']:,.0f}</div>
                         </div>
                         <div>
-                            <div style="font-size: 0.85rem;">Matches</div>
+                            <div style="font-size: 0.85rem; color: #888;">Matches</div>
                             <div style="font-size: 1.2rem; font-weight: 600; color: #333;">{len(comp_df)}</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
     else:
-        st.info("📭 No betting data available yet. Add your first match to get started!")
+        st.markdown("""
+            <div class="info-message">
+                📭 No betting data available yet. Add your first match to get started!
+            </div>
+        """, unsafe_allow_html=True)
 
 # --- COMPETITION PAGES ---
 else:
@@ -650,9 +739,9 @@ else:
     # Current Balance
     balance_color = "#4CAF50" if current_bal >= initial_bankroll else "#FF5252"
     st.markdown(f"""
-        <div style="text-align: center; margin: 20px 0;">
-            <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 5px;">CURRENT BALANCE</p>
-            <h1 style="color: {balance_color}; font-size: 2.8rem; margin: 0;">₪{current_bal:,.2f}</h1>
+        <div class="balance-container">
+            <p class="balance-label">CURRENT BALANCE</p>
+            <h1 class="balance-value" style="color: {balance_color};">₪{current_bal:,.2f}</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -687,34 +776,38 @@ else:
         </div>
     """, unsafe_allow_html=True)
     
-    # Add Match Form
+    # Add Match Form - Soft and Inviting Design
     st.markdown("""
         <div class="form-card">
-            <h3>➕ Add New Match</h3>
+            <div class="form-card-title">
+                <span style="font-size: 1.5rem;">⚽</span>
+                <span style="color: #2d3748 !important;">Add New Match</span>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
     with st.form("add_match_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
-            home_team = st.text_input("🏠 Home Team")
+            home_team = st.text_input("Home Team", placeholder="Enter home team name")
         with col2:
-            away_team = st.text_input("✈️ Away Team")
+            away_team = st.text_input("Away Team", placeholder="Enter away team name")
         
         col3, col4 = st.columns(2)
         with col3:
-            odds = st.number_input("📊 Odds", min_value=1.01, value=3.20, step=0.1)
+            odds = st.number_input("Odds", min_value=1.01, value=3.20, step=0.1)
         with col4:
-            stake = st.number_input("💵 Stake (₪)", min_value=1.0, value=float(next_bet), step=10.0)
+            stake = st.number_input("Stake (₪)", min_value=1.0, value=float(next_bet), step=10.0)
         
+        st.write("")  # Spacing
         result = st.radio(
-            "Result",
+            "Match Result",
             ["Pending", "Draw (X)", "No Draw"],
-            horizontal=True,
-            label_visibility="collapsed"
+            horizontal=True
         )
         
-        submitted = st.form_submit_button("✅ Submit Match", use_container_width=True)
+        st.write("")  # Spacing
+        submitted = st.form_submit_button("✅ Add Match", use_container_width=True, type="primary")
         
         if submitted:
             if home_team and away_team:
@@ -738,14 +831,11 @@ else:
                 st.error("⚠️ Please enter both team names")
     
     # Match History
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-        <h3 style="color: white; margin-bottom: 15px;">📜 Match History</h3>
-    """, unsafe_allow_html=True)
+    st.markdown('<p class="section-title">📜 Match History</p>', unsafe_allow_html=True)
     
     if not comp_df.empty:
         for _, row in comp_df.sort_index(ascending=False).iterrows():
-            # Determine card style
+            # Determine card style based on ACTUAL status from data
             if row['Status'] == "Won":
                 card_class = "match-card-won"
                 profit_class = "match-profit-positive"
@@ -754,7 +844,7 @@ else:
                 card_class = "match-card-lost"
                 profit_class = "match-profit-negative"
                 profit_prefix = ""
-            else:
+            else:  # Pending
                 card_class = "match-card-pending"
                 profit_class = "match-profit-neutral"
                 profit_prefix = ""
@@ -764,8 +854,8 @@ else:
                     <div class="match-info">
                         <div class="match-name">{row['Match']}</div>
                         <div class="match-details">
-                            📅 {row['Date']} | 💵 Stake: ₪{row['Stake']:,.0f} | 📊 Odds: {row['Odds']:.2f} | 
-                            <span style="font-weight: 600;">{row['Status']}</span>
+                            📅 {row['Date']} &nbsp;|&nbsp; 💵 Stake: ₪{row['Stake']:,.0f} &nbsp;|&nbsp; 📊 Odds: {row['Odds']:.2f} &nbsp;|&nbsp; 
+                            <strong>{row['Status']}</strong>
                         </div>
                     </div>
                     <div class="match-profit {profit_class}">
@@ -792,13 +882,17 @@ else:
                             connect_to_sheets.clear()
                             st.rerun()
     else:
-        st.info("📭 No matches recorded yet for this competition. Add your first match above!")
+        st.markdown("""
+            <div class="info-message">
+                📭 No matches recorded yet for this competition. Add your first match above!
+            </div>
+        """, unsafe_allow_html=True)
 
 
 # --- FOOTER ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
-    <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem; padding: 20px;">
+    <div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
         Elite Football Tracker v2.0 | Built with ❤️ using Streamlit
     </div>
 """, unsafe_allow_html=True)
