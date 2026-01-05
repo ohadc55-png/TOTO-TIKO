@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import gspread
 import datetime
+import plotly.express as px
 
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
+# הלינק לשיטס צרוב כאן בקוד ליתר ביטחון
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1o7OO2nyqAEqRgUq5makKZKR7ZtFyeh2JcJlzXnEmsv8/edit?gid=0#gid=0"
 
 st.set_page_config(
     page_title="Elite Football Tracker",
@@ -41,7 +43,6 @@ st.markdown(f"""
         font-family: 'Montserrat', sans-serif;
     }}
     
-    /* Banners */
     .comp-banner-box {{
         border-radius: 15px; padding: 20px; display: flex; align-items: center; 
         justify-content: center; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -57,43 +58,36 @@ st.markdown(f"""
         [data-testid="stDataFrame"] * {{ font-size: 12px !important; }}
     }}
 
-    /* Activity Cards */
     .activity-card {{
         border-radius: 15px !important; padding: 20px !important; margin-bottom: 15px !important;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important; position: relative !important; overflow: hidden !important;
+        background: rgba(255,255,255,0.9);
     }}
-    .activity-card-won {{ background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 50%, #b1dfbb 100%) !important; border-left: 6px solid #28a745 !important; }}
-    .activity-card-lost {{ background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%) !important; border-left: 6px solid #dc3545 !important; }}
-    .activity-card-pending {{ background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 50%, #fdcb6e 100%) !important; border-left: 6px solid #ffc107 !important; }}
+    .activity-card-won {{ border-left: 6px solid #28a745 !important; }}
+    .activity-card-lost {{ border-left: 6px solid #dc3545 !important; }}
+    .activity-card-pending {{ border-left: 6px solid #ffc107 !important; }}
     
     .custom-metric-box {{
         background-color: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px;
         text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; text-shadow: none !important; }}
-    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; text-shadow: none !important; }}
+    .metric-card-label {{ color: #555 !important; font-weight: 700; font-size: 13px; }}
+    .metric-card-value {{ color: #1b4332 !important; font-weight: 900; font-size: 26px; }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. BACKEND FUNCTIONS (החלק הקריטי שתוקן) ---
+# --- 3. BACKEND FUNCTIONS ---
 @st.cache_data(ttl=30)
 def get_data_from_sheets():
     try:
-        # שלב 1: בדיקה שהסודות קיימים
+        # בדיקת חיבור בסיסית
         if "service_account" not in st.secrets:
-            st.error("Error: [service_account] section missing in Secrets!")
+            st.error("Missing [service_account] in Secrets")
             return [], None, 5000.0
             
-        # שלב 2: התחברות
         gc = gspread.service_account_from_dict(st.secrets["service_account"])
-        
-        # שלב 3: משיכת הלינק (בדיקה אם הוא בסודות או בקוד)
-        sheet_url = st.secrets.get("sheet_url")
-        if not sheet_url:
-             # גיבוי למקרה שהלינק לא נקלט מהסודות
-             sheet_url = "https://docs.google.com/spreadsheets/d/1o7OO2nyqAEqRgUq5makKZKR7ZtFyeh2JcJlzXnEmsv8/edit?gid=0#gid=0"
-        
-        sh = gc.open_by_url(sheet_url)
+        # שימוש בלינק הצרוב בקוד
+        sh = gc.open_by_url(SHEET_URL)
         worksheet = sh.get_worksheet(0)
         data = worksheet.get_all_records()
         
@@ -102,12 +96,9 @@ def get_data_from_sheets():
             initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
         except:
             initial_bankroll = 5000.0
-            
         return data, worksheet, initial_bankroll
-        
     except Exception as e:
-        st.error(f"Critical Connection Error: {e}")
-        st.info("Check: 1. Is 'sheet_url' in Secrets? 2. Is [service_account] correct?")
+        st.error(f"Connection Error: {e}")
         return [], None, 5000.0
 
 def update_bankroll(worksheet, val):
@@ -118,9 +109,9 @@ def update_bankroll(worksheet, val):
         return True
     except: return False
 
-def safe_float_conversion(value, default=0.0):
-    try: return float(str(value).replace(',', '.'))
-    except: return default
+def safe_float(val):
+    try: return float(str(val).replace(',', '.'))
+    except: return 0.0
 
 def calculate_logic(raw_data, br_base, af_base):
     processed = []
@@ -132,229 +123,185 @@ def calculate_logic(raw_data, br_base, af_base):
             comp = str(row.get('Competition', 'Brighton')).strip() or 'Brighton'
             home = str(row.get('Home Team', '')).strip()
             away = str(row.get('Away Team', '')).strip()
-            match_name = f"{home} vs {away}"
-            date_val = str(row.get('Date', ''))
-            
-            odds = safe_float_conversion(row.get('Odds', 1), 1.0)
-            stake_val = row.get('Stake')
-            
-            if stake_val in [None, '', ' ']:
-                exp = next_bets.get(comp, 30.0)
-            else:
-                exp = safe_float_conversion(stake_val, next_bets.get(comp, 30.0))
+            match = f"{home} vs {away}"
+            date = str(row.get('Date', ''))
+            odds = safe_float(row.get('Odds', 1))
+            stake = safe_float(row.get('Stake', 0))
+            if stake == 0: stake = next_bets.get(comp, 30.0)
             
             res = str(row.get('Result', '')).strip()
             
             if res == "Pending":
                 processed.append({
-                    "Row": idx + 2, "Date": date_val, "Comp": comp, "Match": match_name,
+                    "Row": idx + 2, "Date": date, "Comp": comp, "Match": match,
                     "Odds": odds, "Expense": 0.0, "Income": 0.0, "Net Profit": 0.0,
                     "Status": "⏳ Pending", "ROI": "N/A"
                 })
                 continue
             
-            cycle_invest[comp] = cycle_invest.get(comp, 0) + exp
-            is_win = "Draw (X)" in res
-            
-            if is_win:
-                inc = exp * odds
+            cycle_invest[comp] += stake
+            if "Draw (X)" in res:
+                inc = stake * odds
                 net = inc - cycle_invest[comp]
-                try: roi = f"{(net / cycle_invest[comp]) * 100:.1f}%"
-                except: roi = "0.0%"
-                next_bets[comp] = float(br_base if "Brighton" in comp else af_base)
                 cycle_invest[comp] = 0.0
+                next_bets[comp] = 30.0
                 status = "✅ Won"
             else:
                 inc = 0.0
-                net = -exp
-                roi = "N/A"
-                next_bets[comp] = exp * 2.0
+                net = -stake
+                next_bets[comp] = stake * 2.0
                 status = "❌ Lost"
             
             processed.append({
-                "Row": idx + 2, "Date": date_val, "Comp": comp, "Match": match_name,
-                "Odds": odds, "Expense": exp, "Income": inc, "Net Profit": net,
-                "Status": status, "ROI": roi
+                "Row": idx + 2, "Date": date, "Comp": comp, "Match": match,
+                "Odds": odds, "Expense": stake, "Income": inc, "Net Profit": net,
+                "Status": status, "ROI": "N/A"
             })
         except: continue
     return processed, next_bets
 
-def get_competition_stats(df, initial_bankroll):
+def get_stats(df, bankroll):
     if df.empty: return []
     stats = []
     for comp in df['Comp'].unique():
-        comp_df = df[df['Comp'] == comp].copy()
-        total_matches = len(comp_df)
-        wins = len(comp_df[comp_df['Status'] == "✅ Won"])
-        net_profit = comp_df['Income'].sum() - comp_df['Expense'].sum()
-        stats.append({'Competition': comp, 'Matches': total_matches, 'Wins': wins, 'Net Profit': net_profit})
+        cdf = df[df['Comp'] == comp]
+        wins = len(cdf[cdf['Status'] == "✅ Won"])
+        net = cdf['Income'].sum() - cdf['Expense'].sum()
+        stats.append({'Competition': comp, 'Matches': len(cdf), 'Wins': wins, 'Net Profit': net})
     return stats
 
-def add_match_to_sheet(worksheet, date, comp, home, away, odds, result, stake):
-    if worksheet is None: return False
-    try:
-        worksheet.append_row([date, comp, home, away, odds, result, stake, 0.0])
-        get_data_from_sheets.clear()
-        return True
-    except: return False
+def add_match(ws, date, comp, h, a, o, res, s):
+    if ws:
+        try:
+            ws.append_row([date, comp, h, a, o, res, s, 0.0])
+            get_data_from_sheets.clear()
+            return True
+        except: return False
+    return False
 
-def update_match_result(worksheet, row_num, result):
-    if worksheet is None: return False
-    try:
-        worksheet.update_cell(row_num, 6, result)
-        get_data_from_sheets.clear()
-        return True
-    except: return False
+def update_res(ws, row, res):
+    if ws:
+        try:
+            ws.update_cell(row, 6, res)
+            get_data_from_sheets.clear()
+            return True
+        except: return False
+    return False
 
-def delete_last_row(worksheet, row_count):
-    if worksheet is None or row_count == 0: return False
-    try:
-        worksheet.delete_rows(row_count + 1)
-        get_data_from_sheets.clear()
-        return True
-    except: return False
+def undo(ws, count):
+    if ws and count > 0:
+        try:
+            ws.delete_rows(count + 1)
+            get_data_from_sheets.clear()
+            return True
+        except: return False
+    return False
 
 # --- 4. EXECUTION ---
 raw_data, worksheet, saved_br = get_data_from_sheets()
 processed, next_stakes = calculate_logic(raw_data, 30.0, 20.0)
-if processed:
-    df = pd.DataFrame(processed)
-    current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum())
-else:
-    df = pd.DataFrame()
-    current_bal = saved_br
+df = pd.DataFrame(processed) if processed else pd.DataFrame()
+current_bal = saved_br + (df['Income'].sum() - df['Expense'].sum()) if not df.empty else saved_br
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
-    try: st.image(APP_LOGO_URL, use_container_width=True)
-    except: pass
-    st.markdown("## WALLET CONTROL")
+    st.image(APP_LOGO_URL, use_container_width=True)
     st.metric("Base Bankroll", f"₪{saved_br:,.0f}")
-    amt = st.number_input("Amount", min_value=0.0, value=100.0, step=50.0, label_visibility="collapsed")
+    
+    amt = st.number_input("Amount", 100.0, step=50.0)
     c1, c2 = st.columns(2)
-    with c1:
-        if st.button("Deposit", use_container_width=True):
-            update_bankroll(worksheet, saved_br + amt); st.rerun()
-    with c2:
-        if st.button("Withdraw", use_container_width=True):
-            update_bankroll(worksheet, saved_br - amt); st.rerun()
+    if c1.button("Deposit"): update_bankroll(worksheet, saved_br + amt); st.rerun()
+    if c2.button("Withdraw"): update_bankroll(worksheet, saved_br - amt); st.rerun()
+    
     st.divider()
-    st.write("Current Track:")
-    track = st.selectbox("Track", ["📊 Overview", "Brighton", "Africa Cup of Nations"], label_visibility="collapsed")
-    if st.button("🔄 Sync Cloud", use_container_width=True):
-        get_data_from_sheets.clear(); st.rerun()
+    track = st.selectbox("Track", ["📊 Overview", "Brighton", "Africa Cup of Nations"])
+    if st.button("Sync"): get_data_from_sheets.clear(); st.rerun()
 
-# --- MAIN CONTENT ---
+# --- MAIN PAGE ---
 if track == "📊 Overview":
     st.markdown(f"""
-        <div class="comp-banner-box" style="background: linear-gradient(90deg, #40916c 0%, #95d5b2 50%, #40916c 100%);">
+        <div class="comp-banner-box" style="background: linear-gradient(90deg, #40916c, #95d5b2);">
             <img src="{APP_LOGO_URL}" class="comp-banner-logo">
             <h1 class="comp-banner-text" style="color: #081c15 !important;">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
-    st.markdown(f"""<div style="text-align: center; margin-bottom: 50px;"><div style="font-size: 2.3rem; font-weight: 300; color: #ffffff;">₪{current_bal:,.2f}</div><div style="font-size: 0.8rem; font-weight: 600; color: #cccccc;">LIVE BANKROLL</div></div>""", unsafe_allow_html=True)
     
-    if not df.empty:
-        comp_stats = get_competition_stats(df, saved_br)
-        for stat in comp_stats:
-            st.markdown(f"""
-                <div style="background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: black !important; margin:0;">{stat['Competition']}</h3>
-                    <div style="font-size: 1.5rem; font-weight: 900; color: {'#2d6a4f' if stat['Net Profit'] >= 0 else '#d32f2f'};">₪{stat['Net Profit']:,.0f}</div>
+    # תיקון השורה שגרמה לקריסה:
+    st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#ccc; font-weight:bold;'>LIVE BANKROLL</p>", unsafe_allow_html=True)
+    
+    stats = get_stats(df, saved_br)
+    for stat in stats:
+        color = "#2d6a4f" if stat['Net Profit'] >= 0 else "#d32f2f"
+        st.markdown(f"""
+            <div style="background:white; border-radius:15px; padding:20px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:black; margin:0;">{stat['Competition']}</h3>
+                <div style="text-align:right;">
+                    <div style="font-size:1.5rem; font-weight:900; color:{color};">₪{stat['Net Profit']:,.0f}</div>
+                    <div style="color:#666;">{stat['Matches']} Matches</div>
                 </div>
-            """, unsafe_allow_html=True)
+            </div>
+        """, unsafe_allow_html=True)
 
 else:
-    # הגדרות תחרות
+    # הגדרות תצוגה
     if track == "Brighton":
-        c1, c2, logo, base_bet = "#4CABFF", "#E6F7FF", "https://upload.wikimedia.org/wikipedia/en/f/fd/Brighton_&_Hove_Albion_FC_logo.svg", 30.0
-        text_color = "#004085"
-    else: # Africa
-        c1, c2, logo, base_bet = "#007A33", "#FCD116", "https://upload.wikimedia.org/wikipedia/en/f/f9/2023_Africa_Cup_of_Nations_logo.png", 30.0
-        text_color = "#FFFFFF"
+        c1, c2, logo = "#4CABFF", "#E6F7FF", "https://upload.wikimedia.org/wikipedia/en/f/fd/Brighton_&_Hove_Albion_FC_logo.svg"
+        txt_col = "#004085"
+    else:
+        c1, c2, logo = "#007A33", "#FCD116", "https://upload.wikimedia.org/wikipedia/en/f/f9/2023_Africa_Cup_of_Nations_logo.png"
+        txt_col = "#FFFFFF"
 
     st.markdown(f"""
         <div class="comp-banner-box" style="background: linear-gradient(90deg, {c1}, {c2});">
             <img src="{logo}" class="comp-banner-logo">
-            <h1 class="comp-banner-text" style="color: {text_color} !important;">{track.upper()}</h1>
+            <h1 class="comp-banner-text" style="color: {txt_col} !important;">{track.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown(f"<h1 style='text-align:center; color:white;'>₪{current_bal:,.2f}</h1>", unsafe_allow_html=True)
 
-    st.markdown(f"""<div style="text-align: center; margin-bottom: 35px;"><div style="font-size: 2.3rem; font-weight: 300; color: #ffffff;">₪{current_bal:,.2f}</div><div style="font-size: 0.8rem; font-weight: 600; color: #cccccc;">LIVE BANKROLL</div></div>""", unsafe_allow_html=True)
+    f_df = df[df['Comp'] == track].copy() if not df.empty else pd.DataFrame()
+    next_bet = next_stakes.get(track, 30.0)
+    
+    st.markdown(f"<div style='text-align:center; margin:20px;'>Next Bet: <span style='color:#4CAF50; font-weight:900; font-size:1.5rem;'>₪{next_bet:,.0f}</span></div>", unsafe_allow_html=True)
 
-    if not df.empty:
-        f_df = df[df['Comp'] == track].copy()
-    else:
-        f_df = pd.DataFrame()
-
-    # סטטיסטיקות
-    if not f_df.empty:
-        m_exp = f_df['Expense'].sum()
-        m_inc = f_df['Income'].sum()
-        m_net = m_inc - m_exp
-    else:
-        m_exp, m_inc, m_net = 0.0, 0.0, 0.0
-
-    c1, c2, c3 = st.columns(3)
-    with c1: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL EXPENSES</div><div class="metric-card-value">₪{m_exp:,.0f}</div></div>""", unsafe_allow_html=True)
-    with c2: st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">TOTAL REVENUE</div><div class="metric-card-value">₪{m_inc:,.0f}</div></div>""", unsafe_allow_html=True)
-    with c3:
-        color_net = '#2d6a4f' if m_net >= 0 else '#d32f2f'
-        st.markdown(f"""<div class="custom-metric-box"><div class="metric-card-label">NET PROFIT</div><div class="metric-card-value" style="color: {color_net} !important;">₪{m_net:,.0f}</div></div>""", unsafe_allow_html=True)
-
-    next_val = next_stakes.get(track, base_bet)
-    st.markdown(f"""<div style="text-align: center; margin: 30px 0;"><span style="font-size: 1.4rem; color: white;">Next Bet: </span><span style="font-size: 1.6rem; color: #4CAF50; font-weight: 900;">₪{next_val:,.0f}</span></div>""", unsafe_allow_html=True)
-
-    col_form, col_chart = st.columns([1, 1])
-    with col_form:
-        with st.form("new_match"):
+    # טופס
+    c_form, c_chart = st.columns(2)
+    with c_form:
+        with st.form("new"):
             st.subheader("Add Match")
-            h_team = st.text_input("Home")
-            a_team = st.text_input("Away")
-            odds_val = st.number_input("Odds", value=3.2)
-            stake_val = st.number_input("Stake", value=float(next_val))
-            result_val = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
+            h = st.text_input("Home")
+            a = st.text_input("Away")
+            o = st.number_input("Odds", 3.2)
+            s = st.number_input("Stake", float(next_bet))
+            res = st.radio("Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
             if st.form_submit_button("Submit"):
-                if h_team and a_team:
-                    if add_match_to_sheet(worksheet, str(datetime.date.today()), track, h_team, a_team, odds_val, result_val, stake_val):
-                        st.toast("Added!", icon="✅"); st.rerun()
+                if h and a:
+                    add_match(worksheet, str(datetime.date.today()), track, h, a, o, res, s)
+                    st.rerun()
 
-    # Activity Log
-    st.markdown("""<h2 style="color: #ffffff !important; margin-bottom: 20px;">📜 Activity Log</h2>""", unsafe_allow_html=True)
+    # היסטוריה
+    st.subheader("History")
     if not f_df.empty:
-        f_df_sorted = f_df.sort_index(ascending=False)
-        for idx, match in f_df_sorted.iterrows():
-            if 'Won' in str(match['Status']): card_class = "activity-card-won"
-            elif 'Pending' in str(match['Status']): card_class = "activity-card-pending"
-            else: card_class = "activity-card-lost"
+        for idx, row in f_df.sort_index(ascending=False).iterrows():
+            cls = "activity-card-won" if "Won" in row['Status'] else "activity-card-pending" if "Pending" in row['Status'] else "activity-card-lost"
             
-            # Update Buttons for Pending
-            if 'Pending' in str(match['Status']):
-                st.markdown("#### ⏳ Update")
-                col1, col2, col3 = st.columns([2, 1, 1])
-                with col1: st.write(f"**{match['Match']}**")
-                with col2:
-                    if st.button("✅ Won", key=f"w_{idx}", use_container_width=True):
-                        update_match_result(worksheet, int(match['Row']), "Draw (X)"); st.rerun()
-                with col3:
-                    if st.button("❌ Lost", key=f"l_{idx}", use_container_width=True):
-                        update_match_result(worksheet, int(match['Row']), "No Draw"); st.rerun()
-
+            if "Pending" in row['Status']:
+                st.markdown(f"**{row['Match']}**")
+                b1, b2 = st.columns(2)
+                if b1.button("✅ Won", key=f"w{idx}"): update_res(worksheet, row['Row'], "Draw (X)"); st.rerun()
+                if b2.button("❌ Lost", key=f"l{idx}"): update_res(worksheet, row['Row'], "No Draw"); st.rerun()
+            
             st.markdown(f"""
-<div class="activity-card {card_class}">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <div style="font-weight:900; font-size:1.1rem; color:black;">{match['Match']}</div>
-            <div style="color:#555; font-size:0.8rem;">{match['Date']}</div>
-        </div>
-        <div style="text-align:right;">
-            <div style="font-weight:900; font-size:1.3rem; color:black;">₪{match['Net Profit']:,.0f}</div>
-            <div style="font-size:0.8rem; color:black;">{match['Status']}</div>
-        </div>
-    </div>
-</div>
+                <div class="activity-card {cls}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>{row['Match']}</b>
+                        <b>₪{row['Net Profit']:,.0f}</b>
+                    </div>
+                    <div style="font-size:0.8rem; color:#555;">{row['Date']} | {row['Status']}</div>
+                </div>
             """, unsafe_allow_html=True)
 
-    with st.expander("🛠️ Admin Actions"):
-        if st.button("Undo Last Entry"):
-            delete_last_row(worksheet, len(raw_data)); st.rerun()
+    with st.expander("Admin"):
+        if st.button("Undo Last"): undo(worksheet, len(raw_data)); st.rerun()
