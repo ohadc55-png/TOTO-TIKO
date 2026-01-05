@@ -74,10 +74,26 @@ st.markdown(f"""
 # --- BACKEND FUNCTIONS ---
 @st.cache_data(ttl=30)
 def get_data_from_sheets():
-    """Fetch data from Google Sheets - FIXED VERSION"""
+    """Fetch data from Google Sheets - DEBUG VERSION"""
     try:
-        gc = gspread.service_account_from_dict(st.secrets["service_account"])
-        sh = gc.open_by_url(st.secrets["sheet_url"])  # ← FIXED: Using st.secrets
+        # ============ DEBUG START ============
+        st.write("🔍 **Available secrets:**", list(st.secrets.keys()))
+        
+        if "service_account" in st.secrets:
+            st.write("🔑 **Service account keys:**", list(st.secrets["service_account"].keys()))
+        else:
+            st.error("❌ 'service_account' not found in secrets!")
+            return [], None, None, [], 5000.0
+        
+        if "sheet_url" not in st.secrets:
+            st.error("❌ 'sheet_url' not found in secrets!")
+            return [], None, None, [], 5000.0
+        
+        st.write("📄 **Sheet URL:**", st.secrets["sheet_url"][:50] + "...")
+        # ============ DEBUG END ============
+        
+        gc = gspread.service_account_from_dict(dict(st.secrets["service_account"]))
+        sh = gc.open_by_url(st.secrets["sheet_url"])
         
         matches_sheet = sh.get_worksheet(0)
         competitions_sheet = sh.get_worksheet(1)
@@ -90,10 +106,14 @@ def get_data_from_sheets():
             initial_bankroll = float(str(val).replace(',', '')) if val else 5000.0
         except:
             initial_bankroll = 5000.0
-            
+        
+        st.success("✅ Connected successfully!")  # DEBUG
         return data, matches_sheet, competitions_sheet, competitions_data, initial_bankroll
+        
     except Exception as e:
-        st.error(f"❌ Connection Error: {e}")
+        st.error(f"❌ **Full error:** {type(e).__name__}: {e}")
+        import traceback
+        st.code(traceback.format_exc())
         return [], None, None, [], 5000.0
 
 def update_bankroll(sheet, val):
