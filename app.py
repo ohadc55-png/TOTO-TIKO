@@ -86,20 +86,42 @@ st.markdown(f"""
         color: #4a5568 !important;
     }}
     
-    /* Form elements inside the main area - dark text */
-    [data-testid="stForm"] label,
-    [data-testid="stForm"] span,
-    [data-testid="stForm"] p {{
-        color: #2d3748 !important;
+    /* Form elements - Labels should be WHITE (they're on dark background, outside the card) */
+    [data-testid="stForm"] label {{
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
     
     [data-testid="stForm"] input {{
         color: #2d3748 !important;
     }}
     
-    /* Radio buttons in form */
+    /* Radio buttons in form - WHITE text */
     [data-testid="stForm"] [data-testid="stMarkdownContainer"] {{
-        color: #2d3748 !important;
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
+    }}
+    
+    [data-testid="stForm"] [data-baseweb="radio"] {{
+        color: white !important;
+    }}
+    
+    [data-testid="stForm"] [data-baseweb="radio"] div {{
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
+    }}
+    
+    /* Radio button labels specifically */
+    [data-testid="stForm"] .stRadio label {{
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
+    }}
+    
+    [data-testid="stForm"] .stRadio p {{
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
     
     /* Form Card Styling - Soft and Inviting */
