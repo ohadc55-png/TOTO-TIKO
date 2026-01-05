@@ -482,7 +482,7 @@ def process_data(raw):
             comp: {"total_staked": 0, "total_income": 0, "net_profit": 0}
             for comp in COMPETITION_STYLES.keys()
         }
-        return pd.DataFrame(), {comp: DEFAULT_STAKE for comp in COMPETITION_STYLES.keys()}, empty_stats
+        return pd.DataFrame(), {comp: DEFAULT_STAKE for comp in COMPETITION_STYLES.keys()}, empty_stats, 0.0
     
     processed = []
     
@@ -566,8 +566,10 @@ def process_data(raw):
         
         if is_win:
             # WIN - Calculate profit based on Martingale
+            # Income = stake × odds
+            # Net profit = income - all stakes in this cycle (including this bet)
             income = stake * odds
-            net_profit = income - cycle_investment[comp]  # Profit after covering all losses
+            net_profit = income - cycle_investment[comp]
             
             comp_stats[comp]["total_income"] += income
             comp_stats[comp]["net_profit"] += net_profit
@@ -577,13 +579,12 @@ def process_data(raw):
             next_bets[comp] = DEFAULT_STAKE
             status = "Won"
         else:
-            # LOSS - No Draw, 1, 2, X1, X2, etc.
+            # LOSS - No Draw
+            # In Martingale, losses are NOT counted as negative profit
+            # because they will be covered by the next win
+            # The cycle_investment already tracks the total spent
             income = 0.0
-            net_profit = -stake
-            
-            # For losses, we don't add to net_profit in comp_stats 
-            # because the loss is accounted for in the next win
-            # But we do track it for display purposes
+            net_profit = 0  # Don't count loss here - it's accounted for in cycle_investment
             
             # Double the stake for next bet (Martingale)
             next_bets[comp] = stake * 2.0
@@ -602,13 +603,19 @@ def process_data(raw):
             "Expense": stake
         })
     
-    return pd.DataFrame(processed), next_bets, comp_stats
+    # Calculate pending losses - money still invested in open cycles that hasn't been recovered yet
+    # This is important for accurate bankroll display
+    pending_losses = sum(cycle_investment.values())
+    
+    return pd.DataFrame(processed), next_bets, comp_stats, pending_losses
 
 
 # --- 5. LOAD DATA ---
 raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
-df, next_stakes, competition_stats = process_data(raw_data)
-current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0)
+df, next_stakes, competition_stats, pending_losses = process_data(raw_data)
+
+# Current balance = Initial bankroll + Net profits from wins - Money still invested in open cycles
+current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0) - pending_losses
 
 
 # --- 6. SIDEBAR ---
