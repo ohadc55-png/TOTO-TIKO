@@ -217,7 +217,7 @@ st.markdown(f"""
     /* Competition Banner */
     .comp-banner-box {{
         border-radius: 20px;
-        padding: 25px 35px;
+        padding: 30px 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -228,16 +228,82 @@ st.markdown(f"""
     }}
     
     .comp-banner-box img {{
-        height: 60px;
-        margin-right: 20px;
-        filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        height: 100px;
+        margin-right: 30px;
+        filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.5));
     }}
     
     .comp-banner-box h1 {{
         margin: 0;
         font-weight: 900;
-        font-size: 2rem;
+        font-size: 2.2rem;
         letter-spacing: 2px;
+    }}
+    
+    /* Banner text - hidden on mobile */
+    .comp-banner-text {{
+        margin: 0;
+        font-weight: 900;
+        font-size: 2.2rem;
+        letter-spacing: 2px;
+    }}
+    
+    /* Mobile Responsive - Competition Banner */
+    @media (max-width: 768px) {{
+        .comp-banner-box {{
+            padding: 20px;
+        }}
+        
+        .comp-banner-box img {{
+            height: 80px;
+            margin-right: 0;
+        }}
+        
+        .comp-banner-box h1,
+        .comp-banner-box .comp-banner-text {{
+            display: none !important;
+        }}
+        
+        .overview-comp-header h3 {{
+            font-size: 1.1rem;
+        }}
+        
+        .overview-comp-header img {{
+            height: 50px;
+            margin-right: 12px;
+        }}
+        
+        .overview-comp-profit {{
+            font-size: 1.4rem;
+        }}
+        
+        .overview-stats-row {{
+            flex-wrap: wrap;
+        }}
+        
+        .overview-stat-item {{
+            flex: 1 1 33%;
+            padding: 8px 5px;
+        }}
+        
+        .stat-box {{
+            min-width: 100px;
+            padding: 15px 10px;
+        }}
+        
+        .stat-box .stat-value {{
+            font-size: 1.2rem;
+        }}
+        
+        .match-card {{
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }}
+        
+        .match-card .match-profit {{
+            align-self: flex-end;
+        }}
     }}
     
     /* Stats Boxes */
@@ -294,46 +360,79 @@ st.markdown(f"""
         text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }}
     
-    /* Overview Competition Cards */
+    /* Overview Competition Cards - Banner Style */
     .overview-comp-card {{
-        background: rgba(255,255,255,0.95);
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 20px;
+        padding: 25px 30px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        border: 3px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
     }}
     
     .overview-comp-header {{
         display: flex;
         align-items: center;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #eee;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid rgba(255,255,255,0.2);
     }}
     
     .overview-comp-header img {{
-        height: 45px;
-        margin-right: 15px;
+        height: 85px;
+        margin-right: 25px;
+        filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.5));
     }}
     
     .overview-comp-header h3 {{
         margin: 0;
-        color: #333 !important;
-        font-weight: 700;
+        font-weight: 800;
+        font-size: 1.6rem;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }}
     
     .overview-comp-profit {{
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: 700;
         text-align: right;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }}
     
     .overview-profit-positive {{
-        color: #28a745 !important;
+        color: #90EE90 !important;
     }}
     
     .overview-profit-negative {{
-        color: #dc3545 !important;
+        color: #FFB6C1 !important;
+    }}
+    
+    .overview-stats-row {{
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }}
+    
+    .overview-stat-item {{
+        padding: 10px 20px;
+    }}
+    
+    .overview-stat-label {{
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.8) !important;
+        margin-bottom: 5px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }}
+    
+    .overview-stat-value {{
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }}
+    
+    .overview-stat-value-green {{
+        color: #90EE90 !important;
     }}
     
     /* Next Bet Display */
@@ -747,25 +846,25 @@ if track == "📊 Overview":
             profit_sign = "+" if comp_profit >= 0 else ""
             
             st.markdown(f"""
-                <div class="overview-comp-card">
+                <div class="overview-comp-card" style="background: {style['gradient']};">
                     <div class="overview-comp-header">
                         <img src="{style['logo']}" alt="{comp_name}">
-                        <h3>{comp_name}</h3>
+                        <h3 style="color: white;">{comp_name}</h3>
                         <div style="flex: 1;"></div>
                         <span class="overview-comp-profit {profit_class}">{profit_sign}₪{comp_profit:,.0f}</span>
                     </div>
-                    <div style="display: flex; justify-content: space-around; text-align: center; color: #666;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #888;">Total Staked</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #333;">₪{stats['total_staked']:,.0f}</div>
+                    <div class="overview-stats-row">
+                        <div class="overview-stat-item">
+                            <div class="overview-stat-label">Total Staked</div>
+                            <div class="overview-stat-value">₪{stats['total_staked']:,.0f}</div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #888;">Total Won</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #28a745;">₪{stats['total_income']:,.0f}</div>
+                        <div class="overview-stat-item">
+                            <div class="overview-stat-label">Total Won</div>
+                            <div class="overview-stat-value overview-stat-value-green">₪{stats['total_income']:,.0f}</div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #888;">Matches</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #333;">{len(comp_df)}</div>
+                        <div class="overview-stat-item">
+                            <div class="overview-stat-label">Matches</div>
+                            <div class="overview-stat-value">{len(comp_df)}</div>
                         </div>
                     </div>
                 </div>
@@ -786,7 +885,7 @@ else:
     st.markdown(f"""
         <div class="comp-banner-box" style="background: {style['gradient']};">
             <img src="{style['logo']}" alt="{comp_name}">
-            <h1 style="color: {style['text_color']};">{comp_name.upper()}</h1>
+            <h1 class="comp-banner-text" style="color: {style['text_color']};">{comp_name.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
     
