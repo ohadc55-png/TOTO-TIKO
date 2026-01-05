@@ -523,6 +523,108 @@ st.markdown(f"""
         border: 1px solid rgba(255,255,255,0.2);
         text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }}
+    
+    /* Football Loading Animation */
+    .loading-container {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        gap: 20px;
+    }}
+    
+    .football-loader {{
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+        border-radius: 50%;
+        position: relative;
+        animation: roll 1s linear infinite;
+        box-shadow: 
+            inset -5px -5px 15px rgba(0,0,0,0.2),
+            inset 5px 5px 15px rgba(255,255,255,0.3),
+            0 10px 30px rgba(0,0,0,0.4);
+    }}
+    
+    .football-loader::before {{
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 25px;
+        height: 25px;
+        background: #1a1a1a;
+        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    }}
+    
+    .football-loader::after {{
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: #1a1a1a;
+        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    }}
+    
+    @keyframes roll {{
+        0% {{
+            transform: rotate(0deg) translateX(0);
+        }}
+        25% {{
+            transform: rotate(90deg) translateX(10px);
+        }}
+        50% {{
+            transform: rotate(180deg) translateX(0);
+        }}
+        75% {{
+            transform: rotate(270deg) translateX(-10px);
+        }}
+        100% {{
+            transform: rotate(360deg) translateX(0);
+        }}
+    }}
+    
+    .loading-text {{
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 500;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        animation: pulse 1.5s ease-in-out infinite;
+    }}
+    
+    @keyframes pulse {{
+        0%, 100% {{ opacity: 0.6; }}
+        50% {{ opacity: 1; }}
+    }}
+    
+    /* Overview cards - hide text on mobile */
+    .overview-comp-name {{
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.6rem;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        color: white !important;
+    }}
+    
+    @media (max-width: 768px) {{
+        .overview-comp-name {{
+            display: none !important;
+        }}
+        
+        .overview-comp-header {{
+            justify-content: space-between;
+        }}
+        
+        .overview-comp-header img {{
+            margin-right: 0;
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -770,6 +872,16 @@ def process_data(raw):
     return pd.DataFrame(processed), next_bets, comp_stats, pending_losses
 
 
+def show_loading():
+    """Display football loading animation"""
+    st.markdown("""
+        <div class="loading-container">
+            <div class="football-loader"></div>
+            <div class="loading-text">Loading data...</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 # --- 5. LOAD DATA ---
 raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
 df, next_stakes, competition_stats, pending_losses = process_data(raw_data)
@@ -871,7 +983,7 @@ if track == "📊 Overview":
                 <div class="overview-comp-card" style="background: {style['gradient']};">
                     <div class="overview-comp-header">
                         <img src="{style['logo']}" alt="{comp_name}">
-                        <h3 style="color: white;">{comp_name}</h3>
+                        <h3 class="overview-comp-name">{comp_name}</h3>
                         <div style="flex: 1;"></div>
                         <span class="overview-comp-profit {profit_class}">{profit_sign}₪{comp_profit:,.0f}</span>
                     </div>
@@ -892,11 +1004,7 @@ if track == "📊 Overview":
                 </div>
             """, unsafe_allow_html=True)
     else:
-        st.markdown("""
-            <div class="info-message">
-                📭 No betting data available yet. Add your first match to get started!
-            </div>
-        """, unsafe_allow_html=True)
+        show_loading()  # Show football loading when no data
 
 # --- COMPETITION PAGES ---
 else:
@@ -986,20 +1094,21 @@ else:
         
         if submitted:
             if home_team and away_team:
-                ws = get_worksheet_for_update()
-                if ws:
-                    new_row = [
-                        str(datetime.date.today()),
-                        comp_name,
-                        home_team,
-                        away_team,
-                        odds,
-                        result,
-                        stake,
-                        0
-                    ]
-                    ws.append_row(new_row)
-                    connect_to_sheets.clear()
+                with st.spinner('⚽ Adding match...'):
+                    ws = get_worksheet_for_update()
+                    if ws:
+                        new_row = [
+                            str(datetime.date.today()),
+                            comp_name,
+                            home_team,
+                            away_team,
+                            odds,
+                            result,
+                            stake,
+                            0
+                        ]
+                        ws.append_row(new_row)
+                        connect_to_sheets.clear()
                     st.success(f"✅ Added: {home_team} vs {away_team}")
                     st.rerun()
             else:
@@ -1044,18 +1153,20 @@ else:
                 col1, col2, col3 = st.columns([1, 1, 2])
                 with col1:
                     if st.button("✅ WIN", key=f"win_{row['Row']}", use_container_width=True):
-                        ws = get_worksheet_for_update()
-                        if ws:
-                            ws.update_cell(row['Row'], RESULT_COL, "Draw (X)")
-                            connect_to_sheets.clear()
-                            st.rerun()
+                        with st.spinner('⚽'):
+                            ws = get_worksheet_for_update()
+                            if ws:
+                                ws.update_cell(row['Row'], RESULT_COL, "Draw (X)")
+                                connect_to_sheets.clear()
+                                st.rerun()
                 with col2:
                     if st.button("❌ LOSS", key=f"loss_{row['Row']}", use_container_width=True):
-                        ws = get_worksheet_for_update()
-                        if ws:
-                            ws.update_cell(row['Row'], RESULT_COL, "No Draw")
-                            connect_to_sheets.clear()
-                            st.rerun()
+                        with st.spinner('⚽'):
+                            ws = get_worksheet_for_update()
+                            if ws:
+                                ws.update_cell(row['Row'], RESULT_COL, "No Draw")
+                                connect_to_sheets.clear()
+                                st.rerun()
     else:
         st.markdown("""
             <div class="info-message">
