@@ -602,6 +602,105 @@ st.markdown(f"""
         50% {{ opacity: 1; }}
     }}
     
+    /* Override Streamlit's default spinner with football */
+    [data-testid="stSpinner"] {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+    
+    [data-testid="stSpinner"] > div {{
+        display: none !important;
+    }}
+    
+    [data-testid="stSpinner"]::after {{
+        content: '';
+        width: 50px;
+        height: 50px;
+        background: 
+            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 50%),
+            linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+        border-radius: 50%;
+        animation: football-spin 0.8s linear infinite;
+        box-shadow: 
+            inset -3px -3px 10px rgba(0,0,0,0.15),
+            inset 3px 3px 10px rgba(255,255,255,0.5),
+            0 5px 20px rgba(0,0,0,0.3);
+        position: relative;
+    }}
+    
+    @keyframes football-spin {{
+        0% {{
+            transform: rotate(0deg) translateY(0px);
+        }}
+        25% {{
+            transform: rotate(90deg) translateY(-5px);
+        }}
+        50% {{
+            transform: rotate(180deg) translateY(0px);
+        }}
+        75% {{
+            transform: rotate(270deg) translateY(-5px);
+        }}
+        100% {{
+            transform: rotate(360deg) translateY(0px);
+        }}
+    }}
+    
+    /* Full page loading overlay */
+    .page-loader {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        gap: 25px;
+    }}
+    
+    .page-loader .football {{
+        width: 100px;
+        height: 100px;
+        background: 
+            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, transparent 40%),
+            conic-gradient(from 0deg, #fff 0deg, #fff 60deg, #1a1a1a 60deg, #1a1a1a 120deg, #fff 120deg, #fff 180deg, #1a1a1a 180deg, #1a1a1a 240deg, #fff 240deg, #fff 300deg, #1a1a1a 300deg, #1a1a1a 360deg);
+        border-radius: 50%;
+        animation: bounce-roll 1.2s ease-in-out infinite;
+        box-shadow: 
+            inset -8px -8px 20px rgba(0,0,0,0.2),
+            inset 8px 8px 20px rgba(255,255,255,0.3),
+            0 15px 40px rgba(0,0,0,0.5);
+    }}
+    
+    @keyframes bounce-roll {{
+        0%, 100% {{
+            transform: translateY(0) rotate(0deg);
+        }}
+        25% {{
+            transform: translateY(-30px) rotate(90deg);
+        }}
+        50% {{
+            transform: translateY(0) rotate(180deg);
+        }}
+        75% {{
+            transform: translateY(-15px) rotate(270deg);
+        }}
+    }}
+    
+    .page-loader .loader-text {{
+        color: white;
+        font-size: 1.4rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+        animation: pulse 1.5s ease-in-out infinite;
+    }}
+    
     /* Overview cards - hide text on mobile */
     .overview-comp-name {{
         margin: 0;
@@ -627,6 +726,49 @@ st.markdown(f"""
     }}
     </style>
 """, unsafe_allow_html=True)
+
+# Add page loader JavaScript
+st.markdown("""
+    <script>
+        // Show loader on page navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create loader element
+            const loader = document.createElement('div');
+            loader.id = 'page-loader';
+            loader.className = 'page-loader';
+            loader.innerHTML = '<div class="football"></div><div class="loader-text">Loading...</div>';
+            
+            // Add to body initially hidden
+            loader.style.display = 'none';
+            document.body.appendChild(loader);
+            
+            // Show loader on Streamlit rerun
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.target.classList && mutation.target.classList.contains('stApp')) {
+                        // Page is updating
+                    }
+                });
+            });
+        });
+    </script>
+""", unsafe_allow_html=True)
+
+# Show loading placeholder while data loads
+def show_page_loader():
+    """Display full-page football loading animation"""
+    st.markdown("""
+        <div class="page-loader" id="initial-loader">
+            <div class="football"></div>
+            <div class="loader-text">Loading...</div>
+        </div>
+        <script>
+            setTimeout(function() {
+                var loader = document.getElementById('initial-loader');
+                if (loader) loader.style.display = 'none';
+            }, 500);
+        </script>
+    """, unsafe_allow_html=True)
 
 # --- 3. GOOGLE SHEETS CONNECTION ---
 @st.cache_data(ttl=15)
@@ -872,19 +1014,30 @@ def process_data(raw):
     return pd.DataFrame(processed), next_bets, comp_stats, pending_losses
 
 
-def show_loading():
+def show_loading(message="Loading data..."):
     """Display football loading animation"""
-    st.markdown("""
+    st.markdown(f"""
         <div class="loading-container">
             <div class="football-loader"></div>
-            <div class="loading-text">Loading data...</div>
+            <div class="loading-text">{message}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def show_inline_loader():
+    """Display inline football loader for smaller operations"""
+    st.markdown("""
+        <div style="display: flex; justify-content: center; padding: 20px;">
+            <div class="football-loader" style="width: 50px; height: 50px;"></div>
         </div>
     """, unsafe_allow_html=True)
 
 
 # --- 5. LOAD DATA ---
-raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
-df, next_stakes, competition_stats, pending_losses = process_data(raw_data)
+# Use spinner while loading data
+with st.spinner(''):
+    raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
+    df, next_stakes, competition_stats, pending_losses = process_data(raw_data)
 
 # Current balance = Initial bankroll + Net profits from wins - Money still invested in open cycles
 current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0) - pending_losses
