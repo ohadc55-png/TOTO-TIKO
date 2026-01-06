@@ -593,6 +593,34 @@ st.markdown(f"""
         }}
     }}
     
+    /* Expander styling for dark background */
+    [data-testid="stExpander"] {{
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        margin-bottom: 10px !important;
+    }}
+    
+    [data-testid="stExpander"] summary {{
+        color: white !important;
+        font-weight: 600 !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+    }}
+    
+    [data-testid="stExpander"] summary:hover {{
+        color: #4CABFF !important;
+    }}
+    
+    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
+        color: white !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+    }}
+    
+    [data-testid="stExpander"] label {{
+        color: white !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+    }}
+    
     /* Archive card styling */
     .archive-card {{
         background: linear-gradient(135deg, rgba(108, 117, 125, 0.6) 0%, rgba(73, 80, 87, 0.4) 100%);
@@ -958,7 +986,7 @@ with st.sidebar:
     nav_options.append("➕ New Competition")
     if archived_competitions:
         nav_options.append("📁 Archive")
-    nav_options.append("⚙️ Settings")
+    nav_options.append("⚙️ Manage Competitions")
     
     track = st.selectbox("Select View", nav_options, label_visibility="collapsed")
     
@@ -1155,21 +1183,26 @@ elif track == "📁 Archive":
             </div>
         """, unsafe_allow_html=True)
 
-# --- SETTINGS PAGE ---
-elif track == "⚙️ Settings":
+# --- MANAGE COMPETITIONS PAGE ---
+elif track == "⚙️ Manage Competitions":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">⚙️ SETTINGS</h1>
+            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">⚙️ MANAGE COMPETITIONS</h1>
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown('<p class="section-title">🏆 Manage Competitions</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">🏆 Active Competitions</p>', unsafe_allow_html=True)
     
     for comp_name, comp_info in active_competitions.items():
         with st.expander(f"⚽ {comp_name}", expanded=False):
-            st.markdown(f"**Description:** {comp_info['description'] or 'N/A'}")
-            st.markdown(f"**Default Stake:** ₪{comp_info['default_stake']}")
-            st.markdown(f"**Created:** {comp_info['created_date']}")
+            # Use white text for visibility
+            st.markdown(f"""
+                <div style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                    <p><strong>📝 Description:</strong> {comp_info['description'] or 'N/A'}</p>
+                    <p><strong>💵 Default Stake:</strong> ₪{comp_info['default_stake']}</p>
+                    <p><strong>📅 Created:</strong> {comp_info['created_date']}</p>
+                </div>
+            """, unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             
