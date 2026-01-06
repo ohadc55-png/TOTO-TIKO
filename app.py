@@ -3,15 +3,10 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import datetime
-import plotly.express as px
 
 # --- 1. CONFIGURATION ---
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 BG_IMAGE_URL = "https://i.postimg.cc/GmFZ4KS7/Gemini-Generated-Image-k1h11zk1h11zk1h1.png"
-
-# Competition Logos
-BRIGHTON_LOGO = "https://i.postimg.cc/x8kdQh5H/Brighton_Hove_Albion_logo.png"
-AFCON_LOGO = "https://i.postimg.cc/5yHtJTgz/2025_Africa_Cup_of_Nations_logo.png"
 
 # Constants
 DEFAULT_STAKE = 30.0
@@ -20,19 +15,9 @@ BANKROLL_CELL_ROW = 1
 BANKROLL_CELL_COL = 10
 RESULT_COL = 6
 
-# Competition styling
-COMPETITION_STYLES = {
-    "Brighton": {
-        "gradient": "linear-gradient(135deg, #0057B8 0%, #4CABFF 50%, #E6F7FF 100%)",
-        "text_color": "#004085",
-        "logo": BRIGHTON_LOGO
-    },
-    "Africa Cup of Nations": {
-        "gradient": "linear-gradient(135deg, #009639 0%, #FFCD00 50%, #EF3340 100%)",
-        "text_color": "#1a1a1a",
-        "logo": AFCON_LOGO
-    }
-}
+# Sheet names
+MATCHES_SHEET = 0  # First sheet (index 0)
+COMPETITIONS_SHEET = "Competitions"
 
 st.set_page_config(page_title="Elite Football Tracker", layout="wide", page_icon=APP_LOGO_URL)
 
@@ -86,7 +71,7 @@ st.markdown(f"""
         color: #4a5568 !important;
     }}
     
-    /* Form elements - Labels should be WHITE (they're on dark background, outside the card) */
+    /* Form elements - Labels should be WHITE (they're on dark background) */
     [data-testid="stForm"] label {{
         color: white !important;
         font-weight: 600 !important;
@@ -113,7 +98,6 @@ st.markdown(f"""
         text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
     
-    /* Radio button labels specifically */
     [data-testid="stForm"] .stRadio label {{
         color: white !important;
         text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
@@ -142,30 +126,6 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         gap: 10px;
-    }}
-    
-    /* Style form inputs */
-    .form-card .stTextInput > div > div > input,
-    .form-card .stNumberInput > div > div > input {{
-        background: white !important;
-        border: 2px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        padding: 12px 16px !important;
-        color: #2d3748 !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .form-card .stTextInput > div > div > input:focus,
-    .form-card .stNumberInput > div > div > input:focus {{
-        border-color: #4CABFF !important;
-        box-shadow: 0 0 0 3px rgba(76, 171, 255, 0.2) !important;
-    }}
-    
-    .form-card label {{
-        color: #4a5568 !important;
-        font-weight: 500 !important;
-        font-size: 0.9rem !important;
     }}
     
     /* Match Activity Cards */
@@ -361,11 +321,6 @@ st.markdown(f"""
         border: 2px solid rgba(155, 89, 182, 0.5);
     }}
     
-    .stat-box-loss {{
-        background: linear-gradient(135deg, rgba(231, 76, 60, 0.8) 0%, rgba(192, 57, 43, 0.6) 100%);
-        border: 2px solid rgba(231, 76, 60, 0.5);
-    }}
-    
     .stat-box .stat-label {{
         font-size: 0.85rem;
         color: rgba(255,255,255,0.9) !important;
@@ -559,34 +514,12 @@ st.markdown(f"""
         clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
     }}
     
-    .football-loader::after {{
-        content: '';
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 12px;
-        height: 12px;
-        background: #1a1a1a;
-        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-    }}
-    
     @keyframes roll {{
-        0% {{
-            transform: rotate(0deg) translateX(0);
-        }}
-        25% {{
-            transform: rotate(90deg) translateX(10px);
-        }}
-        50% {{
-            transform: rotate(180deg) translateX(0);
-        }}
-        75% {{
-            transform: rotate(270deg) translateX(-10px);
-        }}
-        100% {{
-            transform: rotate(360deg) translateX(0);
-        }}
+        0% {{ transform: rotate(0deg) translateX(0); }}
+        25% {{ transform: rotate(90deg) translateX(10px); }}
+        50% {{ transform: rotate(180deg) translateX(0); }}
+        75% {{ transform: rotate(270deg) translateX(-10px); }}
+        100% {{ transform: rotate(360deg) translateX(0); }}
     }}
     
     .loading-text {{
@@ -626,79 +559,14 @@ st.markdown(f"""
             inset -3px -3px 10px rgba(0,0,0,0.15),
             inset 3px 3px 10px rgba(255,255,255,0.5),
             0 5px 20px rgba(0,0,0,0.3);
-        position: relative;
     }}
     
     @keyframes football-spin {{
-        0% {{
-            transform: rotate(0deg) translateY(0px);
-        }}
-        25% {{
-            transform: rotate(90deg) translateY(-5px);
-        }}
-        50% {{
-            transform: rotate(180deg) translateY(0px);
-        }}
-        75% {{
-            transform: rotate(270deg) translateY(-5px);
-        }}
-        100% {{
-            transform: rotate(360deg) translateY(0px);
-        }}
-    }}
-    
-    /* Full page loading overlay */
-    .page-loader {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.85);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        gap: 25px;
-    }}
-    
-    .page-loader .football {{
-        width: 100px;
-        height: 100px;
-        background: 
-            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, transparent 40%),
-            conic-gradient(from 0deg, #fff 0deg, #fff 60deg, #1a1a1a 60deg, #1a1a1a 120deg, #fff 120deg, #fff 180deg, #1a1a1a 180deg, #1a1a1a 240deg, #fff 240deg, #fff 300deg, #1a1a1a 300deg, #1a1a1a 360deg);
-        border-radius: 50%;
-        animation: bounce-roll 1.2s ease-in-out infinite;
-        box-shadow: 
-            inset -8px -8px 20px rgba(0,0,0,0.2),
-            inset 8px 8px 20px rgba(255,255,255,0.3),
-            0 15px 40px rgba(0,0,0,0.5);
-    }}
-    
-    @keyframes bounce-roll {{
-        0%, 100% {{
-            transform: translateY(0) rotate(0deg);
-        }}
-        25% {{
-            transform: translateY(-30px) rotate(90deg);
-        }}
-        50% {{
-            transform: translateY(0) rotate(180deg);
-        }}
-        75% {{
-            transform: translateY(-15px) rotate(270deg);
-        }}
-    }}
-    
-    .page-loader .loader-text {{
-        color: white;
-        font-size: 1.4rem;
-        font-weight: 600;
-        letter-spacing: 2px;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-        animation: pulse 1.5s ease-in-out infinite;
+        0% {{ transform: rotate(0deg) translateY(0px); }}
+        25% {{ transform: rotate(90deg) translateY(-5px); }}
+        50% {{ transform: rotate(180deg) translateY(0px); }}
+        75% {{ transform: rotate(270deg) translateY(-5px); }}
+        100% {{ transform: rotate(360deg) translateY(0px); }}
     }}
     
     /* Overview cards - hide text on mobile */
@@ -724,132 +592,123 @@ st.markdown(f"""
             margin-right: 0;
         }}
     }}
+    
+    /* Archive card styling */
+    .archive-card {{
+        background: linear-gradient(135deg, rgba(108, 117, 125, 0.6) 0%, rgba(73, 80, 87, 0.4) 100%);
+        border: 2px solid rgba(108, 117, 125, 0.5);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }}
+    
+    .archive-card h4 {{
+        color: white !important;
+        margin: 0 0 10px 0;
+    }}
+    
+    .archive-card p {{
+        color: rgba(255,255,255,0.8) !important;
+        margin: 5px 0;
+    }}
+    
+    /* Settings card */
+    .settings-card {{
+        background: rgba(255,255,255,0.95);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }}
+    
+    .settings-card h3 {{
+        color: #333 !important;
+        margin-bottom: 20px;
+    }}
+    
+    .settings-card label {{
+        color: #555 !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# Add page loader JavaScript
-st.markdown("""
-    <script>
-        // Show loader on page navigation
-        document.addEventListener('DOMContentLoaded', function() {
-            // Create loader element
-            const loader = document.createElement('div');
-            loader.id = 'page-loader';
-            loader.className = 'page-loader';
-            loader.innerHTML = '<div class="football"></div><div class="loader-text">Loading...</div>';
-            
-            // Add to body initially hidden
-            loader.style.display = 'none';
-            document.body.appendChild(loader);
-            
-            // Show loader on Streamlit rerun
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.target.classList && mutation.target.classList.contains('stApp')) {
-                        // Page is updating
-                    }
-                });
-            });
-        });
-    </script>
-""", unsafe_allow_html=True)
-
-# Show loading placeholder while data loads
-def show_page_loader():
-    """Display full-page football loading animation"""
-    st.markdown("""
-        <div class="page-loader" id="initial-loader">
-            <div class="football"></div>
-            <div class="loader-text">Loading...</div>
-        </div>
-        <script>
-            setTimeout(function() {
-                var loader = document.getElementById('initial-loader');
-                if (loader) loader.style.display = 'none';
-            }, 500);
-        </script>
-    """, unsafe_allow_html=True)
 
 # --- 3. GOOGLE SHEETS CONNECTION ---
 @st.cache_data(ttl=15)
 def connect_to_sheets():
-    """
-    Connect to Google Sheets and retrieve data.
-    Returns: (raw_data, worksheet, bankroll, error_message)
-    """
-    # Check for required secrets
+    """Connect to Google Sheets and retrieve all data."""
     if "service_account" not in st.secrets:
-        return None, None, DEFAULT_BANKROLL, "Missing [service_account] in Secrets"
+        return None, None, None, DEFAULT_BANKROLL, [], "Missing [service_account] in Secrets"
     if "sheet_id" not in st.secrets:
-        return None, None, DEFAULT_BANKROLL, "Missing 'sheet_id' in Secrets"
+        return None, None, None, DEFAULT_BANKROLL, [], "Missing 'sheet_id' in Secrets"
     
     try:
-        # Define required scopes
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
-        
-        # Create credentials with scopes
         creds = Credentials.from_service_account_info(
             st.secrets["service_account"],
             scopes=scopes
         )
-        
-        # Authorize gspread client
         gc = gspread.authorize(creds)
-        
     except Exception as e:
-        return None, None, DEFAULT_BANKROLL, f"Authentication Error: {str(e)}"
+        return None, None, None, DEFAULT_BANKROLL, [], f"Authentication Error: {str(e)}"
     
-    # Try to open the spreadsheet
     try:
         sh = gc.open_by_key(st.secrets["sheet_id"])
-    except gspread.exceptions.APIError as e:
-        bot_email = st.secrets["service_account"].get("client_email", "Unknown")
-        return None, None, DEFAULT_BANKROLL, f"API Error. Share the sheet with: '{bot_email}'. Error: {e}"
-    except gspread.exceptions.SpreadsheetNotFound:
-        return None, None, DEFAULT_BANKROLL, "Spreadsheet not found. Check the sheet_id in Secrets."
     except Exception as e:
         bot_email = st.secrets["service_account"].get("client_email", "Unknown")
-        return None, None, DEFAULT_BANKROLL, f"Access Denied. Share the sheet with: '{bot_email}'. Error: {e}"
+        return None, None, None, DEFAULT_BANKROLL, [], f"Access Denied. Share with: '{bot_email}'. Error: {e}"
     
-    # Get the first worksheet
+    # Get Matches worksheet (first sheet)
     try:
-        worksheet = sh.get_worksheet(0)
+        matches_ws = sh.get_worksheet(MATCHES_SHEET)
     except Exception as e:
-        return None, None, DEFAULT_BANKROLL, f"Error accessing worksheet: {str(e)}"
+        return None, None, None, DEFAULT_BANKROLL, [], f"Error accessing matches sheet: {str(e)}"
     
-    # Read data from worksheet
+    # Get Competitions worksheet
     try:
-        raw_values = worksheet.get_all_values()
+        comp_ws = sh.worksheet(COMPETITIONS_SHEET)
+    except Exception as e:
+        return None, None, None, DEFAULT_BANKROLL, [], f"Error accessing Competitions sheet. Make sure it exists! Error: {str(e)}"
+    
+    # Read matches data
+    try:
+        raw_values = matches_ws.get_all_values()
         if len(raw_values) > 1:
             headers = [h.strip() for h in raw_values[0]]
-            data = [dict(zip(headers, row)) for row in raw_values[1:] if any(cell.strip() for cell in row)]
+            matches_data = [dict(zip(headers, row)) for row in raw_values[1:] if any(cell.strip() for cell in row)]
         else:
-            data = []
+            matches_data = []
     except Exception as e:
-        data = []
-        st.warning(f"Could not read data: {str(e)}")
+        matches_data = []
     
-    # Read bankroll value
+    # Read competitions data
     try:
-        val = worksheet.cell(BANKROLL_CELL_ROW, BANKROLL_CELL_COL).value
-        bankroll = float(str(val).replace(',', '').replace('₪', '').strip()) if val else DEFAULT_BANKROLL
+        comp_values = comp_ws.get_all_values()
+        if len(comp_values) > 1:
+            comp_headers = [h.strip() for h in comp_values[0]]
+            competitions_data = [dict(zip(comp_headers, row)) for row in comp_values[1:] if any(cell.strip() for cell in row)]
+        else:
+            competitions_data = []
     except Exception as e:
-        bankroll = DEFAULT_BANKROLL
-        st.warning(f"Could not read bankroll, using default: {str(e)}")
+        competitions_data = []
     
-    return data, worksheet, bankroll, None
+    # Read bankroll
+    try:
+        val = matches_ws.cell(BANKROLL_CELL_ROW, BANKROLL_CELL_COL).value
+        bankroll = float(str(val).replace(',', '').replace('₪', '').strip()) if val else DEFAULT_BANKROLL
+    except:
+        bankroll = DEFAULT_BANKROLL
+    
+    return matches_data, matches_ws, comp_ws, bankroll, competitions_data, None
 
 
-def get_worksheet_for_update():
-    """
-    Get a fresh worksheet connection for updates (bypasses cache).
-    """
+def get_spreadsheet():
+    """Get fresh spreadsheet connection for updates."""
     if "service_account" not in st.secrets or "sheet_id" not in st.secrets:
         return None
-    
     try:
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
@@ -860,83 +719,115 @@ def get_worksheet_for_update():
             scopes=scopes
         )
         gc = gspread.authorize(creds)
-        sh = gc.open_by_key(st.secrets["sheet_id"])
-        return sh.get_worksheet(0)
+        return gc.open_by_key(st.secrets["sheet_id"])
     except Exception as e:
         st.error(f"Connection error: {str(e)}")
         return None
 
 
+def get_matches_worksheet():
+    """Get matches worksheet for updates."""
+    sh = get_spreadsheet()
+    if sh:
+        return sh.get_worksheet(MATCHES_SHEET)
+    return None
+
+
+def get_competitions_worksheet():
+    """Get competitions worksheet for updates."""
+    sh = get_spreadsheet()
+    if sh:
+        try:
+            return sh.worksheet(COMPETITIONS_SHEET)
+        except:
+            return None
+    return None
+
+
 # --- 4. DATA PROCESSING ---
-def process_data(raw):
-    """
-    Process raw data from Google Sheets and calculate betting cycles.
-    READS THE ACTUAL RESULT FROM SHEETS - does not override!
-    
-    The Martingale system works as follows:
-    - Start with DEFAULT_STAKE
-    - On loss: double the stake for next bet
-    - On win: collect winnings and reset stake to DEFAULT_STAKE
-    - Profit on win = (stake * odds) - total_invested_in_cycle
-    
-    Returns: (DataFrame, next_stakes_dict, competition_stats_dict)
-    """
-    if not raw:
-        empty_stats = {
-            comp: {"total_staked": 0, "total_income": 0, "net_profit": 0}
-            for comp in COMPETITION_STYLES.keys()
+def build_competitions_dict(competitions_data):
+    """Build a dictionary of competitions with their settings."""
+    comps = {}
+    for comp in competitions_data:
+        name = comp.get('Name', '').strip()
+        if not name:
+            continue
+        
+        # Parse colors
+        color1 = comp.get('Color1', '#4CABFF').strip() or '#4CABFF'
+        color2 = comp.get('Color2', '#E6F7FF').strip() or '#E6F7FF'
+        text_color = comp.get('Text_Color', '#004085').strip() or '#004085'
+        
+        # Build gradient
+        gradient = f"linear-gradient(135deg, {color1} 0%, {color2} 100%)"
+        
+        # Parse default stake
+        try:
+            default_stake = float(str(comp.get('Default_Stake', DEFAULT_STAKE)).replace(',', '.'))
+        except:
+            default_stake = DEFAULT_STAKE
+        
+        comps[name] = {
+            'name': name,
+            'description': comp.get('Description', ''),
+            'default_stake': default_stake,
+            'color1': color1,
+            'color2': color2,
+            'text_color': text_color,
+            'gradient': gradient,
+            'logo': comp.get('Logo_URL', ''),
+            'status': comp.get('Status', 'Active').strip(),
+            'created_date': comp.get('Created_Date', ''),
+            'closed_date': comp.get('Closed_Date', ''),
+            'row': competitions_data.index(comp) + 2  # +2 for header and 0-index
         }
-        return pd.DataFrame(), {comp: DEFAULT_STAKE for comp in COMPETITION_STYLES.keys()}, empty_stats, 0.0
+    
+    return comps
+
+
+def process_data(raw, competitions_dict):
+    """Process raw match data and calculate betting cycles."""
+    if not raw:
+        empty_stats = {name: {"total_staked": 0, "total_income": 0, "net_profit": 0} for name in competitions_dict.keys()}
+        return pd.DataFrame(), {name: competitions_dict[name]['default_stake'] for name in competitions_dict.keys()}, empty_stats, 0.0
     
     processed = []
-    
-    # Track cycle investment per competition
-    cycle_investment = {comp: 0.0 for comp in COMPETITION_STYLES.keys()}
-    next_bets = {comp: DEFAULT_STAKE for comp in COMPETITION_STYLES.keys()}
-    
-    # Track overall stats per competition
-    comp_stats = {
-        comp: {"total_staked": 0.0, "total_income": 0.0, "net_profit": 0.0}
-        for comp in COMPETITION_STYLES.keys()
-    }
+    cycle_investment = {name: 0.0 for name in competitions_dict.keys()}
+    next_bets = {name: competitions_dict[name]['default_stake'] for name in competitions_dict.keys()}
+    comp_stats = {name: {"total_staked": 0.0, "total_income": 0.0, "net_profit": 0.0} for name in competitions_dict.keys()}
     
     for i, row in enumerate(raw):
         if not isinstance(row, dict):
             continue
         
-        # Extract and clean data
-        comp = str(row.get('Competition', 'Brighton')).strip()
-        if comp not in COMPETITION_STYLES:
-            comp = 'Brighton'  # Default fallback
-            
+        comp = str(row.get('Competition', '')).strip()
+        if comp not in competitions_dict:
+            continue  # Skip unknown competitions
+        
+        comp_info = competitions_dict[comp]
         home = str(row.get('Home Team', '')).strip()
         away = str(row.get('Away Team', '')).strip()
         match_name = f"{home} vs {away}" if home and away else "Unknown Match"
         
-        # Parse odds
         try:
             odds = float(str(row.get('Odds', '1')).replace(',', '.').strip())
             if odds <= 0:
                 odds = 1.0
-        except (ValueError, TypeError):
+        except:
             odds = 1.0
         
-        # Parse stake
         try:
             stake_str = str(row.get('Stake', '')).replace(',', '.').replace('₪', '').strip()
             stake = float(stake_str) if stake_str else 0.0
-        except (ValueError, TypeError):
+        except:
             stake = 0.0
         
-        # If stake is 0, use the calculated next bet for this competition
         if stake == 0:
-            stake = next_bets.get(comp, DEFAULT_STAKE)
+            stake = next_bets.get(comp, comp_info['default_stake'])
         
-        # GET THE ACTUAL RESULT FROM SHEETS - THIS IS CRITICAL!
         result = str(row.get('Result', '')).strip()
         date = str(row.get('Date', '')).strip()
         
-        # Handle pending bets - no calculations yet
         if result == "Pending" or result == "" or not result:
             processed.append({
                 "Row": i + 2,
@@ -952,45 +843,25 @@ def process_data(raw):
             })
             continue
         
-        # Add stake to cycle investment (this bet was placed)
         cycle_investment[comp] += stake
         comp_stats[comp]["total_staked"] += stake
         
-        # Check ACTUAL result from sheet
-        # WIN condition: Result is exactly "Draw (X)" or just "Draw"
-        # IMPORTANT: "No Draw" should NOT be a win!
         result_lower = result.lower().strip()
-        is_win = (result == "Draw (X)" or 
-                  result_lower == "draw" or 
-                  result_lower == "draw (x)")
-        
-        # Make sure "No Draw" is NOT a win
+        is_win = (result == "Draw (X)" or result_lower == "draw" or result_lower == "draw (x)")
         if "no draw" in result_lower or "no_draw" in result_lower:
             is_win = False
         
         if is_win:
-            # WIN - Calculate profit based on Martingale
-            # Income = stake × odds
-            # Net profit = income - all stakes in this cycle (including this bet)
             income = stake * odds
             net_profit = income - cycle_investment[comp]
-            
             comp_stats[comp]["total_income"] += income
             comp_stats[comp]["net_profit"] += net_profit
-            
-            # Reset cycle for next sequence
             cycle_investment[comp] = 0.0
-            next_bets[comp] = DEFAULT_STAKE
+            next_bets[comp] = comp_info['default_stake']
             status = "Won"
         else:
-            # LOSS - No Draw
-            # In Martingale, losses are NOT counted as negative profit
-            # because they will be covered by the next win
-            # The cycle_investment already tracks the total spent
             income = 0.0
-            net_profit = 0  # Don't count loss here - it's accounted for in cycle_investment
-            
-            # Double the stake for next bet (Martingale)
+            net_profit = 0
             next_bets[comp] = stake * 2.0
             status = "Lost"
         
@@ -1007,15 +878,12 @@ def process_data(raw):
             "Expense": stake
         })
     
-    # Calculate pending losses - money still invested in open cycles that hasn't been recovered yet
-    # This is important for accurate bankroll display
     pending_losses = sum(cycle_investment.values())
-    
     return pd.DataFrame(processed), next_bets, comp_stats, pending_losses
 
 
 def show_loading(message="Loading data..."):
-    """Display football loading animation"""
+    """Display football loading animation."""
     st.markdown(f"""
         <div class="loading-container">
             <div class="football-loader"></div>
@@ -1024,22 +892,22 @@ def show_loading(message="Loading data..."):
     """, unsafe_allow_html=True)
 
 
-def show_inline_loader():
-    """Display inline football loader for smaller operations"""
-    st.markdown("""
-        <div style="display: flex; justify-content: center; padding: 20px;">
-            <div class="football-loader" style="width: 50px; height: 50px;"></div>
-        </div>
-    """, unsafe_allow_html=True)
-
-
 # --- 5. LOAD DATA ---
-# Use spinner while loading data
 with st.spinner(''):
-    raw_data, worksheet, initial_bankroll, error_msg = connect_to_sheets()
-    df, next_stakes, competition_stats, pending_losses = process_data(raw_data)
+    raw_data, matches_ws, comp_ws, initial_bankroll, competitions_raw, error_msg = connect_to_sheets()
 
-# Current balance = Initial bankroll + Net profits from wins - Money still invested in open cycles
+# Build competitions dictionary
+if competitions_raw:
+    competitions = build_competitions_dict(competitions_raw)
+else:
+    competitions = {}
+
+# Get active and archived competitions
+active_competitions = {k: v for k, v in competitions.items() if v['status'] == 'Active'}
+archived_competitions = {k: v for k, v in competitions.items() if v['status'] == 'Closed'}
+
+# Process match data
+df, next_stakes, competition_stats, pending_losses = process_data(raw_data, competitions) if not error_msg else (pd.DataFrame(), {}, {}, 0)
 current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0) - pending_losses
 
 
@@ -1066,14 +934,14 @@ with st.sidebar:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("➕ Deposit", use_container_width=True):
-            ws = get_worksheet_for_update()
+            ws = get_matches_worksheet()
             if ws:
                 ws.update_cell(BANKROLL_CELL_ROW, BANKROLL_CELL_COL, initial_bankroll + amt)
                 connect_to_sheets.clear()
                 st.rerun()
     with col2:
         if st.button("➖ Withdraw", use_container_width=True):
-            ws = get_worksheet_for_update()
+            ws = get_matches_worksheet()
             if ws:
                 ws.update_cell(BANKROLL_CELL_ROW, BANKROLL_CELL_COL, initial_bankroll - amt)
                 connect_to_sheets.clear()
@@ -1083,11 +951,16 @@ with st.sidebar:
     
     # Navigation
     st.markdown("### 🧭 Navigation")
-    track = st.selectbox(
-        "Select View",
-        ["📊 Overview", "Brighton", "Africa Cup of Nations"],
-        label_visibility="collapsed"
-    )
+    
+    # Build navigation options
+    nav_options = ["📊 Overview"]
+    nav_options.extend([f"⚽ {name}" for name in active_competitions.keys()])
+    nav_options.append("➕ New Competition")
+    if archived_competitions:
+        nav_options.append("📁 Archive")
+    nav_options.append("⚙️ Settings")
+    
+    track = st.selectbox("Select View", nav_options, label_visibility="collapsed")
     
     st.divider()
     
@@ -1104,14 +977,12 @@ if error_msg:
 
 # --- OVERVIEW PAGE ---
 if track == "📊 Overview":
-    # Overview Banner - Dark green gradient, NO logo/icon
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #4a7c59 100%);">
             <h1 style="color: white; margin: 0; font-size: 2.5rem; letter-spacing: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.4);">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
-    # Total Balance Display
     balance_color = "#4CAF50" if current_bal >= initial_bankroll else "#FF5252"
     st.markdown(f"""
         <div class="balance-container">
@@ -1120,11 +991,10 @@ if track == "📊 Overview":
         </div>
     """, unsafe_allow_html=True)
     
-    # Competition Cards
-    st.markdown('<p class="section-title">📈 Competition Performance</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">📈 Active Competitions</p>', unsafe_allow_html=True)
     
-    if not df.empty:
-        for comp_name, style in COMPETITION_STYLES.items():
+    if active_competitions and not df.empty:
+        for comp_name, comp_info in active_competitions.items():
             comp_df = df[df['Comp'] == comp_name]
             comp_profit = comp_df['Profit'].sum() if not comp_df.empty else 0
             stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0})
@@ -1132,10 +1002,12 @@ if track == "📊 Overview":
             profit_class = "overview-profit-positive" if comp_profit >= 0 else "overview-profit-negative"
             profit_sign = "+" if comp_profit >= 0 else ""
             
+            logo_html = f'<img src="{comp_info["logo"]}" alt="{comp_name}">' if comp_info["logo"] else ''
+            
             st.markdown(f"""
-                <div class="overview-comp-card" style="background: {style['gradient']};">
+                <div class="overview-comp-card" style="background: {comp_info['gradient']};">
                     <div class="overview-comp-header">
-                        <img src="{style['logo']}" alt="{comp_name}">
+                        {logo_html}
                         <h3 class="overview-comp-name">{comp_name}</h3>
                         <div style="flex: 1;"></div>
                         <span class="overview-comp-profit {profit_class}">{profit_sign}₪{comp_profit:,.0f}</span>
@@ -1156,19 +1028,196 @@ if track == "📊 Overview":
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+    elif not active_competitions:
+        st.markdown("""
+            <div class="info-message">
+                📭 No active competitions. Create your first competition to get started!
+            </div>
+        """, unsafe_allow_html=True)
     else:
-        show_loading()  # Show football loading when no data
+        st.markdown("""
+            <div class="info-message">
+                📭 No betting data available yet. Add your first match to get started!
+            </div>
+        """, unsafe_allow_html=True)
+
+# --- NEW COMPETITION PAGE ---
+elif track == "➕ New Competition":
+    st.markdown("""
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
+            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">➕ NEW COMPETITION</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div class="form-card">
+            <div class="form-card-title">
+                <span style="font-size: 1.5rem;">🏆</span>
+                <span style="color: #2d3748 !important;">Create New Competition</span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form("new_competition_form"):
+        comp_name = st.text_input("Competition Name *", placeholder="e.g., Premier League")
+        comp_desc = st.text_input("Description", placeholder="e.g., English top division")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            default_stake = st.number_input("Default Stake (₪)", min_value=1.0, value=30.0, step=5.0)
+        with col2:
+            logo_url = st.text_input("Logo URL", placeholder="https://example.com/logo.png")
+        
+        st.markdown("**Colors:**")
+        col3, col4, col5 = st.columns(3)
+        with col3:
+            color1 = st.color_picker("Primary Color", "#4CABFF")
+        with col4:
+            color2 = st.color_picker("Secondary Color", "#E6F7FF")
+        with col5:
+            text_color = st.color_picker("Text Color", "#004085")
+        
+        # Preview
+        st.markdown("**Preview:**")
+        preview_gradient = f"linear-gradient(135deg, {color1} 0%, {color2} 100%)"
+        logo_preview = f'<img src="{logo_url}" style="height:50px; margin-right:15px;">' if logo_url else ''
+        st.markdown(f"""
+            <div style="background: {preview_gradient}; border-radius: 15px; padding: 20px; display: flex; align-items: center; justify-content: center;">
+                {logo_preview}
+                <span style="color: {text_color}; font-weight: bold; font-size: 1.3rem;">{comp_name or 'Competition Name'}</span>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        submitted = st.form_submit_button("✅ Create Competition", use_container_width=True, type="primary")
+        
+        if submitted:
+            if comp_name:
+                if comp_name in competitions:
+                    st.error(f"⚠️ Competition '{comp_name}' already exists!")
+                else:
+                    with st.spinner('⚽ Creating competition...'):
+                        ws = get_competitions_worksheet()
+                        if ws:
+                            new_row = [
+                                comp_name,
+                                comp_desc,
+                                default_stake,
+                                color1,
+                                color2,
+                                text_color,
+                                logo_url,
+                                "Active",
+                                str(datetime.date.today()),
+                                ""
+                            ]
+                            ws.append_row(new_row)
+                            connect_to_sheets.clear()
+                            st.success(f"✅ Competition '{comp_name}' created!")
+                            st.rerun()
+            else:
+                st.error("⚠️ Please enter a competition name")
+
+# --- ARCHIVE PAGE ---
+elif track == "📁 Archive":
+    st.markdown("""
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);">
+            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">📁 ARCHIVE</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<p class="section-title">📜 Closed Competitions</p>', unsafe_allow_html=True)
+    
+    if archived_competitions:
+        for comp_name, comp_info in archived_competitions.items():
+            comp_df = df[df['Comp'] == comp_name]
+            comp_profit = comp_df['Profit'].sum() if not comp_df.empty else 0
+            stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0})
+            
+            profit_color = "#90EE90" if comp_profit >= 0 else "#FFB6C1"
+            logo_html = f'<img src="{comp_info["logo"]}" style="height:40px; margin-right:15px;">' if comp_info["logo"] else ''
+            
+            st.markdown(f"""
+                <div class="archive-card">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        {logo_html}
+                        <h4>{comp_name}</h4>
+                    </div>
+                    <p>📅 Closed: {comp_info['closed_date'] or 'N/A'}</p>
+                    <p>💰 Total Staked: ₪{stats['total_staked']:,.0f}</p>
+                    <p>🏆 Total Won: ₪{stats['total_income']:,.0f}</p>
+                    <p style="font-size: 1.2rem; color: {profit_color};">📈 Final Profit: ₪{comp_profit:,.0f}</p>
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <div class="info-message">
+                📭 No archived competitions yet.
+            </div>
+        """, unsafe_allow_html=True)
+
+# --- SETTINGS PAGE ---
+elif track == "⚙️ Settings":
+    st.markdown("""
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
+            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">⚙️ SETTINGS</h1>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<p class="section-title">🏆 Manage Competitions</p>', unsafe_allow_html=True)
+    
+    for comp_name, comp_info in active_competitions.items():
+        with st.expander(f"⚽ {comp_name}", expanded=False):
+            st.markdown(f"**Description:** {comp_info['description'] or 'N/A'}")
+            st.markdown(f"**Default Stake:** ₪{comp_info['default_stake']}")
+            st.markdown(f"**Created:** {comp_info['created_date']}")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                new_stake = st.number_input(
+                    f"Update Default Stake",
+                    min_value=1.0,
+                    value=float(comp_info['default_stake']),
+                    step=5.0,
+                    key=f"stake_{comp_name}"
+                )
+                if st.button("💾 Save Stake", key=f"save_{comp_name}"):
+                    with st.spinner('⚽'):
+                        ws = get_competitions_worksheet()
+                        if ws:
+                            ws.update_cell(comp_info['row'], 3, new_stake)  # Column C = Default_Stake
+                            connect_to_sheets.clear()
+                            st.success("✅ Updated!")
+                            st.rerun()
+            
+            with col2:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button(f"🔒 Close Competition", key=f"close_{comp_name}"):
+                    with st.spinner('⚽'):
+                        ws = get_competitions_worksheet()
+                        if ws:
+                            ws.update_cell(comp_info['row'], 8, "Closed")  # Column H = Status
+                            ws.update_cell(comp_info['row'], 10, str(datetime.date.today()))  # Column J = Closed_Date
+                            connect_to_sheets.clear()
+                            st.success(f"✅ '{comp_name}' closed and moved to archive!")
+                            st.rerun()
 
 # --- COMPETITION PAGES ---
-else:
-    comp_name = track
-    style = COMPETITION_STYLES.get(comp_name, COMPETITION_STYLES["Brighton"])
+elif track.startswith("⚽ "):
+    comp_name = track.replace("⚽ ", "")
+    
+    if comp_name not in active_competitions:
+        st.error("Competition not found!")
+        st.stop()
+    
+    comp_info = active_competitions[comp_name]
     
     # Competition Banner
+    logo_html = f'<img src="{comp_info["logo"]}" alt="{comp_name}">' if comp_info["logo"] else ''
     st.markdown(f"""
-        <div class="comp-banner-box" style="background: {style['gradient']};">
-            <img src="{style['logo']}" alt="{comp_name}">
-            <h1 class="comp-banner-text" style="color: {style['text_color']};">{comp_name.upper()}</h1>
+        <div class="comp-banner-box" style="background: {comp_info['gradient']};">
+            {logo_html}
+            <h1 class="comp-banner-text" style="color: {comp_info['text_color']};">{comp_name.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1204,7 +1253,7 @@ else:
     """, unsafe_allow_html=True)
     
     # Next Bet Display
-    next_bet = next_stakes.get(comp_name, DEFAULT_STAKE)
+    next_bet = next_stakes.get(comp_name, comp_info['default_stake'])
     st.markdown(f"""
         <div class="next-bet-display">
             <div class="next-bet-label">NEXT RECOMMENDED BET</div>
@@ -1212,7 +1261,7 @@ else:
         </div>
     """, unsafe_allow_html=True)
     
-    # Add Match Form - Soft and Inviting Design
+    # Add Match Form
     st.markdown("""
         <div class="form-card">
             <div class="form-card-title">
@@ -1235,20 +1284,16 @@ else:
         with col4:
             stake = st.number_input("Stake (₪)", min_value=1.0, value=float(next_bet), step=10.0)
         
-        st.write("")  # Spacing
-        result = st.radio(
-            "Match Result",
-            ["Pending", "Draw (X)", "No Draw"],
-            horizontal=True
-        )
+        st.write("")
+        result = st.radio("Match Result", ["Pending", "Draw (X)", "No Draw"], horizontal=True)
         
-        st.write("")  # Spacing
+        st.write("")
         submitted = st.form_submit_button("✅ Add Match", use_container_width=True, type="primary")
         
         if submitted:
             if home_team and away_team:
                 with st.spinner('⚽ Adding match...'):
-                    ws = get_worksheet_for_update()
+                    ws = get_matches_worksheet()
                     if ws:
                         new_row = [
                             str(datetime.date.today()),
@@ -1262,8 +1307,8 @@ else:
                         ]
                         ws.append_row(new_row)
                         connect_to_sheets.clear()
-                    st.success(f"✅ Added: {home_team} vs {away_team}")
-                    st.rerun()
+                        st.success(f"✅ Added: {home_team} vs {away_team}")
+                        st.rerun()
             else:
                 st.error("⚠️ Please enter both team names")
     
@@ -1272,7 +1317,6 @@ else:
     
     if not comp_df.empty:
         for _, row in comp_df.sort_index(ascending=False).iterrows():
-            # Determine card style based on ACTUAL status from data
             if row['Status'] == "Won":
                 card_class = "match-card-won"
                 profit_class = "match-profit-positive"
@@ -1281,7 +1325,7 @@ else:
                 card_class = "match-card-lost"
                 profit_class = "match-profit-negative"
                 profit_prefix = ""
-            else:  # Pending
+            else:
                 card_class = "match-card-pending"
                 profit_class = "match-profit-neutral"
                 profit_prefix = ""
@@ -1301,13 +1345,12 @@ else:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Action buttons for pending matches
             if row['Status'] == "Pending":
                 col1, col2, col3 = st.columns([1, 1, 2])
                 with col1:
                     if st.button("✅ WIN", key=f"win_{row['Row']}", use_container_width=True):
                         with st.spinner('⚽'):
-                            ws = get_worksheet_for_update()
+                            ws = get_matches_worksheet()
                             if ws:
                                 ws.update_cell(row['Row'], RESULT_COL, "Draw (X)")
                                 connect_to_sheets.clear()
@@ -1315,7 +1358,7 @@ else:
                 with col2:
                     if st.button("❌ LOSS", key=f"loss_{row['Row']}", use_container_width=True):
                         with st.spinner('⚽'):
-                            ws = get_worksheet_for_update()
+                            ws = get_matches_worksheet()
                             if ws:
                                 ws.update_cell(row['Row'], RESULT_COL, "No Draw")
                                 connect_to_sheets.clear()
@@ -1332,6 +1375,6 @@ else:
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
     <div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-        Elite Football Tracker v2.0 | Built with ❤️ using Streamlit
+        Elite Football Tracker v3.0 | Built with ❤️ using Streamlit
     </div>
 """, unsafe_allow_html=True)
