@@ -222,12 +222,21 @@ st.markdown(f"""
         letter-spacing: 2px;
     }}
     
-    /* Banner text - hidden on mobile */
+    /* Banner text - hidden on mobile for competitions only */
     .comp-banner-text {{
         margin: 0;
         font-weight: 900;
         font-size: 2.2rem;
         letter-spacing: 2px;
+    }}
+    
+    /* Overview banner text - always visible */
+    .overview-banner-text {{
+        margin: 0;
+        font-weight: 900;
+        font-size: 2.2rem;
+        letter-spacing: 2px;
+        color: white;
     }}
     
     /* Mobile Responsive - Competition Banner */
@@ -241,9 +250,15 @@ st.markdown(f"""
             margin-right: 0;
         }}
         
-        .comp-banner-box h1,
+        /* Hide ONLY competition banner text, not overview */
         .comp-banner-box .comp-banner-text {{
             display: none !important;
+        }}
+        
+        /* Keep overview banner text visible */
+        .comp-banner-box .overview-banner-text {{
+            display: block !important;
+            font-size: 1.8rem;
         }}
         
         .overview-comp-header h3 {{
@@ -980,15 +995,34 @@ with st.sidebar:
     # Navigation
     st.markdown("### 🧭 Navigation")
     
-    # Build navigation options
+    # Build navigation options with proper labels
     nav_options = ["📊 Overview"]
-    nav_options.extend([f"⚽ {name}" for name in active_competitions.keys()])
+    comp_name_map = {}  # Map display name to actual name
+    
+    for name, info in active_competitions.items():
+        # Use a shorter format for dropdown
+        display_name = f"⚽ {name}"
+        nav_options.append(display_name)
+        comp_name_map[display_name] = name
+    
     nav_options.append("➕ New Competition")
     if archived_competitions:
         nav_options.append("📁 Archive")
     nav_options.append("⚙️ Manage Competitions")
     
     track = st.selectbox("Select View", nav_options, label_visibility="collapsed")
+    
+    # Show competition logo below dropdown if a competition is selected
+    if track.startswith("⚽ "):
+        selected_comp = track.replace("⚽ ", "")
+        if selected_comp in active_competitions:
+            comp_logo = active_competitions[selected_comp].get('logo', '')
+            if comp_logo:
+                st.markdown(f"""
+                    <div style="text-align: center; padding: 10px;">
+                        <img src="{comp_logo}" style="height: 60px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">
+                    </div>
+                """, unsafe_allow_html=True)
     
     st.divider()
     
@@ -1007,7 +1041,7 @@ if error_msg:
 if track == "📊 Overview":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #4a7c59 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2.5rem; letter-spacing: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.4);">OVERVIEW</h1>
+            <h1 class="overview-banner-text">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1073,7 +1107,7 @@ if track == "📊 Overview":
 elif track == "➕ New Competition":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">➕ NEW COMPETITION</h1>
+            <h1 class="overview-banner-text">➕ NEW COMPETITION</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1149,7 +1183,7 @@ elif track == "➕ New Competition":
 elif track == "📁 Archive":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">📁 ARCHIVE</h1>
+            <h1 class="overview-banner-text">📁 ARCHIVE</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1187,7 +1221,7 @@ elif track == "📁 Archive":
 elif track == "⚙️ Manage Competitions":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
-            <h1 style="color: white; margin: 0; font-size: 2rem; letter-spacing: 2px;">⚙️ MANAGE COMPETITIONS</h1>
+            <h1 class="overview-banner-text">⚙️ MANAGE COMPETITIONS</h1>
         </div>
     """, unsafe_allow_html=True)
     
