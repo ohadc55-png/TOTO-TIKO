@@ -1010,7 +1010,14 @@ with st.sidebar:
         nav_options.append("📁 Archive")
     nav_options.append("⚙️ Manage Competitions")
     
-    track = st.selectbox("Select View", nav_options, label_visibility="collapsed")
+    # Handle navigation from Overview buttons
+    default_index = 0
+    if 'nav_to' in st.session_state:
+        if st.session_state['nav_to'] in nav_options:
+            default_index = nav_options.index(st.session_state['nav_to'])
+        del st.session_state['nav_to']
+    
+    track = st.selectbox("Select View", nav_options, index=default_index, label_visibility="collapsed")
     
     # Show competition logo below dropdown if a competition is selected
     if track.startswith("⚽ "):
@@ -1090,6 +1097,12 @@ if track == "📊 Overview":
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Button to navigate to competition page
+            if st.button(f"➡️ Go to {comp_name}", key=f"goto_{comp_name}", use_container_width=True):
+                st.session_state['nav_to'] = f"⚽ {comp_name}"
+                st.rerun()
+                
     elif not active_competitions:
         st.markdown("""
             <div class="info-message">
@@ -1319,6 +1332,19 @@ elif track.startswith("⚽ "):
         </div>
     """, unsafe_allow_html=True)
     
+    # Close Competition Button (small, right-aligned)
+    col_spacer, col_close = st.columns([4, 1])
+    with col_close:
+        if st.button("🔒 Close", key=f"close_comp_{comp_name}", help="Close this competition"):
+            with st.spinner('⚽'):
+                ws = get_competitions_worksheet()
+                if ws:
+                    ws.update_cell(comp_info['row'], 8, "Closed")  # Column H = Status
+                    ws.update_cell(comp_info['row'], 10, str(datetime.date.today()))  # Column J = Closed_Date
+                    connect_to_sheets.clear()
+                    st.success(f"✅ '{comp_name}' closed!")
+                    st.rerun()
+    
     # Next Bet Display
     next_bet = next_stakes.get(comp_name, comp_info['default_stake'])
     st.markdown(f"""
@@ -1442,6 +1468,6 @@ elif track.startswith("⚽ "):
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
     <div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-        Elite Football Tracker v3.0 | Built with ❤️ using Streamlit
+       Goal Metric v3.0 | Built with ❤️ using BabiGroup Pelicens
     </div>
 """, unsafe_allow_html=True)
