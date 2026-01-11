@@ -959,7 +959,7 @@ with st.sidebar:
     st.image(APP_LOGO_URL, use_container_width=True)
     
     if error_msg:
-        st.error(⚠️ Offline Mode")
+        st.error("⚠️ Offline Mode")
         if "service_account" in st.secrets:
             bot_email = st.secrets["service_account"].get("client_email", "Unknown")
             st.info(f"🤖 Bot Email:\n`{bot_email}`")
