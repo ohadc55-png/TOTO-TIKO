@@ -24,14 +24,14 @@ st.set_page_config(page_title="Elite Football Tracker", layout="wide", page_icon
 # --- 2. CSS STYLING ---
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;900&display=swap');
-    
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
     * {{
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
     }}
     
     [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url("{BG_IMAGE_URL}");
+        background-image: linear-gradient(rgba(10,10,5,0.85), rgba(10,10,5,0.92)), url("{BG_IMAGE_URL}");
         background-attachment: fixed; 
         background-size: cover;
     }}
@@ -47,11 +47,11 @@ st.markdown(f"""
         color: white !important;
     }}
     
-    /* Sidebar - Dark text on light background */
+    /* Sidebar - Dark theme */
     [data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        background: linear-gradient(180deg, #0a0a05 0%, #151510 100%) !important;
     }}
-    
+
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
@@ -60,67 +60,65 @@ st.markdown(f"""
     [data-testid="stSidebar"] span,
     [data-testid="stSidebar"] label,
     [data-testid="stSidebar"] .stMarkdown {{
-        color: #2d3748 !important;
+        color: rgba(255,255,255,0.6) !important;
     }}
-    
+
     [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-        color: #1a365d !important;
+        color: #ffffff !important;
     }}
-    
+
     [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
-        color: #4a5568 !important;
+        color: rgba(255,255,255,0.4) !important;
     }}
     
-    /* Form elements - Labels should be WHITE (they're on dark background) */
+    /* Form elements */
     [data-testid="stForm"] label {{
-        color: white !important;
+        color: rgba(255,255,255,0.6) !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
+        font-size: 0.85rem !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }}
-    
+
     [data-testid="stForm"] input {{
         color: #2d3748 !important;
     }}
-    
-    /* Radio buttons in form - WHITE text */
+
+    /* Radio buttons in form */
     [data-testid="stForm"] [data-testid="stMarkdownContainer"] {{
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
-    
+
     [data-testid="stForm"] [data-baseweb="radio"] {{
         color: white !important;
     }}
-    
+
     [data-testid="stForm"] [data-baseweb="radio"] div {{
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
-    
+
     [data-testid="stForm"] .stRadio label {{
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
-    
+
     [data-testid="stForm"] .stRadio p {{
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5) !important;
     }}
     
-    /* Form Card Styling - Soft and Inviting */
+    /* Form Card Styling */
     .form-card {{
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(245, 247, 250, 0.95));
-        border-radius: 20px;
-        padding: 30px;
-        margin: 25px 0;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        border: 1px solid rgba(255,255,255,0.8);
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
+        padding: 24px;
+        margin: 20px 0;
+        box-shadow: none;
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .form-card-title {{
-        color: #2d3748 !important;
-        font-size: 1.3rem;
+        color: white !important;
+        font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 20px;
         display: flex;
@@ -130,174 +128,197 @@ st.markdown(f"""
     
     /* Match Activity Cards */
     .match-card {{
-        border-radius: 16px;
-        padding: 20px 24px;
-        margin-bottom: 14px;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid transparent;
+        box-shadow: none;
+        transition: border-color 0.2s ease;
     }}
-    
+
     .match-card:hover {{
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        transform: none;
+        box-shadow: none;
+        border-color: rgba(255,255,255,0.1);
     }}
-    
+
     .match-card-won {{
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.6) 0%, rgba(40, 167, 69, 0.35) 100%);
-        border: 2px solid rgba(40, 167, 69, 0.7);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid transparent;
+        border-left: 3px solid #00FF88;
     }}
-    
+
     .match-card-lost {{
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.6) 0%, rgba(220, 53, 69, 0.35) 100%);
-        border: 2px solid rgba(220, 53, 69, 0.7);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid transparent;
+        border-left: 3px solid #FF4B4B;
     }}
-    
+
     .match-card-pending {{
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.6) 0%, rgba(255, 193, 7, 0.35) 100%);
-        border: 2px solid rgba(255, 193, 7, 0.7);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid transparent;
+        border-left: 3px solid #ffff00;
     }}
-    
+
     .match-card .match-info {{
         flex: 1;
     }}
-    
+
     .match-card .match-name {{
-        font-size: 1.15rem;
+        font-size: 1rem;
         font-weight: 600;
-        color: white !important;
+        color: rgba(255,255,255,0.9) !important;
         margin-bottom: 6px;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     }}
-    
+
     .match-card .match-details {{
-        font-size: 0.85rem;
-        color: rgba(255,255,255,0.95) !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4) !important;
     }}
-    
+
     .match-card .match-profit {{
-        font-size: 1.4rem;
+        font-size: 1.15rem;
         font-weight: 700;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }}
-    
+
     .match-profit-positive {{
-        color: #90EE90 !important;
+        color: #00FF88 !important;
     }}
-    
+
     .match-profit-negative {{
-        color: #FFB6C1 !important;
+        color: #FF4B4B !important;
     }}
-    
+
     .match-profit-neutral {{
-        color: #FFE066 !important;
+        color: #ffff00 !important;
     }}
     
     /* Competition Banner */
     .comp-banner-box {{
-        border-radius: 20px;
-        padding: 30px 40px;
+        border-radius: 12px;
+        padding: 24px 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 30px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        border: 3px solid rgba(255,255,255,0.3);
-        backdrop-filter: blur(10px);
+        box-shadow: none;
+        border: 1px solid rgba(255,255,255,0.05);
+        backdrop-filter: blur(12px);
+        position: relative;
+        overflow: hidden;
     }}
-    
+
+    .comp-banner-box::before {{
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 5, 0.6);
+        z-index: 0;
+        pointer-events: none;
+    }}
+
+    .comp-banner-box > * {{
+        position: relative;
+        z-index: 1;
+    }}
+
     .comp-banner-box img {{
-        height: 100px;
+        height: 70px;
         margin-right: 30px;
-        filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.5));
+        filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.3));
     }}
-    
+
     .comp-banner-box h1 {{
         margin: 0;
-        font-weight: 900;
-        font-size: 2.2rem;
-        letter-spacing: 2px;
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
     }}
-    
+
     /* Banner text - hidden on mobile for competitions only */
     .comp-banner-text {{
         margin: 0;
-        font-weight: 900;
-        font-size: 2.2rem;
-        letter-spacing: 2px;
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
     }}
-    
+
     /* Overview banner text - always visible */
     .overview-banner-text {{
         margin: 0;
-        font-weight: 900;
-        font-size: 2.2rem;
-        letter-spacing: 2px;
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
         color: white;
     }}
     
-    /* Mobile Responsive - Competition Banner */
+    /* Mobile Responsive */
     @media (max-width: 768px) {{
         .comp-banner-box {{
-            padding: 20px;
+            padding: 16px;
         }}
-        
+
         .comp-banner-box img {{
-            height: 80px;
+            height: 50px;
             margin-right: 0;
         }}
-        
+
         /* Hide ONLY competition banner text, not overview */
         .comp-banner-box .comp-banner-text {{
             display: none !important;
         }}
-        
+
         /* Keep overview banner text visible */
         .comp-banner-box .overview-banner-text {{
             display: block !important;
-            font-size: 1.8rem;
+            font-size: 1.2rem;
         }}
-        
+
         .overview-comp-header h3 {{
-            font-size: 1.1rem;
+            font-size: 1rem;
         }}
-        
+
         .overview-comp-header img {{
-            height: 50px;
-            margin-right: 12px;
+            height: 40px;
+            margin-right: 10px;
         }}
-        
+
         .overview-comp-profit {{
-            font-size: 1.4rem;
+            font-size: 1.2rem;
         }}
-        
+
         .overview-stats-row {{
             flex-wrap: wrap;
         }}
-        
+
         .overview-stat-item {{
             flex: 1 1 33%;
             padding: 8px 5px;
         }}
-        
+
         .stat-box {{
             min-width: 100px;
-            padding: 15px 10px;
+            padding: 12px 10px;
         }}
-        
+
         .stat-box .stat-value {{
-            font-size: 1.2rem;
+            font-size: 1rem;
         }}
-        
+
         .match-card {{
             flex-direction: column;
             align-items: flex-start;
             gap: 10px;
         }}
-        
+
         .match-card .match-profit {{
             align-self: flex-end;
         }}
@@ -314,117 +335,134 @@ st.markdown(f"""
     .stat-box {{
         flex: 1;
         min-width: 150px;
-        border-radius: 15px;
-        padding: 20px;
+        border-radius: 12px;
+        padding: 16px 20px;
         text-align: center;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        backdrop-filter: blur(10px);
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.05);
+        box-shadow: none;
     }}
-    
+
     .stat-box-total {{
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.8) 0%, rgba(41, 128, 185, 0.6) 100%);
-        border: 2px solid rgba(52, 152, 219, 0.5);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .stat-box-income {{
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.8) 0%, rgba(39, 174, 96, 0.6) 100%);
-        border: 2px solid rgba(46, 204, 113, 0.5);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .stat-box-profit {{
-        background: linear-gradient(135deg, rgba(155, 89, 182, 0.8) 0%, rgba(142, 68, 173, 0.6) 100%);
-        border: 2px solid rgba(155, 89, 182, 0.5);
+        background: rgba(35, 35, 15, 0.7);
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .stat-box .stat-label {{
-        font-size: 0.85rem;
-        color: rgba(255,255,255,0.9) !important;
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.4) !important;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
         margin-bottom: 8px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        font-weight: 700;
     }}
-    
+
     .stat-box .stat-value {{
-        font-size: 1.6rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: white !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }}
     
-    /* Overview Competition Cards - Banner Style */
+    /* Overview Competition Cards */
     .overview-comp-card {{
-        border-radius: 20px;
-        padding: 25px 30px;
-        margin-bottom: 20px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        border: 3px solid rgba(255,255,255,0.3);
-        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        box-shadow: none;
+        border: 1px solid rgba(255,255,255,0.05);
+        backdrop-filter: blur(12px);
+        position: relative;
+        overflow: hidden;
     }}
-    
+
+    .overview-comp-card::before {{
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 5, 0.6);
+        z-index: 0;
+        pointer-events: none;
+    }}
+
+    .overview-comp-card > * {{
+        position: relative;
+        z-index: 1;
+    }}
+
     .overview-comp-header {{
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid rgba(255,255,255,0.2);
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
     }}
-    
+
     .overview-comp-header img {{
-        height: 85px;
-        margin-right: 25px;
-        filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.5));
+        height: 60px;
+        margin-right: 20px;
+        filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.3));
     }}
-    
+
     .overview-comp-header h3 {{
         margin: 0;
-        font-weight: 800;
-        font-size: 1.6rem;
+        font-weight: 700;
+        font-size: 1.2rem;
         letter-spacing: 1px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }}
-    
+
     .overview-comp-profit {{
-        font-size: 2rem;
+        font-size: 1.5rem;
         font-weight: 700;
         text-align: right;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }}
-    
+
     .overview-profit-positive {{
-        color: #90EE90 !important;
+        color: #00FF88 !important;
+        filter: drop-shadow(0 0 10px rgba(0,255,136,0.3));
     }}
-    
+
     .overview-profit-negative {{
-        color: #FFB6C1 !important;
+        color: #FF4B4B !important;
     }}
-    
+
     .overview-stats-row {{
         display: flex;
         justify-content: space-around;
         text-align: center;
     }}
-    
+
     .overview-stat-item {{
         padding: 10px 20px;
     }}
-    
+
     .overview-stat-label {{
-        font-size: 0.85rem;
-        color: rgba(255,255,255,0.8) !important;
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.4) !important;
         margin-bottom: 5px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 700;
     }}
-    
+
     .overview-stat-value {{
-        font-size: 1.3rem;
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 700;
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }}
-    
+
     .overview-stat-value-green {{
-        color: #90EE90 !important;
+        color: #00FF88 !important;
     }}
     
     /* Next Bet Display */
@@ -432,66 +470,71 @@ st.markdown(f"""
         text-align: center;
         margin: 25px 0;
         padding: 20px;
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.1) 100%);
-        border-radius: 15px;
-        border: 2px solid rgba(76, 175, 80, 0.4);
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .next-bet-label {{
-        font-size: 1rem;
-        color: rgba(255,255,255,0.85) !important;
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.4) !important;
         margin-bottom: 5px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }}
-    
-    .next-bet-value {{
-        font-size: 2.2rem;
         font-weight: 700;
-        color: #4CAF50 !important;
-        text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }}
-    
+
+    .next-bet-value {{
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffff00 !important;
+        text-shadow: 0 0 20px rgba(255,255,0,0.3);
+    }}
+
     /* Section Titles */
     .section-title {{
-        color: white !important;
-        font-size: 1.3rem;
-        font-weight: 600;
+        color: rgba(255,255,255,0.4) !important;
+        font-size: 0.7rem;
+        font-weight: 700;
         margin: 25px 0 15px 0;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        text-transform: uppercase;
+        letter-spacing: 3px;
         display: flex;
         align-items: center;
         gap: 10px;
     }}
-    
+
     /* Balance Display */
     .balance-container {{
         text-align: center;
         margin: 25px 0;
         padding: 20px;
     }}
-    
+
     .balance-label {{
-        color: rgba(255,255,255,0.8) !important;
-        font-size: 1rem;
+        color: rgba(255,255,255,0.4) !important;
+        font-size: 0.75rem;
         margin-bottom: 5px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }}
-    
-    .balance-value {{
-        font-size: 3rem;
         font-weight: 700;
-        text-shadow: 0 0 30px rgba(0,0,0,0.3);
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }}
-    
+
+    .balance-value {{
+        font-size: 2.8rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }}
+
     /* Info messages */
     .info-message {{
-        background: rgba(255,255,255,0.15);
+        background: rgba(35, 35, 15, 0.5);
         border-radius: 12px;
         padding: 20px;
         text-align: center;
         color: white !important;
-        border: 1px solid rgba(255,255,255,0.2);
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
     }}
     
     /* Football Loading Animation */
@@ -538,10 +581,9 @@ st.markdown(f"""
     }}
     
     .loading-text {{
-        color: white;
-        font-size: 1.2rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 1rem;
         font-weight: 500;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         animation: pulse 1.5s ease-in-out infinite;
     }}
     
@@ -587,10 +629,9 @@ st.markdown(f"""
     /* Overview cards - hide text on mobile */
     .overview-comp-name {{
         margin: 0;
-        font-weight: 800;
-        font-size: 1.6rem;
+        font-weight: 700;
+        font-size: 1.2rem;
         letter-spacing: 1px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         color: white !important;
     }}
     
@@ -608,69 +649,69 @@ st.markdown(f"""
         }}
     }}
     
-    /* Expander styling for dark background */
+    /* Expander styling */
     [data-testid="stExpander"] {{
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: rgba(35, 35, 15, 0.5) !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
         border-radius: 12px !important;
         margin-bottom: 10px !important;
     }}
-    
+
     [data-testid="stExpander"] summary {{
         color: white !important;
         font-weight: 600 !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
     }}
-    
+
     [data-testid="stExpander"] summary:hover {{
-        color: #4CABFF !important;
+        color: #ffff00 !important;
     }}
-    
+
     [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {{
-        color: white !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+        color: rgba(255,255,255,0.6) !important;
     }}
-    
+
     [data-testid="stExpander"] label {{
-        color: white !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+        color: rgba(255,255,255,0.6) !important;
     }}
     
     /* Archive card styling */
     .archive-card {{
-        background: linear-gradient(135deg, rgba(108, 117, 125, 0.6) 0%, rgba(73, 80, 87, 0.4) 100%);
-        border: 2px solid rgba(108, 117, 125, 0.5);
-        border-radius: 16px;
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
         padding: 20px;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }}
-    
+
     .archive-card h4 {{
         color: white !important;
         margin: 0 0 10px 0;
     }}
-    
+
     .archive-card p {{
-        color: rgba(255,255,255,0.8) !important;
+        color: rgba(255,255,255,0.6) !important;
         margin: 5px 0;
     }}
-    
+
     /* Settings card */
     .settings-card {{
-        background: rgba(255,255,255,0.95);
-        border-radius: 16px;
+        background: rgba(35, 35, 15, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
         padding: 25px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        box-shadow: none;
+        border: 1px solid rgba(255,255,255,0.05);
     }}
-    
+
     .settings-card h3 {{
-        color: #333 !important;
+        color: white !important;
         margin-bottom: 20px;
     }}
-    
+
     .settings-card label {{
-        color: #555 !important;
+        color: rgba(255,255,255,0.6) !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -956,8 +997,6 @@ current_bal = initial_bankroll + (df['Profit'].sum() if not df.empty else 0) - p
 
 # --- 6. SIDEBAR ---
 with st.sidebar:
-    st.image(APP_LOGO_URL, use_container_width=True)
-    
     if error_msg:
         st.error("⚠️ Offline Mode")
         if "service_account" in st.secrets:
@@ -1056,12 +1095,12 @@ if error_msg:
 # --- OVERVIEW PAGE ---
 if track == "📊 Overview":
     st.markdown("""
-        <div class="comp-banner-box" style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #4a7c59 100%);">
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, rgba(10,10,5,0.85) 0%, rgba(20,20,10,0.85) 100%);">
             <h1 class="overview-banner-text">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
-    balance_color = "#4CAF50" if current_bal >= initial_bankroll else "#FF5252"
+    balance_color = "#00FF88" if current_bal >= initial_bankroll else "#FF4B4B"
     st.markdown(f"""
         <div class="balance-container">
             <p class="balance-label">TOTAL BALANCE</p>
@@ -1122,7 +1161,7 @@ if track == "📊 Overview":
 # --- NEW COMPETITION PAGE ---
 elif track == "➕ New Competition":
     st.markdown("""
-        <div class="comp-banner-box" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, rgba(10,10,5,0.85) 0%, rgba(20,20,10,0.85) 100%);">
             <h1 class="overview-banner-text">➕ NEW COMPETITION</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -1131,7 +1170,7 @@ elif track == "➕ New Competition":
         <div class="form-card">
             <div class="form-card-title">
                 <span style="font-size: 1.5rem;">🏆</span>
-                <span style="color: #2d3748 !important;">Create New Competition</span>
+                <span style="color: white !important;">Create New Competition</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -1198,7 +1237,7 @@ elif track == "➕ New Competition":
 # --- ARCHIVE PAGE ---
 elif track == "📁 Archive":
     st.markdown("""
-        <div class="comp-banner-box" style="background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);">
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, rgba(10,10,5,0.85) 0%, rgba(20,20,10,0.85) 100%);">
             <h1 class="overview-banner-text">📁 ARCHIVE</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -1211,7 +1250,7 @@ elif track == "📁 Archive":
             comp_profit = comp_df['Profit'].sum() if not comp_df.empty else 0
             stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0})
             
-            profit_color = "#90EE90" if comp_profit >= 0 else "#FFB6C1"
+            profit_color = "#00FF88" if comp_profit >= 0 else "#FF4B4B"
             logo_html = f'<img src="{comp_info["logo"]}" style="height:40px; margin-right:15px;">' if comp_info["logo"] else ''
             
             st.markdown(f"""
@@ -1236,7 +1275,7 @@ elif track == "📁 Archive":
 # --- MANAGE COMPETITIONS PAGE ---
 elif track == "⚙️ Manage Competitions":
     st.markdown("""
-        <div class="comp-banner-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
+        <div class="comp-banner-box" style="background: linear-gradient(135deg, rgba(10,10,5,0.85) 0%, rgba(20,20,10,0.85) 100%);">
             <h1 class="overview-banner-text">⚙️ MANAGE COMPETITIONS</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -1247,7 +1286,7 @@ elif track == "⚙️ Manage Competitions":
         with st.expander(f"⚽ {comp_name}", expanded=False):
             # Use white text for visibility
             st.markdown(f"""
-                <div style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                <div style="color: rgba(255,255,255,0.6);">
                     <p><strong>📝 Description:</strong> {comp_info['description'] or 'N/A'}</p>
                     <p><strong>💵 Default Stake:</strong> ₪{comp_info['default_stake']}</p>
                     <p><strong>📅 Created:</strong> {comp_info['created_date']}</p>
@@ -1305,7 +1344,7 @@ elif track.startswith("⚽ "):
     """, unsafe_allow_html=True)
     
     # Current Balance
-    balance_color = "#4CAF50" if current_bal >= initial_bankroll else "#FF5252"
+    balance_color = "#00FF88" if current_bal >= initial_bankroll else "#FF4B4B"
     st.markdown(f"""
         <div class="balance-container">
             <p class="balance-label">CURRENT BALANCE</p>
@@ -1349,7 +1388,7 @@ elif track.startswith("⚽ "):
         <div class="form-card">
             <div class="form-card-title">
                 <span style="font-size: 1.5rem;">⚽</span>
-                <span style="color: #2d3748 !important;">Add New Match</span>
+                <span style="color: white !important;">Add New Match</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -1462,7 +1501,7 @@ elif track.startswith("⚽ "):
 # --- FOOTER ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
-    <div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+    <div style="text-align: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; padding: 20px; letter-spacing: 1px;">
         Elite Football Tracker v3.0 | Built with ❤️ using Streamlit
     </div>
 """, unsafe_allow_html=True)
