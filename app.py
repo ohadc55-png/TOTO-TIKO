@@ -407,16 +407,16 @@ st.markdown(f"""
     }}
 
     /* --- 9. Match Profit Color Classes --- */
-    .match-profit-positive {{
+    [data-testid="stAppViewContainer"] .match-profit-positive {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 12px var(--color-profit-glow);
     }}
 
-    .match-profit-negative {{
+    [data-testid="stAppViewContainer"] .match-profit-negative {{
         color: var(--color-loss) !important;
     }}
 
-    .match-profit-neutral {{
+    [data-testid="stAppViewContainer"] .match-profit-neutral {{
         color: var(--color-pending) !important;
         text-shadow: 0 0 10px var(--color-pending-glow);
     }}
@@ -624,23 +624,23 @@ st.markdown(f"""
     }}
 
     /* Staked = muted green (money out, not glowing) */
-    .stat-box-total .stat-value {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .stat-box-total .stat-value {{
         color: #6BCB77 !important;
     }}
 
     /* Won = bright glowing green */
-    .stat-box-income .stat-value {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .stat-box-income .stat-value {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 14px var(--color-profit-glow);
     }}
 
     /* Net Profit - dynamic: green glow or red */
-    .stat-value-profit-pos {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .stat-value-profit-pos {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 18px var(--color-profit-glow);
     }}
 
-    .stat-value-profit-neg {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .stat-value-profit-neg {{
         color: var(--color-loss) !important;
     }}
 
@@ -707,12 +707,12 @@ st.markdown(f"""
         font-variant-numeric: tabular-nums;
     }}
 
-    .overview-profit-positive {{
+    [data-testid="stAppViewContainer"] .overview-profit-positive {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 16px var(--color-profit-glow);
     }}
 
-    .overview-profit-negative {{
+    [data-testid="stAppViewContainer"] .overview-profit-negative {{
         color: var(--color-loss) !important;
     }}
 
@@ -742,11 +742,11 @@ st.markdown(f"""
         font-variant-numeric: tabular-nums;
     }}
 
-    .overview-stat-value-staked {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .overview-stat-value-staked {{
         color: #6BCB77 !important;
     }}
 
-    .overview-stat-value-green {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .overview-stat-value-green {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 12px var(--color-profit-glow);
     }}
@@ -836,12 +836,12 @@ st.markdown(f"""
         line-height: 1.1;
     }}
 
-    .balance-positive {{
+    [data-testid="stAppViewContainer"] .balance-positive {{
         color: var(--color-profit) !important;
         text-shadow: 0 0 20px var(--color-profit-glow);
     }}
 
-    .balance-negative {{
+    [data-testid="stAppViewContainer"] .balance-negative {{
         color: var(--color-loss) !important;
     }}
 
@@ -1080,11 +1080,11 @@ st.markdown(f"""
         margin-top: 10px !important;
     }}
 
-    .archive-profit-positive {{
+    [data-testid="stAppViewContainer"] .archive-profit-positive {{
         color: var(--color-profit) !important;
     }}
 
-    .archive-profit-negative {{
+    [data-testid="stAppViewContainer"] .archive-profit-negative {{
         color: var(--color-loss) !important;
     }}
 
