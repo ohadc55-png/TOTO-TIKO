@@ -1093,14 +1093,37 @@ st.markdown(f"""
 
     /* --- Global Button Polish --- */
     [data-testid="stMain"] button {{
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-medium) !important;
+        color: var(--text-primary) !important;
         border-radius: var(--radius-sm) !important;
         font-weight: 600 !important;
         transition: all var(--transition-fast) !important;
         letter-spacing: 0.3px;
     }}
 
+    [data-testid="stMain"] button p,
+    [data-testid="stMain"] button span,
+    [data-testid="stMain"] button div {{
+        color: var(--text-primary) !important;
+    }}
+
+    [data-testid="stMain"] button:hover {{
+        background: var(--bg-card-hover) !important;
+        border-color: var(--accent-primary) !important;
+        color: var(--accent-primary) !important;
+        transform: translateY(-1px);
+    }}
+
+    [data-testid="stMain"] button:hover p,
+    [data-testid="stMain"] button:hover span,
+    [data-testid="stMain"] button:hover div {{
+        color: var(--accent-primary) !important;
+    }}
+
     /* Primary action buttons in main area */
-    [data-testid="stMain"] button[kind="primary"] {{
+    [data-testid="stMain"] button[kind="primary"],
+    [data-testid="stMain"] button[kind="primaryFormSubmit"] {{
         background: linear-gradient(135deg, var(--accent-primary) 0%, #E8941E 100%) !important;
         color: #0a0a05 !important;
         border: none !important;
@@ -1108,9 +1131,95 @@ st.markdown(f"""
         box-shadow: 0 2px 10px var(--accent-primary-glow) !important;
     }}
 
-    [data-testid="stMain"] button[kind="primary"]:hover {{
+    [data-testid="stMain"] button[kind="primary"] p,
+    [data-testid="stMain"] button[kind="primary"] span,
+    [data-testid="stMain"] button[kind="primary"] div,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"] p,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"] span,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"] div {{
+        color: #0a0a05 !important;
+    }}
+
+    [data-testid="stMain"] button[kind="primary"]:hover,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover {{
         box-shadow: 0 4px 20px var(--accent-primary-glow) !important;
         transform: translateY(-1px);
+    }}
+
+    [data-testid="stMain"] button[kind="primary"]:hover p,
+    [data-testid="stMain"] button[kind="primary"]:hover span,
+    [data-testid="stMain"] button[kind="primary"]:hover div,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover p,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover span,
+    [data-testid="stMain"] button[kind="primaryFormSubmit"]:hover div {{
+        color: #0a0a05 !important;
+    }}
+
+    /* --- Dropdown / Popover / Listbox (light background panels) --- */
+    [data-baseweb="popover"],
+    [data-baseweb="menu"],
+    [role="listbox"] {{
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-medium) !important;
+    }}
+
+    [data-baseweb="popover"] li,
+    [data-baseweb="menu"] li,
+    [role="listbox"] li,
+    [role="option"] {{
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }}
+
+    [data-baseweb="popover"] li:hover,
+    [data-baseweb="menu"] li:hover,
+    [role="option"]:hover {{
+        background: var(--bg-card-hover) !important;
+    }}
+
+    [role="option"][aria-selected="true"] {{
+        background: rgba(245, 166, 35, 0.15) !important;
+        color: var(--accent-primary) !important;
+    }}
+
+    /* Main area inputs (outside forms too) */
+    [data-testid="stMain"] input,
+    [data-testid="stMain"] textarea {{
+        background: var(--bg-input) !important;
+        border: 1px solid var(--border-medium) !important;
+        color: var(--text-primary) !important;
+        border-radius: var(--radius-sm) !important;
+    }}
+
+    [data-testid="stMain"] input:focus,
+    [data-testid="stMain"] textarea:focus {{
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 3px var(--accent-primary-glow) !important;
+    }}
+
+    /* Main area select/dropdown */
+    [data-testid="stMain"] [data-baseweb="select"] {{
+        background: var(--bg-card) !important;
+    }}
+
+    [data-testid="stMain"] [data-baseweb="select"] div {{
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }}
+
+    /* Radio buttons in main area */
+    [data-testid="stMain"] [data-baseweb="radio"] div {{
+        color: var(--text-primary) !important;
+    }}
+
+    /* Number input steppers */
+    [data-testid="stMain"] [data-baseweb="input"] {{
+        background: var(--bg-input) !important;
+    }}
+
+    [data-testid="stMain"] [data-baseweb="input"] div {{
+        color: var(--text-primary) !important;
+        background: transparent !important;
     }}
 
     /* Scrollbar styling */
