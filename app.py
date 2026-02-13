@@ -354,20 +354,20 @@ st.markdown(f"""
     }}
 
     .match-card-won {{
-        border: 1.5px solid #34D399;
-        border-left: 4px solid #059669;
+        border: 2px solid #10B981;
+        border-left: 5px solid #10B981;
         background: #ECFDF5;
     }}
 
     .match-card-lost {{
-        border: 1.5px solid #FCA5A5;
-        border-left: 4px solid #DC2626;
+        border: 2px solid #EF4444;
+        border-left: 5px solid #EF4444;
         background: #FFF1F2;
     }}
 
     .match-card-pending {{
-        border: 1.5px solid #FCD34D;
-        border-left: 4px solid #D97706;
+        border: 2px solid #F59E0B;
+        border-left: 5px solid #F59E0B;
         background: #FFFBEB;
     }}
 
