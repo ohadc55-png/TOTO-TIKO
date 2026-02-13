@@ -623,6 +623,27 @@ st.markdown(f"""
         font-variant-numeric: tabular-nums;
     }}
 
+    /* Staked = muted green (money out, not glowing) */
+    .stat-box-total .stat-value {{
+        color: #6BCB77 !important;
+    }}
+
+    /* Won = bright glowing green */
+    .stat-box-income .stat-value {{
+        color: var(--color-profit) !important;
+        text-shadow: 0 0 14px var(--color-profit-glow);
+    }}
+
+    /* Net Profit - dynamic: green glow or red */
+    .stat-value-profit-pos {{
+        color: var(--color-profit) !important;
+        text-shadow: 0 0 18px var(--color-profit-glow);
+    }}
+
+    .stat-value-profit-neg {{
+        color: var(--color-loss) !important;
+    }}
+
     /* --- 14. Overview Competition Cards --- */
     .overview-comp-card {{
         border-radius: var(--radius-md);
@@ -721,8 +742,13 @@ st.markdown(f"""
         font-variant-numeric: tabular-nums;
     }}
 
+    .overview-stat-value-staked {{
+        color: #6BCB77 !important;
+    }}
+
     .overview-stat-value-green {{
         color: var(--color-profit) !important;
+        text-shadow: 0 0 12px var(--color-profit-glow);
     }}
 
     /* --- 16. Next Bet Display --- */
@@ -1703,7 +1729,7 @@ if track == "📊 Overview":
                     <div class="overview-stats-row">
                         <div class="overview-stat-item">
                             <div class="overview-stat-label">Total Staked</div>
-                            <div class="overview-stat-value">₪{stats['total_staked']:,.0f}</div>
+                            <div class="overview-stat-value overview-stat-value-staked">₪{stats['total_staked']:,.0f}</div>
                         </div>
                         <div class="overview-stat-item">
                             <div class="overview-stat-label">Total Won</div>
@@ -1927,6 +1953,7 @@ elif track.startswith("⚽ "):
     stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0})
     
     # Statistics Boxes
+    profit_val_class = "stat-value-profit-pos" if stats['net_profit'] >= 0 else "stat-value-profit-neg"
     st.markdown(f"""
         <div class="stats-container">
             <div class="stat-box stat-box-total">
@@ -1939,7 +1966,7 @@ elif track.startswith("⚽ "):
             </div>
             <div class="stat-box stat-box-profit">
                 <div class="stat-label">📈 Net Profit</div>
-                <div class="stat-value">₪{stats['net_profit']:,.0f}</div>
+                <div class="stat-value {profit_val_class}">₪{stats['net_profit']:,.0f}</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
