@@ -214,15 +214,19 @@ st.markdown(f"""
     }}
 
     [data-testid="stSidebar"] input {{
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        color: var(--text-on-dark) !important;
+        background: #FFFFFF !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        color: #1A1D23 !important;
         border-radius: var(--radius-sm) !important;
     }}
 
     [data-testid="stSidebar"] input:focus {{
         border-color: var(--accent) !important;
         box-shadow: 0 0 0 2px rgba(37,99,235,0.3) !important;
+    }}
+
+    [data-testid="stSidebar"] [data-baseweb="input"] div {{
+        color: #1A1D23 !important;
     }}
 
     /* --- Forms --- */
