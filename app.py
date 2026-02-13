@@ -355,17 +355,17 @@ st.markdown(f"""
 
     .match-card-won {{
         border-left: 4px solid var(--color-profit);
-        background: linear-gradient(90deg, var(--color-profit-bg) 0%, var(--bg-card) 30%);
+        background: rgba(22, 163, 74, 0.15);
     }}
 
     .match-card-lost {{
         border-left: 4px solid var(--color-loss);
-        background: linear-gradient(90deg, var(--color-loss-bg) 0%, var(--bg-card) 30%);
+        background: rgba(220, 38, 38, 0.15);
     }}
 
     .match-card-pending {{
         border-left: 4px solid var(--color-pending);
-        background: linear-gradient(90deg, var(--color-pending-bg) 0%, var(--bg-card) 30%);
+        background: rgba(217, 119, 6, 0.12);
     }}
 
     .match-card .match-info {{
