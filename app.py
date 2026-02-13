@@ -446,26 +446,7 @@ st.markdown(f"""
         transform: scale(1.04);
     }}
 
-    [data-testid="stAppViewContainer"] .comp-banner-box h1 {{
-        margin: 0;
-        font-weight: 800;
-        font-size: 1.5rem;
-        letter-spacing: 5px;
-        text-transform: uppercase;
-        color: #FFFFFF !important;
-    }}
-
-    [data-testid="stAppViewContainer"] [data-testid="stMain"] .comp-banner-text {{
-        margin: 0;
-        font-weight: 800;
-        font-size: 1.5rem;
-        letter-spacing: 5px;
-        text-transform: uppercase;
-        color: #FFFFFF !important;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }}
-
-    [data-testid="stAppViewContainer"] [data-testid="stMain"] .overview-banner-text {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] [data-testid="stMarkdownContainer"] .banner-title {{
         margin: 0;
         font-weight: 800;
         font-size: 1.6rem;
@@ -473,6 +454,10 @@ st.markdown(f"""
         text-transform: uppercase;
         color: #FFFFFF !important;
         text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }}
+
+    .comp-banner-box .banner-title {{
+        color: #FFFFFF !important;
     }}
 
     /* --- Stats Container --- */
@@ -1163,12 +1148,7 @@ st.markdown(f"""
             margin-right: 0;
         }}
 
-        .comp-banner-box .comp-banner-text {{
-            display: none !important;
-        }}
-
-        .comp-banner-box .overview-banner-text {{
-            display: block !important;
+        .comp-banner-box .banner-title {{
             font-size: 1.1rem;
             letter-spacing: 4px;
         }}
@@ -1610,7 +1590,7 @@ if error_msg:
 if track == "📊 Overview":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">OVERVIEW</h1>
+            <div class="banner-title">OVERVIEW</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1676,7 +1656,7 @@ if track == "📊 Overview":
 elif track == "➕ New Competition":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">➕ NEW COMPETITION</h1>
+            <div class="banner-title">➕ NEW COMPETITION</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1752,7 +1732,7 @@ elif track == "➕ New Competition":
 elif track == "📁 Archive":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">📁 ARCHIVE</h1>
+            <div class="banner-title">📁 ARCHIVE</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1790,7 +1770,7 @@ elif track == "📁 Archive":
 elif track == "⚙️ Manage Competitions":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">⚙️ MANAGE COMPETITIONS</h1>
+            <div class="banner-title">⚙️ MANAGE COMPETITIONS</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1852,7 +1832,7 @@ elif track.startswith("⚽ "):
     st.markdown(f"""
         <div class="comp-banner-box" style="background: {comp_info['gradient']};">
             {logo_html}
-            <h1 class="comp-banner-text" style="color: #FFFFFF !important;">{comp_name.upper()}</h1>
+            <div class="banner-title">{comp_name.upper()}</div>
         </div>
     """, unsafe_allow_html=True)
     
