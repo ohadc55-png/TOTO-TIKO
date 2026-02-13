@@ -1610,7 +1610,7 @@ if error_msg:
 if track == "📊 Overview":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text">OVERVIEW</h1>
+            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">OVERVIEW</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1676,7 +1676,7 @@ if track == "📊 Overview":
 elif track == "➕ New Competition":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text">➕ NEW COMPETITION</h1>
+            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">➕ NEW COMPETITION</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1752,7 +1752,7 @@ elif track == "➕ New Competition":
 elif track == "📁 Archive":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text">📁 ARCHIVE</h1>
+            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">📁 ARCHIVE</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1790,7 +1790,7 @@ elif track == "📁 Archive":
 elif track == "⚙️ Manage Competitions":
     st.markdown("""
         <div class="comp-banner-box" style="background: linear-gradient(135deg, #1B2A4A 0%, #162240 100%);">
-            <h1 class="overview-banner-text">⚙️ MANAGE COMPETITIONS</h1>
+            <h1 class="overview-banner-text" style="color: #FFFFFF !important;">⚙️ MANAGE COMPETITIONS</h1>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1852,7 +1852,7 @@ elif track.startswith("⚽ "):
     st.markdown(f"""
         <div class="comp-banner-box" style="background: {comp_info['gradient']};">
             {logo_html}
-            <h1 class="comp-banner-text" style="color: {comp_info['text_color']};">{comp_name.upper()}</h1>
+            <h1 class="comp-banner-text" style="color: #FFFFFF !important;">{comp_name.upper()}</h1>
         </div>
     """, unsafe_allow_html=True)
     
