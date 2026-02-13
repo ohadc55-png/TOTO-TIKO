@@ -519,7 +519,8 @@ st.markdown(f"""
 
     /* Net Profit dynamic */
     [data-testid="stAppViewContainer"] .stat-value-profit-pos {{
-        color: var(--color-profit) !important;
+        color: #10B981 !important;
+        text-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 24px rgba(16, 185, 129, 0.3);
     }}
 
     [data-testid="stAppViewContainer"] .stat-value-profit-neg {{
