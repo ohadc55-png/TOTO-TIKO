@@ -446,31 +446,32 @@ st.markdown(f"""
         transform: scale(1.04);
     }}
 
-    .comp-banner-box h1 {{
+    [data-testid="stAppViewContainer"] .comp-banner-box h1 {{
         margin: 0;
         font-weight: 800;
         font-size: 1.5rem;
         letter-spacing: 5px;
         text-transform: uppercase;
+        color: #FFFFFF !important;
     }}
 
-    .comp-banner-text {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .comp-banner-text {{
         margin: 0;
         font-weight: 800;
         font-size: 1.5rem;
         letter-spacing: 5px;
         text-transform: uppercase;
-        color: var(--text-on-dark) !important;
+        color: #FFFFFF !important;
         text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }}
 
-    .overview-banner-text {{
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .overview-banner-text {{
         margin: 0;
         font-weight: 800;
         font-size: 1.6rem;
         letter-spacing: 6px;
         text-transform: uppercase;
-        color: var(--text-on-dark) !important;
+        color: #FFFFFF !important;
         text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }}
 
