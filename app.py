@@ -354,18 +354,21 @@ st.markdown(f"""
     }}
 
     .match-card-won {{
-        border-left: 4px solid var(--color-profit);
-        background: #D1FAE5;
+        border: 1.5px solid #34D399;
+        border-left: 4px solid #059669;
+        background: #ECFDF5;
     }}
 
     .match-card-lost {{
-        border-left: 4px solid var(--color-loss);
-        background: #FEE2E2;
+        border: 1.5px solid #FCA5A5;
+        border-left: 4px solid #DC2626;
+        background: #FFF1F2;
     }}
 
     .match-card-pending {{
-        border-left: 4px solid var(--color-pending);
-        background: #FEF3C7;
+        border: 1.5px solid #FCD34D;
+        border-left: 4px solid #D97706;
+        background: #FFFBEB;
     }}
 
     .match-card .match-info {{
