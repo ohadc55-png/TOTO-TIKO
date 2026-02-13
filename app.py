@@ -87,9 +87,9 @@ st.markdown(f"""
         background-image:
             linear-gradient(
                 175deg,
-                rgba(240, 242, 245, 0.92) 0%,
-                rgba(235, 238, 243, 0.88) 40%,
-                rgba(230, 234, 240, 0.90) 100%
+                rgba(240, 242, 245, 0.75) 0%,
+                rgba(235, 238, 243, 0.70) 40%,
+                rgba(230, 234, 240, 0.72) 100%
             ),
             url("{BG_IMAGE_URL}");
         background-attachment: fixed;
