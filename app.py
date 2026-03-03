@@ -1144,6 +1144,120 @@ st.markdown(f"""
         letter-spacing: 1px;
     }}
 
+    /* --- Match Action Buttons --- */
+    .action-row-pending,
+    .action-row-settled {{
+        display: none !important;
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }}
+
+    /* WIN Button — green gradient */
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:first-child button {{
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        letter-spacing: 1.5px !important;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35) !important;
+        border-radius: var(--radius-sm) !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:first-child button p,
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:first-child button span,
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:first-child button div {{
+        color: #FFFFFF !important;
+    }}
+
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:first-child button:hover {{
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+        transform: translateY(-2px) !important;
+    }}
+
+    /* LOSS Button — red gradient */
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:nth-child(2) button {{
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        letter-spacing: 1.5px !important;
+        box-shadow: 0 3px 10px rgba(239, 68, 68, 0.35) !important;
+        border-radius: var(--radius-sm) !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:nth-child(2) button p,
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:nth-child(2) button span,
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:nth-child(2) button div {{
+        color: #FFFFFF !important;
+    }}
+
+    [data-testid="stElementContainer"]:has(.action-row-pending) + [data-testid="stElementContainer"] [data-testid="stColumn"]:nth-child(2) button:hover {{
+        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45) !important;
+        transform: translateY(-2px) !important;
+    }}
+
+    /* Edit Popover Trigger — accent outline */
+    [data-testid="stPopover"] > button {{
+        background: transparent !important;
+        border: 2px solid var(--accent) !important;
+        color: var(--accent) !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.5px !important;
+        border-radius: var(--radius-sm) !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    [data-testid="stPopover"] > button p,
+    [data-testid="stPopover"] > button span,
+    [data-testid="stPopover"] > button div {{
+        color: var(--accent) !important;
+    }}
+
+    [data-testid="stPopover"] > button:hover {{
+        background: var(--accent) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+        transform: translateY(-2px) !important;
+    }}
+
+    [data-testid="stPopover"] > button:hover p,
+    [data-testid="stPopover"] > button:hover span,
+    [data-testid="stPopover"] > button:hover div {{
+        color: #FFFFFF !important;
+    }}
+
+    /* Delete button inside popover — red outline */
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button {{
+        background: transparent !important;
+        border: 2px solid #EF4444 !important;
+        color: #EF4444 !important;
+    }}
+
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button p,
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button span {{
+        color: #EF4444 !important;
+    }}
+
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button:hover {{
+        background: #EF4444 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    }}
+
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button:hover p,
+    [data-testid="stPopover"] [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:last-child button:hover span {{
+        color: #FFFFFF !important;
+    }}
+
     /* --- Mobile Responsive --- */
     @media (max-width: 768px) {{
         .comp-banner-box {{
@@ -1981,6 +2095,7 @@ elif track.startswith("⚽ "):
             
             # Action buttons row
             if row['Status'] == "Pending":
+                st.markdown('<div class="action-row-pending"></div>', unsafe_allow_html=True)
                 btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
                 with btn_col1:
                     if st.button("✅ WIN", key=f"win_{row['Row']}", use_container_width=True):
@@ -2035,6 +2150,7 @@ elif track.startswith("⚽ "):
                                     st.success("✅ Deleted!")
                                     st.rerun()
             else:
+                st.markdown('<div class="action-row-settled"></div>', unsafe_allow_html=True)
                 _, _, edit_col = st.columns([1, 1, 1])
                 with edit_col:
                     with st.popover("✏️ Edit", use_container_width=True):
