@@ -1419,6 +1419,8 @@ def process_data(raw, competitions_dict):
                 "Row": i + 2,
                 "Comp": comp,
                 "Match": match_name,
+                "Home": home,
+                "Away": away,
                 "Date": date,
                 "Profit": 0,
                 "Status": "Pending",
@@ -1455,6 +1457,8 @@ def process_data(raw, competitions_dict):
             "Row": i + 2,
             "Comp": comp,
             "Match": match_name,
+            "Home": home,
+            "Away": away,
             "Date": date,
             "Profit": net_profit,
             "Status": status,
@@ -1992,6 +1996,58 @@ elif track.startswith("⚽ "):
                             if ws:
                                 ws.update_cell(row['Row'], RESULT_COL, "No Draw")
                                 connect_to_sheets.clear()
+                                st.rerun()
+
+            # Edit expander for all matches
+            with st.expander("✏️ Edit Match", expanded=False):
+                edit_col1, edit_col2 = st.columns(2)
+                with edit_col1:
+                    edit_home = st.text_input("Home Team", value=row['Home'], key=f"edit_home_{row['Row']}")
+                with edit_col2:
+                    edit_away = st.text_input("Away Team", value=row['Away'], key=f"edit_away_{row['Row']}")
+
+                edit_col3, edit_col4 = st.columns(2)
+                with edit_col3:
+                    edit_odds = st.number_input("Odds", min_value=1.01, value=float(row['Odds']), step=0.1, key=f"edit_odds_{row['Row']}")
+                with edit_col4:
+                    edit_stake = st.number_input("Stake (₪)", min_value=1.0, value=float(row['Stake']), step=10.0, key=f"edit_stake_{row['Row']}")
+
+                edit_col5, edit_col6 = st.columns(2)
+                with edit_col5:
+                    result_options = ["Pending", "Draw (X)", "No Draw"]
+                    current_result = row['Status']
+                    if current_result == "Won":
+                        current_result = "Draw (X)"
+                    elif current_result == "Lost":
+                        current_result = "No Draw"
+                    result_idx = result_options.index(current_result) if current_result in result_options else 0
+                    edit_result = st.selectbox("Result", result_options, index=result_idx, key=f"edit_result_{row['Row']}")
+                with edit_col6:
+                    edit_date = st.text_input("Date", value=row['Date'], key=f"edit_date_{row['Row']}")
+
+                btn_col1, btn_col2 = st.columns(2)
+                with btn_col1:
+                    if st.button("💾 Save Changes", key=f"save_{row['Row']}", use_container_width=True, type="primary"):
+                        with st.spinner('⚽ Saving...'):
+                            ws = get_matches_worksheet()
+                            if ws:
+                                ws.update_cell(row['Row'], 1, edit_date)
+                                ws.update_cell(row['Row'], 3, edit_home)
+                                ws.update_cell(row['Row'], 4, edit_away)
+                                ws.update_cell(row['Row'], 5, edit_odds)
+                                ws.update_cell(row['Row'], 6, edit_result)
+                                ws.update_cell(row['Row'], 7, edit_stake)
+                                connect_to_sheets.clear()
+                                st.success("✅ Match updated!")
+                                st.rerun()
+                with btn_col2:
+                    if st.button("🗑️ Delete Match", key=f"del_{row['Row']}", use_container_width=True):
+                        with st.spinner('⚽ Deleting...'):
+                            ws = get_matches_worksheet()
+                            if ws:
+                                ws.delete_rows(row['Row'])
+                                connect_to_sheets.clear()
+                                st.success("✅ Match deleted!")
                                 st.rerun()
     else:
         st.markdown("""
