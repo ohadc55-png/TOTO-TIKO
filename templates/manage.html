@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% set active_page = "manage" %}
+
+{% block title %}Manage Competitions — Elite Football Tracker{% endblock %}
+
+{% block header_left %}
+<a href="/" class="p-2 hover:bg-slate-800 rounded-full transition-colors">
+    <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<h1 class="text-lg font-bold leading-tight tracking-tight">Manage Competitions</h1>
+{% endblock %}
+
+{% block content %}
+<!-- Global Settings -->
+<div class="glass rounded-2xl p-5 mb-6 mt-2">
+    <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary">tune</span>
+        <h3 class="font-bold text-lg">Global Settings</h3>
+    </div>
+    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+        <div>
+            <p class="text-sm font-medium text-white">Default Stake (All)</p>
+            <p class="text-xs text-slate-500">Used when no competition-specific stake is set</p>
+        </div>
+        <p class="text-lg font-bold text-primary">₪30</p>
+    </div>
+</div>
+
+<!-- Active Competitions -->
+<div class="flex items-center gap-2 mb-4">
+    <span class="material-symbols-outlined text-slate-400">trophy</span>
+    <h3 class="font-bold text-lg">Active Competitions ({{ active_competitions|length }})</h3>
+</div>
+
+{% if active_competitions %}
+<div class="space-y-3">
+    {% for comp_name, comp_info in active_competitions.items() %}
+    <details class="glass rounded-2xl overflow-hidden group">
+        <summary class="flex items-center gap-4 p-4 cursor-pointer list-none hover:bg-slate-800/30 transition-colors">
+            {% if comp_info.logo %}
+            <div class="w-10 h-10 rounded-xl bg-white p-1.5 flex items-center justify-center flex-shrink-0">
+                <img src="{{ comp_info.logo }}" alt="{{ comp_name }}" class="w-7 h-7 object-contain"/>
+            </div>
+            {% else %}
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: {{ comp_info.gradient }};">
+                <span class="material-symbols-outlined text-white text-lg">trophy</span>
+            </div>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-white truncate">{{ comp_name }}</p>
+                <p class="text-xs text-slate-500">Matches: {{ competition_stats.get(comp_name, {}).get('total_staked', 0)|int }} staked · Created: {{ comp_info.created_date }}</p>
+            </div>
+            {% set stats = competition_stats.get(comp_name, {"net_profit": 0}) %}
+            <span class="{{ 'text-success' if stats.net_profit >= 0 else 'text-error' }} font-bold">
+                {{ '+' if stats.net_profit >= 0 else '' }}₪{{ stats.net_profit|money }}
+            </span>
+            <span class="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform">expand_more</span>
+        </summary>
+
+        <div class="p-4 pt-0 border-t border-slate-800">
+            <!-- Details -->
+            <div class="space-y-2 mb-4 mt-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Description</span>
+                    <span class="text-white">{{ comp_info.description or 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Default Stake</span>
+                    <span class="text-white">₪{{ comp_info.default_stake }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Created</span>
+                    <span class="text-white">{{ comp_info.created_date }}</span>
+                </div>
+            </div>
+
+            <!-- Update Stake -->
+            <div class="flex items-center gap-3 mb-3">
+                <label class="text-xs text-slate-400 uppercase tracking-wider whitespace-nowrap">New Stake</label>
+                <input id="stake-{{ comp_info.row }}" type="number" min="1" step="5" value="{{ comp_info.default_stake|int }}"
+                       class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-primary outline-none text-sm"/>
+                <button onclick="updateStake({{ comp_info.row }}, document.getElementById('stake-{{ comp_info.row }}').value)"
+                        class="px-4 py-2 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary/80 transition-colors">
+                    <span class="material-symbols-outlined text-sm align-middle">save</span>
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3">
+                <a href="/competition/{{ comp_name }}"
+                   class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold text-primary border border-primary hover:bg-primary hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span> Edit Matches
+                </a>
+                <button onclick="closeCompetition({{ comp_info.row }}, '{{ comp_name }}')"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-error border border-error hover:bg-error hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">lock</span> Close
+                </button>
+            </div>
+        </div>
+    </details>
+    {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+    <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-3xl text-slate-500">settings</span>
+    </div>
+    <p class="text-slate-400 text-sm">No active competitions to manage.</p>
+    <a href="/new-competition" class="mt-4 text-primary font-bold text-sm hover:underline">Create one</a>
+</div>
+{% endif %}
+{% endblock %}

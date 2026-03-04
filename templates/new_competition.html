@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% set active_page = "new_competition" %}
+
+{% block title %}New Competition — Elite Football Tracker{% endblock %}
+
+{% block header_left %}
+<a href="/" class="p-2 hover:bg-slate-800 rounded-full transition-colors">
+    <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<h1 class="text-lg font-bold leading-tight tracking-tight">New Competition</h1>
+{% endblock %}
+
+{% block header_right %}
+<span class="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-bold">STEP 1 OF 1</span>
+{% endblock %}
+
+{% block content %}
+<form id="create-competition-form" onsubmit="return createCompetition(event)" class="space-y-6 mt-2">
+    <!-- Competition Details -->
+    <div class="glass rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">emoji_events</span>
+            <h3 class="font-bold text-lg">Competition Details</h3>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Competition Name</label>
+                <input name="name" type="text" required placeholder="e.g. Champions League"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Description</label>
+                <textarea name="description" rows="3" placeholder="Describe the rules, participants, or prizes..."
+                          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"></textarea>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Default Stake</label>
+                <input name="default_stake" type="number" min="1" step="1" value="30"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Logo URL</label>
+                <input name="logo_url" type="url" placeholder="https://image-url.com"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branding & Colors -->
+    <div class="glass rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">palette</span>
+            <h3 class="font-bold text-lg">Branding & Colors</h3>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Primary Color</label>
+                <div class="flex items-center gap-3">
+                    <input name="color1" type="color" value="#3A63DB" id="color1"
+                           class="w-12 h-12 rounded-xl border border-slate-700 cursor-pointer bg-transparent"/>
+                    <span id="color1-hex" class="text-sm text-slate-400 font-mono">#3A63DB</span>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Secondary Color</label>
+                <div class="flex items-center gap-3">
+                    <input name="color2" type="color" value="#C366F1" id="color2"
+                           class="w-12 h-12 rounded-xl border border-slate-700 cursor-pointer bg-transparent"/>
+                    <span id="color2-hex" class="text-sm text-slate-400 font-mono">#C366F1</span>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1.5">Text Color</label>
+                <div class="flex items-center gap-3">
+                    <input name="text_color" type="color" value="#FFFFFF" id="text-color"
+                           class="w-12 h-12 rounded-xl border border-slate-700 cursor-pointer bg-transparent"/>
+                    <span id="text-color-hex" class="text-sm text-slate-400 font-mono">#FFFFFF</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit"
+            class="w-full py-4 rounded-2xl font-bold text-white bg-primary hover:bg-primary/80 transition-colors shadow-lg shadow-primary/20 text-lg">
+        Create Competition
+        <span class="material-symbols-outlined text-sm align-middle ml-1">arrow_forward</span>
+    </button>
+
+    <!-- Live Preview -->
+    <div class="glass rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">visibility</span>
+            <h3 class="font-bold">Live Preview</h3>
+        </div>
+        <div id="preview-card" class="rounded-xl p-5 transition-all" style="background: linear-gradient(135deg, #3A63DB 0%, #C366F1 100%);">
+            <div class="flex items-center gap-3">
+                <div id="preview-logo" class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-2xl">trophy</span>
+                </div>
+                <div>
+                    <p id="preview-name" class="font-bold text-white text-lg">Competition Name</p>
+                    <p id="preview-desc" class="text-white/70 text-sm">Description</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Live preview updates
+    const nameInput = document.querySelector('input[name="name"]');
+    const descInput = document.querySelector('textarea[name="description"]');
+    const logoInput = document.querySelector('input[name="logo_url"]');
+    const color1Input = document.getElementById('color1');
+    const color2Input = document.getElementById('color2');
+    const textColorInput = document.getElementById('text-color');
+    const previewCard = document.getElementById('preview-card');
+    const previewName = document.getElementById('preview-name');
+    const previewDesc = document.getElementById('preview-desc');
+    const previewLogo = document.getElementById('preview-logo');
+
+    function updatePreview() {
+        const c1 = color1Input.value;
+        const c2 = color2Input.value;
+        const tc = textColorInput.value;
+        previewCard.style.background = `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+        previewName.style.color = tc;
+        previewDesc.style.color = tc + 'b3'; // with opacity
+        if (nameInput.value) previewName.textContent = nameInput.value;
+        else previewName.textContent = 'Competition Name';
+        if (descInput.value) previewDesc.textContent = descInput.value;
+        else previewDesc.textContent = 'Description';
+
+        document.getElementById('color1-hex').textContent = c1.toUpperCase();
+        document.getElementById('color2-hex').textContent = c2.toUpperCase();
+        document.getElementById('text-color-hex').textContent = tc.toUpperCase();
+
+        if (logoInput.value) {
+            previewLogo.innerHTML = `<img src="${logoInput.value}" alt="Logo" class="w-8 h-8 object-contain" onerror="this.parentElement.innerHTML='<span class=\\'material-symbols-outlined text-white text-2xl\\'>trophy</span>'"/>`;
+        }
+    }
+
+    [nameInput, descInput, logoInput, color1Input, color2Input, textColorInput].forEach(el => {
+        el.addEventListener('input', updatePreview);
+    });
+</script>
+{% endblock %}

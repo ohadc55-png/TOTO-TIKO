@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html class="dark" dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}Elite Football Tracker{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                        "card-dark": "#1c222d",
+                        "success": "#10b981",
+                        "error": "#ef4444",
+                        "warning": "#d97706",
+                        "purple": "#7c3aed",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body class="bg-background-dark text-slate-100 min-h-screen font-display pb-24">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-800">
+        <div class="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto w-full">
+            <div class="flex items-center gap-3">
+                {% block header_left %}
+                <a href="/" class="flex items-center gap-3">
+                    <img src="{{ logo }}" alt="Logo" class="w-8 h-8 rounded-lg"/>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+                        Elite Football Tracker
+                    </h1>
+                </a>
+                {% endblock %}
+            </div>
+            <div class="flex items-center gap-2">
+                {% block header_right %}
+                <button onclick="toggleBankrollModal()" class="p-2 hover:bg-slate-800 rounded-full transition-colors" title="Bankroll">
+                    <span class="material-symbols-outlined text-slate-300">account_balance_wallet</span>
+                </button>
+                {% endblock %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast notifications container -->
+    <div id="toast-container" class="fixed top-16 left-4 right-4 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <!-- Bankroll Modal -->
+    <div id="bankroll-modal" class="fixed inset-0 z-[90] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleBankrollModal()"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-card-dark border-t border-slate-700 rounded-t-2xl p-6 max-w-lg mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Bankroll Management</h3>
+                <button onclick="toggleBankrollModal()" class="p-1 hover:bg-slate-700 rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="text-center mb-4">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Current Bankroll</p>
+                <p class="text-3xl font-bold text-white">₪{{ bankroll|money }}</p>
+            </div>
+            <div class="mb-4">
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-2">Amount</label>
+                <input id="bankroll-amount" type="number" value="100" min="10" step="50"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-lg font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="bankrollAction('deposit')"
+                        class="py-3 rounded-xl font-bold text-white bg-success hover:bg-success/80 transition-colors">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">add</span> Deposit
+                </button>
+                <button onclick="bankrollAction('withdraw')"
+                        class="py-3 rounded-xl font-bold text-white bg-error hover:bg-error/80 transition-colors">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">remove</span> Withdraw
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-4 pb-24">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 z-50">
+        <div class="flex items-center justify-between px-6 pb-4 pt-2 max-w-lg mx-auto">
+            <a href="/" class="flex flex-col items-center gap-1 {{ 'text-primary' if active_page == 'overview' else 'text-slate-500 hover:text-primary' }} transition-colors">
+                <span class="material-symbols-outlined" {% if active_page == 'overview' %}style="font-variation-settings: 'FILL' 1"{% endif %}>grid_view</span>
+                <span class="text-[10px] font-medium">Overview</span>
+            </a>
+            <a href="/archive" class="flex flex-col items-center gap-1 {{ 'text-primary' if active_page == 'archive' else 'text-slate-500 hover:text-primary' }} transition-colors">
+                <span class="material-symbols-outlined" {% if active_page == 'archive' %}style="font-variation-settings: 'FILL' 1"{% endif %}>archive</span>
+                <span class="text-[10px] font-medium">Archive</span>
+            </a>
+            <div class="relative -top-6">
+                <a href="/new-competition"
+                   class="bg-primary text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-primary/40 border-4 border-background-dark hover:bg-primary/90 transition-colors">
+                    <span class="material-symbols-outlined text-3xl">add</span>
+                </a>
+            </div>
+            <a href="/manage" class="flex flex-col items-center gap-1 {{ 'text-primary' if active_page == 'manage' else 'text-slate-500 hover:text-primary' }} transition-colors">
+                <span class="material-symbols-outlined" {% if active_page == 'manage' %}style="font-variation-settings: 'FILL' 1"{% endif %}>settings</span>
+                <span class="text-[10px] font-medium">Manage</span>
+            </a>
+            <button onclick="toggleBankrollModal()" class="flex flex-col items-center gap-1 text-slate-500 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <span class="text-[10px] font-medium">Bankroll</span>
+            </button>
+        </div>
+    </nav>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% set active_page = "competition" %}
+
+{% block title %}{{ comp_name }} — Elite Football Tracker{% endblock %}
+
+{% block header_left %}
+<a href="/" class="p-2 hover:bg-slate-800 rounded-full transition-colors">
+    <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<h1 class="text-lg font-bold leading-tight tracking-tight">{{ comp_name }}</h1>
+{% endblock %}
+
+{% block content %}
+<!-- Competition Banner -->
+<div class="relative overflow-hidden rounded-2xl p-6 mb-6 border border-slate-700/30"
+     style="background: {{ comp_info.gradient }};">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+    <div class="relative z-10 flex items-center gap-4">
+        {% if comp_info.logo %}
+        <div class="w-16 h-16 rounded-2xl bg-white p-2 shadow-lg flex items-center justify-center">
+            <img src="{{ comp_info.logo }}" alt="{{ comp_name }}" class="w-12 h-12 object-contain"/>
+        </div>
+        {% endif %}
+        <div>
+            <h2 class="text-2xl font-bold text-white">{{ comp_name }}</h2>
+            <p class="text-white/70 text-sm">{{ comp_info.description or '' }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Current Balance -->
+<div class="text-center mb-6 py-4 glass rounded-2xl">
+    <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Current Balance</p>
+    {% set is_profit = current_bal >= bankroll %}
+    <h2 class="text-4xl font-bold {{ 'text-success' if is_profit else 'text-error' }}">
+        ₪{{ current_bal|money(2) }}
+    </h2>
+</div>
+
+<!-- Stats Boxes -->
+<div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="glass rounded-xl p-4 text-center">
+        <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Total Staked</p>
+        <p class="text-lg font-bold text-slate-300">₪{{ stats.total_staked|money }}</p>
+    </div>
+    <div class="glass rounded-xl p-4 text-center border-b-2 border-success">
+        <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Total Won</p>
+        <p class="text-lg font-bold text-success">₪{{ stats.total_income|money }}</p>
+    </div>
+    {% set profit_positive = stats.net_profit >= 0 %}
+    <div class="glass rounded-xl p-4 text-center border-b-2 {{ 'border-success' if profit_positive else 'border-error' }}">
+        <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Net Profit</p>
+        <p class="text-lg font-bold {{ 'text-success' if profit_positive else 'text-error' }}">
+            {{ '+' if profit_positive else '' }}₪{{ stats.net_profit|money }}
+        </p>
+    </div>
+</div>
+
+<!-- Next Recommended Bet -->
+<div class="mb-6 p-5 rounded-2xl bg-purple/10 border border-purple/20">
+    <div class="flex items-center gap-2 mb-2">
+        <span class="material-symbols-outlined text-purple text-sm">casino</span>
+        <p class="text-xs text-purple uppercase tracking-wider font-bold">Next Recommended Bet</p>
+    </div>
+    <p class="text-3xl font-bold text-purple">₪{{ next_bet|money }}</p>
+</div>
+
+<!-- Add New Match Form -->
+<div class="glass rounded-2xl p-5 mb-8">
+    <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary">add_circle</span>
+        <h3 class="font-bold text-lg">Add New Match</h3>
+    </div>
+    <form id="add-match-form" onsubmit="return addMatch(event, '{{ comp_name }}')">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Home Team</label>
+                <input name="home" type="text" required placeholder="Home team"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"/>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Away Team</label>
+                <input name="away" type="text" required placeholder="Away team"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"/>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Odds</label>
+                <input name="odds" type="number" step="0.01" min="1.01" value="3.20" required
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"/>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Stake (₪)</label>
+                <input name="stake" type="number" step="1" min="1" value="{{ next_bet|money }}" required
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"/>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label class="text-xs text-slate-400 uppercase tracking-wider block mb-2">Result</label>
+            <div class="flex gap-2">
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="result" value="Pending" checked class="hidden peer"/>
+                    <div class="text-center py-2 px-3 rounded-xl border border-slate-700 text-sm font-medium text-slate-400
+                                peer-checked:border-warning peer-checked:bg-warning/10 peer-checked:text-warning transition-all">
+                        Pending
+                    </div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="result" value="Draw (X)" class="hidden peer"/>
+                    <div class="text-center py-2 px-3 rounded-xl border border-slate-700 text-sm font-medium text-slate-400
+                                peer-checked:border-success peer-checked:bg-success/10 peer-checked:text-success transition-all">
+                        Draw (X)
+                    </div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="result" value="No Draw" class="hidden peer"/>
+                    <div class="text-center py-2 px-3 rounded-xl border border-slate-700 text-sm font-medium text-slate-400
+                                peer-checked:border-error peer-checked:bg-error/10 peer-checked:text-error transition-all">
+                        No Draw
+                    </div>
+                </label>
+            </div>
+        </div>
+        <button type="submit"
+                class="w-full py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary/80 transition-colors shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-sm align-middle mr-1">save</span>
+            Save Match
+        </button>
+    </form>
+</div>
+
+<!-- Match History -->
+<div class="flex items-center gap-2 mb-4">
+    <span class="material-symbols-outlined text-slate-400">history</span>
+    <h3 class="font-bold text-lg">Match History</h3>
+    <span class="text-xs text-slate-500 mr-auto">({{ matches|length }})</span>
+</div>
+
+{% if matches %}
+<div class="space-y-3">
+    {% for match in matches %}
+    <div class="match-card glass rounded-xl p-4
+                {{ 'border-r-4 border-success bg-success/5' if match.Status == 'Won' else '' }}
+                {{ 'border-r-4 border-error bg-error/5' if match.Status == 'Lost' else '' }}
+                {{ 'border-r-4 border-warning bg-warning/5' if match.Status == 'Pending' else '' }}">
+        <div class="flex items-start justify-between mb-2">
+            <div>
+                <p class="font-bold text-white">{{ match.Match }}</p>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    {{ match.Date }} · Stake: ₪{{ match.Stake|money }} · Odds: {{ "%.2f"|format(match.Odds) }}
+                </p>
+            </div>
+            <div class="text-left">
+                {% if match.Status == 'Won' %}
+                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-success/20 text-success">Won</span>
+                <p class="text-success font-bold text-lg mt-0.5">+₪{{ match.Profit|money }}</p>
+                {% elif match.Status == 'Lost' %}
+                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-error/20 text-error">Lost</span>
+                <p class="text-error font-bold text-lg mt-0.5">-₪{{ match.Stake|money }}</p>
+                {% else %}
+                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-warning/20 text-warning">Pending</span>
+                <p class="text-warning font-bold text-lg mt-0.5">₪{{ match.Stake|money }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2 mt-3 pt-3 border-t border-slate-800">
+            {% if match.Status == 'Pending' %}
+            <button onclick="setResult({{ match.Row }}, 'Draw (X)')"
+                    class="flex-1 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md shadow-emerald-500/20">
+                <span class="material-symbols-outlined text-sm align-middle mr-0.5">check</span> WIN
+            </button>
+            <button onclick="setResult({{ match.Row }}, 'No Draw')"
+                    class="flex-1 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all shadow-md shadow-red-500/20">
+                <span class="material-symbols-outlined text-sm align-middle mr-0.5">close</span> LOSS
+            </button>
+            {% endif %}
+            <button onclick="openEditModal({{ match.Row }}, '{{ match.Home }}', '{{ match.Away }}', {{ match.Odds }}, {{ match.Stake }}, '{{ match.Status }}', '{{ match.Date }}')"
+                    class="{% if match.Status == 'Pending' %}w-12{% else %}flex-1{% endif %} py-2 rounded-xl text-sm font-bold text-primary border-2 border-primary hover:bg-primary hover:text-white transition-all">
+                <span class="material-symbols-outlined text-sm">edit</span>
+                {% if match.Status != 'Pending' %} Edit{% endif %}
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+    <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-3xl text-slate-500">sports_soccer</span>
+    </div>
+    <p class="text-slate-400 text-sm">No matches recorded yet. Add your first match above!</p>
+</div>
+{% endif %}
+
+<!-- Edit Match Modal -->
+<div id="edit-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-card-dark border-t border-slate-700 rounded-t-2xl p-6 max-w-lg mx-auto max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold">Edit Match</h3>
+            <button onclick="closeEditModal()" class="p-1 hover:bg-slate-700 rounded-full">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="edit-match-form" onsubmit="return saveEdit(event)">
+            <input type="hidden" name="row" id="edit-row"/>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 uppercase block mb-1">Home Team</label>
+                    <input id="edit-home" name="home" type="text" required
+                           class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm"/>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 uppercase block mb-1">Away Team</label>
+                    <input id="edit-away" name="away" type="text" required
+                           class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm"/>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase block mb-1">Odds</label>
+                        <input id="edit-odds" name="odds" type="number" step="0.01" min="1.01" required
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase block mb-1">Stake (₪)</label>
+                        <input id="edit-stake" name="stake" type="number" step="1" min="1" required
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm"/>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 uppercase block mb-1">Result</label>
+                    <select id="edit-result" name="result"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm">
+                        <option value="Pending">Pending</option>
+                        <option value="Draw (X)">Draw (X) — Win</option>
+                        <option value="No Draw">No Draw — Loss</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 uppercase block mb-1">Date</label>
+                    <input id="edit-date" name="date" type="text" required
+                           class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-primary outline-none text-sm"/>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-5">
+                <button type="submit"
+                        class="py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary/80 transition-colors">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">save</span> Save
+                </button>
+                <button type="button" onclick="deleteMatch()"
+                        class="py-3 rounded-xl font-bold text-error border-2 border-error hover:bg-error hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">delete</span> Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

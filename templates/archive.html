@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set active_page = "archive" %}
+
+{% block title %}Archive — Elite Football Tracker{% endblock %}
+
+{% block header_left %}
+<a href="/" class="p-2 hover:bg-slate-800 rounded-full transition-colors">
+    <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<h1 class="text-lg font-bold leading-tight tracking-tight">Archive</h1>
+{% endblock %}
+
+{% block header_right %}
+<button class="p-2 hover:bg-slate-800 rounded-full transition-colors">
+    <span class="material-symbols-outlined">search</span>
+</button>
+{% endblock %}
+
+{% block content %}
+{% if archived_competitions %}
+<div class="space-y-4 mt-2">
+    {% for comp_name, comp_info in archived_competitions.items() %}
+    {% set profit = archive_profits.get(comp_name, 0) %}
+    {% set stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0}) %}
+    <div class="group overflow-hidden rounded-2xl bg-card-dark border border-slate-800 shadow-sm transition-all hover:shadow-md">
+        <!-- Card Header with gradient -->
+        <div class="relative h-24 w-full opacity-80" style="background: {{ comp_info.gradient }};">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#1c222d] to-transparent"></div>
+            <div class="absolute bottom-3 right-4 flex items-center gap-3">
+                {% if comp_info.logo %}
+                <div class="bg-white p-1.5 rounded-lg shadow-lg">
+                    <img src="{{ comp_info.logo }}" alt="{{ comp_name }}" class="w-8 h-8 object-contain"/>
+                </div>
+                {% endif %}
+                <div>
+                    <h3 class="text-white font-bold text-lg leading-tight">{{ comp_name }}</h3>
+                    <p class="text-slate-300 text-xs font-medium">Closed: {{ comp_info.closed_date or 'N/A' }}</p>
+                </div>
+            </div>
+            <div class="absolute top-3 left-4">
+                <span class="bg-slate-900/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full border border-white/20 uppercase tracking-wider font-bold">
+                    Closed
+                </span>
+            </div>
+        </div>
+        <!-- Card Body -->
+        <div class="p-4">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="flex flex-col">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Total Staked</span>
+                    <span class="text-white font-bold text-sm">₪{{ stats.total_staked|money }}</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Total Won</span>
+                    <span class="text-white font-bold text-sm">₪{{ stats.total_income|money }}</span>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Final Profit</span>
+                    <span class="{{ 'text-success' if profit >= 0 else 'text-error' }} font-bold text-sm">
+                        {{ '+' if profit >= 0 else '' }}₪{{ profit|money }}
+                    </span>
+                </div>
+            </div>
+            {% if stats.total_staked > 0 %}
+            {% set roi = (profit / stats.total_staked * 100) %}
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full {{ 'bg-success/20' if roi >= 0 else 'bg-error/20' }} flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px] {{ 'text-success' if roi >= 0 else 'text-error' }} font-bold">
+                            {{ 'trending_up' if roi >= 0 else 'trending_down' }}
+                        </span>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium">ROI: {{ "%.1f"|format(roi) }}%</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Summary Stats -->
+{% set total_archive_profit = archive_profits.values()|sum %}
+{% set total_archive_staked = competition_stats.values()|map(attribute='total_staked')|sum %}
+<div class="mt-8 p-4 rounded-2xl glass-primary">
+    <h4 class="text-primary font-bold text-sm mb-3">Archive Summary</h4>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="glass p-3 rounded-xl">
+            <span class="text-xs text-slate-500 block mb-1">Total Profit</span>
+            <span class="text-lg font-bold {{ 'text-success' if total_archive_profit >= 0 else 'text-error' }}">
+                {{ '+' if total_archive_profit >= 0 else '' }}₪{{ total_archive_profit|money }}
+            </span>
+        </div>
+        <div class="glass p-3 rounded-xl">
+            <span class="text-xs text-slate-500 block mb-1">Competitions</span>
+            <span class="text-lg font-bold text-white">{{ archived_competitions|length }}</span>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-20 text-center px-6">
+    <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-4xl text-slate-500">archive</span>
+    </div>
+    <h3 class="text-lg font-bold text-white mb-2">No Archived Competitions</h3>
+    <p class="text-slate-400 text-sm">Closed competitions will appear here for historical tracking and analysis.</p>
+</div>
+{% endif %}
+{% endblock %}

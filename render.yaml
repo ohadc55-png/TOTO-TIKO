@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: elite-football-tracker
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-flask.txt
+    startCommand: gunicorn flask_app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: GOOGLE_CREDENTIALS
+        sync: false
+      - key: SHEET_ID
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
