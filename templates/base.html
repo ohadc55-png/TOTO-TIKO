@@ -36,7 +36,7 @@
             },
         }
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2"/>
 </head>
 <body class="bg-background-dark text-slate-100 min-h-screen font-display pb-24">
 
@@ -138,7 +138,16 @@
         </div>
     </nav>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
+    <script>
+        // Inline fallback: always hide loader when page is ready
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var el = document.getElementById('loading-overlay');
+                if (el) el.classList.remove('active');
+            }, 400);
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
