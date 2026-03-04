@@ -138,6 +138,86 @@ input[type="color"]::-webkit-color-swatch {
     to { transform: rotate(360deg); }
 }
 
+/* --- Football Loading Overlay --- */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(17, 22, 33, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.loading-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.football-bouncer {
+    font-size: 48px;
+    animation: footballBounce 2s ease-in forwards;
+}
+
+.football-shadow {
+    width: 40px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(36, 99, 235, 0.3);
+    margin-top: 4px;
+    animation: shadowPulse 2s ease-in forwards;
+}
+
+.loading-text {
+    margin-top: 16px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+@keyframes footballBounce {
+    0%   { transform: translateY(0); }
+    4%   { transform: translateY(-120px); }
+    10%  { transform: translateY(0); }
+    14%  { transform: translateY(-90px); }
+    20%  { transform: translateY(0); }
+    24%  { transform: translateY(-60px); }
+    30%  { transform: translateY(0); }
+    34%  { transform: translateY(-36px); }
+    40%  { transform: translateY(0); }
+    44%  { transform: translateY(-20px); }
+    50%  { transform: translateY(0); }
+    54%  { transform: translateY(-10px); }
+    60%  { transform: translateY(0); }
+    64%  { transform: translateY(-4px); }
+    70%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes shadowPulse {
+    0%   { transform: scaleX(1); opacity: 0.3; }
+    4%   { transform: scaleX(0.4); opacity: 0.1; }
+    10%  { transform: scaleX(1); opacity: 0.3; }
+    14%  { transform: scaleX(0.5); opacity: 0.15; }
+    20%  { transform: scaleX(1); opacity: 0.3; }
+    24%  { transform: scaleX(0.6); opacity: 0.18; }
+    30%  { transform: scaleX(1); opacity: 0.3; }
+    34%  { transform: scaleX(0.7); opacity: 0.2; }
+    40%  { transform: scaleX(1); opacity: 0.3; }
+    44%  { transform: scaleX(0.8); opacity: 0.22; }
+    50%  { transform: scaleX(1); opacity: 0.3; }
+    54%  { transform: scaleX(0.85); opacity: 0.25; }
+    60%  { transform: scaleX(1); opacity: 0.3; }
+    64%  { transform: scaleX(0.9); opacity: 0.27; }
+    70%  { transform: scaleX(1); opacity: 0.3; }
+    100% { transform: scaleX(1); opacity: 0.3; }
+}
+
 /* --- Selection --- */
 ::selection {
     background: rgba(36, 99, 235, 0.3);

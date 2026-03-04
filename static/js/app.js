@@ -2,6 +2,34 @@
    ELITE FOOTBALL TRACKER — Client-side Interactivity
    ============================================================ */
 
+// --- Loading Overlay ---
+function showLoader() {
+    const el = document.getElementById('loading-overlay');
+    if (!el) return;
+    // Reset animations by re-inserting bouncer
+    const bouncer = el.querySelector('.football-bouncer');
+    const shadow = el.querySelector('.football-shadow');
+    if (bouncer) { bouncer.style.animation = 'none'; bouncer.offsetHeight; bouncer.style.animation = ''; }
+    if (shadow) { shadow.style.animation = 'none'; shadow.offsetHeight; shadow.style.animation = ''; }
+    el.classList.add('active');
+}
+
+function hideLoader() {
+    const el = document.getElementById('loading-overlay');
+    if (el) el.classList.remove('active');
+}
+
+// Show loader on page navigation (link clicks)
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href]');
+    if (link && link.href && !link.href.startsWith('javascript') && !link.hasAttribute('data-no-loader')) {
+        showLoader();
+    }
+});
+
+// Hide loader once page is fully loaded
+window.addEventListener('load', hideLoader);
+
 // --- Toast Notifications ---
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -26,6 +54,7 @@ async function bankrollAction(action) {
         return;
     }
 
+    showLoader();
     try {
         const res = await fetch(`/api/bankroll/${action}`, {
             method: 'POST',
@@ -38,9 +67,11 @@ async function bankrollAction(action) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Operation failed', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
 }
 
@@ -64,6 +95,7 @@ async function addMatch(event, competition) {
         return false;
     }
 
+    showLoader();
     try {
         const res = await fetch('/api/match', {
             method: 'POST',
@@ -76,15 +108,18 @@ async function addMatch(event, competition) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to add match', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
     return false;
 }
 
 // --- Set Match Result (WIN/LOSS) ---
 async function setResult(row, result) {
+    showLoader();
     try {
         const res = await fetch(`/api/match/${row}/result`, {
             method: 'POST',
@@ -98,9 +133,11 @@ async function setResult(row, result) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to update', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
 }
 
@@ -138,6 +175,7 @@ async function saveEdit(event) {
         date: document.getElementById('edit-date').value
     };
 
+    showLoader();
     try {
         const res = await fetch(`/api/match/${row}/edit`, {
             method: 'POST',
@@ -150,9 +188,11 @@ async function saveEdit(event) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to update', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
     return false;
 }
@@ -161,6 +201,7 @@ async function deleteMatch() {
     const row = parseInt(document.getElementById('edit-row').value);
     if (!confirm('Are you sure you want to delete this match?')) return;
 
+    showLoader();
     try {
         const res = await fetch(`/api/match/${row}/delete`, {
             method: 'POST',
@@ -172,9 +213,11 @@ async function deleteMatch() {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to delete', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
 }
 
@@ -199,6 +242,7 @@ async function createCompetition(event) {
         return false;
     }
 
+    showLoader();
     try {
         const res = await fetch('/api/competition', {
             method: 'POST',
@@ -211,9 +255,11 @@ async function createCompetition(event) {
             setTimeout(() => { window.location.href = '/'; }, 800);
         } else {
             showToast(data.error || 'Failed to create', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
     return false;
 }
@@ -226,6 +272,7 @@ async function updateStake(row, newStake) {
         return;
     }
 
+    showLoader();
     try {
         const res = await fetch(`/api/competition/${row}/stake`, {
             method: 'POST',
@@ -238,9 +285,11 @@ async function updateStake(row, newStake) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to update', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
 }
 
@@ -248,6 +297,7 @@ async function updateStake(row, newStake) {
 async function closeCompetition(row, name) {
     if (!confirm(`Are you sure you want to close "${name}"? This will move it to the archive.`)) return;
 
+    showLoader();
     try {
         const res = await fetch(`/api/competition/${row}/close`, {
             method: 'POST',
@@ -259,9 +309,11 @@ async function closeCompetition(row, name) {
             setTimeout(() => location.reload(), 800);
         } else {
             showToast(data.error || 'Failed to close', 'error');
+            hideLoader();
         }
     } catch (e) {
         showToast('Network error', 'error');
+        hideLoader();
     }
 }
 
