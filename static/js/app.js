@@ -3,21 +3,22 @@
    ============================================================ */
 
 // --- Loading Overlay ---
+// Overlay starts active (visible in HTML), hidden when page is ready
 function showLoader() {
     const el = document.getElementById('loading-overlay');
-    if (!el) return;
-    // Reset animations by re-inserting bouncer
-    const bouncer = el.querySelector('.football-bouncer');
-    const shadow = el.querySelector('.football-shadow');
-    if (bouncer) { bouncer.style.animation = 'none'; bouncer.offsetHeight; bouncer.style.animation = ''; }
-    if (shadow) { shadow.style.animation = 'none'; shadow.offsetHeight; shadow.style.animation = ''; }
-    el.classList.add('active');
+    if (el) el.classList.add('active');
 }
 
 function hideLoader() {
     const el = document.getElementById('loading-overlay');
     if (el) el.classList.remove('active');
 }
+
+// Hide loader when page is fully loaded (images, fonts, etc.)
+window.addEventListener('load', function() {
+    // Small delay so the bounce is visible even on fast loads
+    setTimeout(hideLoader, 400);
+});
 
 // Show loader on page navigation (link clicks)
 document.addEventListener('click', function(e) {
@@ -26,9 +27,6 @@ document.addEventListener('click', function(e) {
         showLoader();
     }
 });
-
-// Hide loader once page is fully loaded
-window.addEventListener('load', hideLoader);
 
 // --- Toast Notifications ---
 function showToast(message, type = 'success') {

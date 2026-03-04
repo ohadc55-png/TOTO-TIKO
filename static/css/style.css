@@ -160,7 +160,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .football-bouncer {
     font-size: 48px;
-    animation: footballBounce 2s ease-in forwards;
+    animation: footballBounce 2s ease-in infinite;
 }
 
 .football-shadow {
@@ -169,7 +169,7 @@ input[type="color"]::-webkit-color-swatch {
     border-radius: 50%;
     background: rgba(36, 99, 235, 0.3);
     margin-top: 4px;
-    animation: shadowPulse 2s ease-in forwards;
+    animation: shadowPulse 2s ease-in infinite;
 }
 
 .loading-text {
