@@ -1,6 +1,7 @@
 """Elite Football Tracker — Flask Application."""
 import datetime
 import os
+import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 from sheets import (
@@ -27,9 +28,20 @@ def money_filter(value, decimals=0):
 
 APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
 
+# --- CACHE ---
+_cache = {"data": None, "timestamp": 0}
+CACHE_TTL = 30  # seconds
+
+def invalidate_cache():
+    """Call after any write operation to force fresh data on next load."""
+    _cache["timestamp"] = 0
 
 def load_app_data():
-    """Load and process all application data from Google Sheets."""
+    """Load and process all application data from Google Sheets (cached)."""
+    now = time.time()
+    if _cache["data"] is not None and (now - _cache["timestamp"]) < CACHE_TTL:
+        return _cache["data"]
+
     matches_data, bankroll, competitions_data, error = get_all_data()
 
     if error:
@@ -55,7 +67,7 @@ def load_app_data():
     total_profits = sum(s['net_profit'] for s in competition_stats.values())
     current_bal = bankroll + total_profits - pending_losses
 
-    return {
+    result = {
         "error": None,
         "bankroll": bankroll,
         "current_bal": current_bal,
@@ -66,6 +78,9 @@ def load_app_data():
         "competition_stats": competition_stats,
         "logo": APP_LOGO_URL,
     }
+    _cache["data"] = result
+    _cache["timestamp"] = time.time()
+    return result
 
 
 # --- PAGE ROUTES ---
@@ -158,6 +173,7 @@ def api_add_match():
             d.get("result", "Pending"),
             d["stake"],
         )
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -169,6 +185,7 @@ def api_update_result(row):
     d = request.json
     try:
         update_match_result(row, d["result"])
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -180,6 +197,7 @@ def api_edit_match(row):
     d = request.json
     try:
         update_match(row, d["date"], d["home"], d["away"], d["odds"], d["result"], d["stake"])
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -190,6 +208,7 @@ def api_delete_match(row):
     """Delete a match."""
     try:
         delete_match(row)
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -203,6 +222,7 @@ def api_deposit():
         data = load_app_data()
         new_amount = data["bankroll"] + float(d["amount"])
         update_bankroll(new_amount)
+        invalidate_cache()
         return jsonify({"ok": True, "new_bankroll": new_amount})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -216,6 +236,7 @@ def api_withdraw():
         data = load_app_data()
         new_amount = data["bankroll"] - float(d["amount"])
         update_bankroll(new_amount)
+        invalidate_cache()
         return jsonify({"ok": True, "new_bankroll": new_amount})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -235,6 +256,7 @@ def api_create_competition():
             d.get("text_color", "#004085"),
             d.get("logo_url", ""),
         )
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -246,6 +268,7 @@ def api_update_stake(row):
     d = request.json
     try:
         update_competition_stake(row, d["stake"])
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -256,6 +279,7 @@ def api_close_competition(row):
     """Close a competition."""
     try:
         close_competition(row)
+        invalidate_cache()
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
