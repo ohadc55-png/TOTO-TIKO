@@ -8,6 +8,21 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* --- Global background image (all pages, 60% opacity) --- */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url('/static/img/backround.webp?v=3');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.6;
+    z-index: -1;
+    pointer-events: none;
+}
+
 /* --- Glassmorphism Utilities --- */
 .glass {
     background: rgba(255, 255, 255, 0.03);

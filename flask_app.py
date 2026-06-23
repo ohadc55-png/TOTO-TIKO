@@ -26,7 +26,7 @@ def money_filter(value, decimals=0):
     except (ValueError, TypeError):
         return str(value)
 
-APP_LOGO_URL = "https://i.postimg.cc/8Cr6SypK/yzwb-ll-sm.png"
+APP_LOGO_URL = "/static/img/logo.webp?v=3"
 
 # --- CACHE ---
 _cache = {"data": None, "timestamp": 0}
