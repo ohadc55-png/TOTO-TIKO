@@ -26,7 +26,8 @@
                     ₪{{ current_bal|money(2) }}
                     {% if bankroll > 0 %}
                     {% set pct = ((current_bal - bankroll) / bankroll * 100) %}
-                    <span class="text-base font-semibold flex items-center gap-1
+                    <!-- Desktop: percentage shown inline next to the balance -->
+                    <span class="hidden md:flex text-base font-semibold items-center gap-1
                                  {{ 'text-success' if is_profit else 'text-error' }}">
                         <span class="material-symbols-outlined text-sm">{{ 'trending_up' if is_profit else 'trending_down' }}</span>
                         {{ "%.1f"|format(pct|abs) }}%{{ '+' if is_profit else '' }}
@@ -34,20 +35,31 @@
                     {% endif %}
                 </h2>
             </div>
-            <div class="flex gap-4">
-                {% set total_won = competition_stats.values()|map(attribute='total_income')|sum %}
-                <div class="glass px-4 py-2 rounded-xl">
-                    <p class="text-slate-400 text-xs mb-1">Total Won</p>
-                    <p class="text-success font-bold">₪{{ total_won|money }}</p>
+            <div class="flex items-center justify-between gap-4 md:justify-end">
+                <div class="flex gap-4">
+                    {% set total_won = competition_stats.values()|map(attribute='total_income')|sum %}
+                    <div class="glass px-4 py-2 rounded-xl">
+                        <p class="text-slate-400 text-xs mb-1">Total Won</p>
+                        <p class="text-success font-bold">₪{{ total_won|money }}</p>
+                    </div>
+                    {% set total_matches = 0 %}
+                    {% if df is not none and not df.empty %}
+                        {% set total_matches = df|length %}
+                    {% endif %}
+                    <div class="glass px-4 py-2 rounded-xl">
+                        <p class="text-slate-400 text-xs mb-1">Total Matches</p>
+                        <p class="text-primary font-bold">{{ total_matches }}</p>
+                    </div>
                 </div>
-                {% set total_matches = 0 %}
-                {% if df is not none and not df.empty %}
-                    {% set total_matches = df|length %}
+                {% if bankroll > 0 %}
+                {% set pct = ((current_bal - bankroll) / bankroll * 100) %}
+                <!-- Mobile: percentage moved to the bottom-right empty area -->
+                <span class="md:hidden text-base font-semibold flex items-center gap-1 whitespace-nowrap
+                             {{ 'text-success' if is_profit else 'text-error' }}">
+                    <span class="material-symbols-outlined text-sm">{{ 'trending_up' if is_profit else 'trending_down' }}</span>
+                    {{ "%.1f"|format(pct|abs) }}%{{ '+' if is_profit else '' }}
+                </span>
                 {% endif %}
-                <div class="glass px-4 py-2 rounded-xl">
-                    <p class="text-slate-400 text-xs mb-1">Total Matches</p>
-                    <p class="text-primary font-bold">{{ total_matches }}</p>
-                </div>
             </div>
         </div>
     </div>

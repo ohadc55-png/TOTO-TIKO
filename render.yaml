@@ -3,7 +3,7 @@ services:
     name: elite-football-tracker
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements-flask.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn flask_app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: GOOGLE_CREDENTIALS
