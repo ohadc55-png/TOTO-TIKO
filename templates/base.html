@@ -138,15 +138,24 @@
         </div>
     </nav>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=3"></script>
     <script>
-        // Inline fallback: always hide loader when page is ready
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                var el = document.getElementById('loading-overlay');
-                if (el) el.classList.remove('active');
-            }, 400);
-        });
+        // Inline fallback, used only if app.js failed to load — the overlay must
+        // never be able to trap the page.
+        if (typeof hideLoader !== 'function') {
+            (function () {
+                function hide() {
+                    var el = document.getElementById('loading-overlay');
+                    if (el) el.classList.remove('active');
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function () { setTimeout(hide, 400); });
+                } else {
+                    setTimeout(hide, 400);
+                }
+                setTimeout(hide, 15000);
+            })();
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>

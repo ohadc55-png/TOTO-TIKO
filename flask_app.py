@@ -1,6 +1,7 @@
 """Elite Football Tracker — Flask Application."""
 import datetime
 import os
+import threading
 import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
@@ -30,18 +31,36 @@ APP_LOGO_URL = "/static/img/logo.webp?v=3"
 
 # --- CACHE ---
 _cache = {"data": None, "timestamp": 0}
+# Guards the refresh so concurrent requests (the server runs with threads) do a
+# single Sheets fetch between them instead of one each.
+_cache_lock = threading.Lock()
 CACHE_TTL = 30  # seconds
 
 def invalidate_cache():
     """Call after any write operation to force fresh data on next load."""
     _cache["timestamp"] = 0
 
+def _cached_data():
+    """Return the cached payload if it is still fresh, else None."""
+    if _cache["data"] is not None and (time.time() - _cache["timestamp"]) < CACHE_TTL:
+        return _cache["data"]
+    return None
+
 def load_app_data():
     """Load and process all application data from Google Sheets (cached)."""
-    now = time.time()
-    if _cache["data"] is not None and (now - _cache["timestamp"]) < CACHE_TTL:
-        return _cache["data"]
+    fresh = _cached_data()
+    if fresh is not None:
+        return fresh
 
+    with _cache_lock:
+        # Another thread may have refreshed it while we waited for the lock.
+        fresh = _cached_data()
+        if fresh is not None:
+            return fresh
+        return _refresh_app_data()
+
+def _refresh_app_data():
+    """Fetch from Sheets and rebuild the cached payload. Caller holds the lock."""
     matches_data, bankroll, competitions_data, error = get_all_data()
 
     if error:
@@ -104,7 +123,9 @@ def overview():
     return render_template("overview.html", comp_profits=comp_profits, **data)
 
 
-@app.route("/competition/<name>")
+# <path:...> so names containing a slash (e.g. "Brighton PL 2026/27") still match;
+# the default converter stops at the first "/" and would 404 on them.
+@app.route("/competition/<path:name>")
 def competition(name):
     data = load_app_data()
     if name not in data["active_competitions"]:
@@ -283,6 +304,18 @@ def api_close_competition(row):
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+def _warm_cache():
+    """Open the Sheets connection at startup so the first real request doesn't
+    pay the ~16s auth + open cost. Never allowed to break boot."""
+    try:
+        load_app_data()
+    except Exception:
+        pass
+
+
+threading.Thread(target=_warm_cache, daemon=True).start()
 
 
 if __name__ == "__main__":

@@ -71,7 +71,7 @@
         <span class="material-symbols-outlined text-primary">add_circle</span>
         <h3 class="font-bold text-lg">Add New Match</h3>
     </div>
-    <form id="add-match-form" onsubmit="return addMatch(event, '{{ comp_name }}')">
+    <form id="add-match-form" onsubmit='return addMatch(event, {{ comp_name|tojson }})'>
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Home Team</label>
@@ -177,7 +177,7 @@
                 <span class="material-symbols-outlined text-sm align-middle mr-0.5">close</span> LOSS
             </button>
             {% endif %}
-            <button onclick="openEditModal({{ match.Row }}, '{{ match.Home }}', '{{ match.Away }}', {{ match.Odds }}, {{ match.Stake }}, '{{ match.Status }}', '{{ match.Date }}')"
+            <button onclick='openEditModal({{ match.Row }}, {{ match.Home|tojson }}, {{ match.Away|tojson }}, {{ match.Odds }}, {{ match.Stake }}, {{ match.Status|tojson }}, {{ match.Date|tojson }})'
                     class="{% if match.Status == 'Pending' %}w-12{% else %}flex-1{% endif %} py-2 rounded-xl text-sm font-bold text-primary border-2 border-primary hover:bg-primary hover:text-white transition-all">
                 <span class="material-symbols-outlined text-sm">edit</span>
                 {% if match.Status != 'Pending' %} Edit{% endif %}

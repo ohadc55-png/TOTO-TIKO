@@ -76,7 +76,7 @@
     {% for comp_name, comp_info in active_competitions.items() %}
     {% set profit = comp_profits.get(comp_name, 0) %}
     {% set stats = competition_stats.get(comp_name, {"total_staked": 0, "total_income": 0, "net_profit": 0}) %}
-    <a href="/competition/{{ comp_name }}" class="block glass rounded-2xl p-5 hover:border-primary/50 transition-all group">
+    <a href="{{ url_for('competition', name=comp_name) }}" class="block glass rounded-2xl p-5 hover:border-primary/50 transition-all group">
         <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-4">
                 {% if comp_info.logo %}

@@ -3,21 +3,44 @@
    ============================================================ */
 
 // --- Loading Overlay ---
-// Overlay starts active (visible in HTML), hidden when page is ready
-function showLoader() {
+// Overlay starts active (visible in HTML), hidden when page is ready.
+const LOADER_MAX_MS = 15000;
+let loaderSafetyTimer = null;
+
+function showLoader(maxMs) {
     const el = document.getElementById('loading-overlay');
     if (el) el.classList.add('active');
+    // Safety net: whatever we're waiting on may never resolve (a request the
+    // server killed, a navigation that stalls). The overlay must not outlive it.
+    clearTimeout(loaderSafetyTimer);
+    loaderSafetyTimer = setTimeout(hideLoader, maxMs || LOADER_MAX_MS);
 }
 
 function hideLoader() {
+    clearTimeout(loaderSafetyTimer);
     const el = document.getElementById('loading-overlay');
     if (el) el.classList.remove('active');
 }
 
-// Hide loader when page is fully loaded (images, fonts, etc.)
-window.addEventListener('load', function() {
+// The overlay ships visible in the HTML, so arm its safety net immediately.
+loaderSafetyTimer = setTimeout(hideLoader, LOADER_MAX_MS);
+
+// Hide once the DOM is usable — deliberately NOT window.load, which also waits
+// for every external image (competition logos are hosted on i.postimg.cc), so
+// one slow third-party host would otherwise pin the overlay open indefinitely.
+function onPageReady() {
     // Small delay so the bounce is visible even on fast loads
     setTimeout(hideLoader, 400);
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onPageReady);
+} else {
+    onPageReady();
+}
+
+// Returning via the back/forward cache replays neither of the above.
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) hideLoader();
 });
 
 // Show loader on page navigation (link clicks)

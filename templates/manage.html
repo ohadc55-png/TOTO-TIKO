@@ -87,11 +87,11 @@
 
             <!-- Actions -->
             <div class="flex gap-3">
-                <a href="/competition/{{ comp_name }}"
+                <a href="{{ url_for('competition', name=comp_name) }}"
                    class="flex-1 text-center py-2.5 rounded-xl text-sm font-bold text-primary border border-primary hover:bg-primary hover:text-white transition-all">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span> Edit Matches
                 </a>
-                <button onclick="closeCompetition({{ comp_info.row }}, '{{ comp_name }}')"
+                <button onclick='closeCompetition({{ comp_info.row }}, {{ comp_name|tojson }})'
                         class="flex-1 py-2.5 rounded-xl text-sm font-bold text-error border border-error hover:bg-error hover:text-white transition-all">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">lock</span> Close
                 </button>
